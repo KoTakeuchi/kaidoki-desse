@@ -1,0 +1,31 @@
+{% load static %}
+
+<header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light px-3 shadow-sm">
+        <div class="container-fluid">
+
+            <!-- ロゴとサイト名 -->
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="{% static 'icon/icon_kaidoki.svg' %}" alt="買い時でっせアイコン" class="me-2" style="height: 32px;">
+                <span class="fw-bold text-primary">買い時でっせ</span>
+            </a>
+
+            <!-- 検索フォーム -->
+            <form method="get" action="{% url 'landing' %}" class="d-flex mx-auto" style="max-width: 400px;">
+                <input type="text" name="q" class="form-control me-2" placeholder="商品名・キーワード">
+                <button class="btn btn-outline-success" type="submit">検索</button>
+            </form>
+
+            <!-- ユーザー情報／ログイン制御 -->
+            <div class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                <span class="me-3 text-secondary">{{ user.username }} さん</span>
+                <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm me-3">ログアウト</a>
+                <a href="{% url 'main:product_create' %}" class="btn btn-outline-primary btn-sm">＋ 商品登録</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-primary btn-sm">ログイン</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</header>

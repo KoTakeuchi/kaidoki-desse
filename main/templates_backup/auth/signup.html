@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}新規登録{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card mx-auto shadow-sm" style="max-width: 420px;">
+    <div class="card-body">
+      <h4 class="text-center mb-4 fw-bold">新規登録</h4>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label for="id_username" class="form-label">ユーザー名</label>
+          {{ form.username }}
+          {% if form.username.errors %}
+          <div class="text-danger small">{{ form.username.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_email" class="form-label">メールアドレス</label>
+          {{ form.email }}
+          <div class="form-text">通知やパスワード再設定に使用されます。</div>
+          {% if form.email.errors %}
+          <div class="text-danger small">{{ form.email.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_password1" class="form-label">パスワード</label>
+          {{ form.password1 }}
+          {% if form.password1.errors %}
+          <div class="text-danger small">{{ form.password1.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="mb-3">
+          <label for="id_password2" class="form-label">パスワード（確認用）</label>
+          {{ form.password2 }}
+          {% if form.password2.errors %}
+          <div class="text-danger small">{{ form.password2.errors }}</div>
+          {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">登録する</button>
+      </form>
+
+      <p class="text-center mt-3 small">
+        すでにアカウントをお持ちの方は <a href="{% url 'login' %}">ログイン</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

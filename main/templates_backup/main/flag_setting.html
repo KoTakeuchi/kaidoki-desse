@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}通知設定{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">🔔 通知設定</h5>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-check form-switch mb-3">
+            <!-- ✅ トグルスイッチ化 -->
+            <input class="form-check-input" type="checkbox" id="id_enabled" name="enabled"
+                {% if form.instance.enabled %}checked{% endif %}>
+            <label class="form-check-label fw-semibold" for="id_enabled">
+                通知を有効にする
+            </label>
+            <div class="form-text text-muted">
+                ※優先度「高」の商品のみ通知対象です。
+            </div>
+        </div>
+
+        <!-- 通知時刻設定 -->
+        <div class="row mb-3">
+            <div class="col-auto">
+                {{ form.notify_hour.label_tag }}
+                {{ form.notify_hour }}
+            </div>
+            <div class="col-auto">
+                {{ form.notify_minute.label_tag }}
+                {{ form.notify_minute }}
+            </div>
+        </div>
+
+        <!-- メールアドレス確認 -->
+        <div class="mb-3">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+            <div class="form-text text-muted">
+                ※このメールアドレスに通知が送信されます。<br>
+                ※変更したい場合は「ユーザー情報編集」ページから登録メールアドレスを更新してください。
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">保存する</button>
+    </form>
+</div>
+
+
+<!-- メール通知イメージ -->
+<div class="card shadow-sm p-4 mt-4">
+    <h5 class="mb-3">📩 通知メールのイメージ</h5>
+    <div class="text-center">
+        <img src="{% static 'images/not_sample_mail.png' %}" alt="通知メール例" class="img-fluid rounded shadow-sm"
+            style="max-width:600px;">
+        <p class="text-muted mt-2 small">
+            ※ 実際のメール本文イメージです（件名・日付・商品名が差し込み表示されます）
+        </p>
+    </div>
+</div>
+
+<div class="mt-3 text-center">
+    <a href="{% url 'main:product_list' %}" class="text-secondary">← 商品一覧に戻る</a>
+</div>
+</div>
+{% endblock %}

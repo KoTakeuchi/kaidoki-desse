@@ -1,0 +1,39 @@
+{
+    // === Python 設定 ===
+    "python.languageServer": "Pylance",
+    "python.formatting.provider": "autopep8",
+    "python.formatting.autopep8Path": "${workspaceFolder}/venv/Scripts/autopep8.exe",
+    // === 保存時にPython専用フォーマッタだけを使う ===
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "[python]": {
+        // BeautifyやPrettierの誤適用を防ぐ
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.formatOnSave": true
+    },
+    // === HTML / JS は個別設定 ===
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    // === Beautify / Prettier のPython誤判定防止 ===
+    "beautify.language": {
+        "js": [
+            "javascript",
+            "json"
+        ],
+        "css": [
+            "css"
+        ],
+        "html": [
+            "html"
+        ]
+    },
+    "prettier.disableLanguages": [
+        "python"
+    ]
+}

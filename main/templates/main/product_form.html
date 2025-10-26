@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% load form_tags %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<style>
+.card {
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease-in-out;
+}
+.form-control:focus {
+  border-color: #C35656;
+  box-shadow: 0 0 0 0.2rem rgba(195, 86, 86, 0.15);
+}
+
+/* ✅ 編集不可項目をグレーアウト表示 */
+.form-control[disabled],
+.form-select[disabled] {
+  background-color: #f7f7f7 !important;
+  color: #777 !important;
+  cursor: not-allowed !important;
+  border-color: #ddd !important;
+  opacity: 1 !important;
+}
+
+.url-help {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 4px;
+}
+.flag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.flag-option {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.flag-option:hover {
+  background-color: #fff5f5;
+  border-color: #C35656;
+}
+input[type="radio"]:checked + .flag-option {
+  background-color: #C35656;
+  color: white;
+  border-color: #C35656;
+}
+.price-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.price-card {
+  flex: 1;
+  min-width: 200px;
+}
+.price-card label {
+  font-weight: 600;
+  color: #555;
+}
+.btn-submit {
+  background-color: #C35656;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 10px 30px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+.btn-submit:hover {
+  background-color: #a83f3f;
+}
+.text-danger.small {
+  margin-top: 4px;
+}
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{% if is_edit %}商品編集{% else %}新規商品登録{% endif %}</h2>
+        <a href="{% url 'main:product_list' %}" class="btn btn-secondary">一覧へ戻る</a>
+    </div>
+
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        <div class="card shadow-sm p-4">
+
+            <!-- ✅ 商品URL（編集時は非表示） -->
+            {% if not is_edit %}
+            <div class="mb-4">
+                <label class="form-label fw-bold">商品URL</label>
+                {{ form.product_url }}
+                <div class="url-help">
+                    楽天市場 <strong>https://item.rakuten.co.jp/</strong> から登録する商品ページのURLをコピペしてください。
+                </div>
+                <div id="url-error" class="text-danger small mt-1"></div>
+            </div>
+            {% endif %}
+
+            <!-- 商品名・ショップ名 -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">商品名</label>
+                    {{ form.product_name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">ショップ名</label>
+                    {{ form.shop_name }}
+                </div>
+            </div>
+
+            <!-- ✅ 通知条件（新規のみ表示） -->
+            {% if not is_edit and form.flag_type %}
+            <div class="mb-4">
+                <label class="form-label fw-bold">通知条件</label>
+                <div class="flag-group">
+                    <label>
+                        <input type="radio" name="flag_type" value="price" hidden>
+                        <div class="flag-option">買い時価格</div>
+                    </label>
+                    <label>
+                        <input type="radio" name="flag_type" value="rate" hidden>
+                        <div class="flag-option">割引率</div>
+                    </label>
+                    <label>
+                        <input type="radio" name="flag_type" value="drop" hidden>
+                        <div class="flag-option">最安値</div>
+                    </label>
+                </div>
+                <div class="form-text text-muted mt-1">
+                    どの条件で「買い時」と判断するかを選択してください。
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 価格入力 -->
+            <div class="price-group mb-4">
+                <div class="price-card">
+                    <label>定価</label>
+                    {{ form.regular_price }}
+                    <div class="text-muted small">未設定</div>
+                </div>
+                <div class="price-card">
+                    <label>登録時価格</label>
+                    {{ form.initial_price }}
+                    <div class="text-muted small">未設定</div>
+                </div>
+                <div class="price-card">
+                    <label>買い時価格</label>
+                    {{ form.threshold_price }}
+                    <div class="text-muted small">未設定</div>
+                </div>
+            </div>
+
+            <!-- 優先度 -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">優先度</label><br>
+                {{ form.priority }}
+            </div>
+
+            <!-- 登録ボタン -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-submit">
+                    {% if is_edit %}更新する{% else %}登録する{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if not is_edit %}
+<!-- ✅ 新規登録時のみ：楽天API自動入力・通知条件動作スクリプト -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const urlInput = document.getElementById("id_product_url");
+  const errorArea = document.getElementById("url-error");
+
+  // 楽天API連携
+  urlInput.addEventListener("change", async () => {
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    errorArea.textContent = "";
+    urlInput.classList.remove("is-invalid");
+
+    try {
+      const res = await fetch(`/main/api/fetch_rakuten_item/?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        errorArea.textContent = data.error || "楽天市場の商品ページではありません。";
+        urlInput.classList.add("is-invalid");
+        return;
+      }
+
+      // 自動入力
+      document.getElementById("id_product_name").value = data.product_name || "";
+      document.getElementById("id_shop_name").value = data.shop_name || "";
+      document.getElementById("id_regular_price").value = data.regular_price || "";
+      document.getElementById("id_initial_price").value = data.initial_price || "";
+      document.getElementById("id_image_url").value = data.image_url || "";
+
+    } catch (e) {
+      errorArea.textContent = "通信エラーが発生しました。";
+    }
+  });
+
+  // 通知条件動的切り替え
+  const flagRadios = document.querySelectorAll("input[name='flag_type']");
+  const thresholdInput = document.getElementById("id_threshold_price");
+  const thresholdLabel = thresholdInput.closest(".price-card").querySelector("label");
+
+  const selectDiscount = document.createElement("select");
+  selectDiscount.classList.add("form-select");
+  for (let i = 5; i <= 95; i += 5) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${i}% 割引`;
+    selectDiscount.appendChild(opt);
+  }
+
+  flagRadios.forEach(radio => {
+    radio.addEventListener("change", e => {
+      const type = e.target.value;
+
+      thresholdInput.style.display = "none";
+      selectDiscount.remove();
+      thresholdLabel.textContent = "買い時価格";
+
+      if (type === "price") {
+        thresholdInput.style.display = "block";
+        thresholdLabel.textContent = "買い時価格";
+      } else if (type === "rate") {
+        thresholdLabel.textContent = "割引率";
+        thresholdInput.after(selectDiscount);
+      } else if (type === "drop") {
+        thresholdLabel.textContent = "最安値（入力不要）";
+      }
+    });
+  });
+});
+</script>
+{% endif %}
+{% endblock %}

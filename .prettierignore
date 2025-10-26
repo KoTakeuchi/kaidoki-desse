@@ -1,0 +1,3 @@
+*.html
+!main/templates/main/index.html
+!./main/templates/main/index.html

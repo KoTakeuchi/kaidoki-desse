@@ -1,0 +1,71 @@
+<!-- 実行ディレクトリ: D:\職業訓練\kaidoki-desse\templates\layout-landing.html -->
+{% extends 'base.html' %}
+
+{% block extra_css %}
+  <style>
+    .hero {
+      background: linear-gradient(135deg, var(--main-color), var(--accent-color));
+      color: white;
+      padding: 100px 0;
+      text-align: center;
+      border-radius: 0 0 30px 30px;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+    }
+
+    .section {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      margin: 40px auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      max-width: 900px;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <h1>買い時を、もっとスマートに。</h1>
+    <p>あなたの「買いたい」をデータで応援するアプリ</p>
+    <div class="mt-4">
+      <a href="/signup/" class="btn btn-light btn-lg me-2 fw-bold">新規登録</a>
+      <a href="/login/" class="btn btn-outline-light btn-lg">ログイン</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="text-center mb-4">💡 できること</h2>
+    <ul class="list-unstyled text-center">
+      <li>🛒 商品価格を追跡して「買い時」をお知らせ</li>
+      <li>📬 通知設定で無駄なチェックを減らす</li>
+      <li>📱 スマートなUIでどこでも確認</li>
+    </ul>
+  </section>
+
+  <section class="section d-flex flex-wrap justify-content-around">
+    <div>
+      <h3>💭 個人的な思い</h3>
+      <ul>
+        <li>ほしい物の価格が下がったらすぐ知りたい</li>
+        <li>でも毎回チェックするのは面倒</li>
+      </ul>
+    </div>
+    <div>
+      <h3>💡 経験として積みたかったこと</h3>
+      <ul>
+        <li>データベースの監視・運用を通して構造を理解</li>
+        <li>通知・履歴管理など実務的な流れを体験</li>
+      </ul>
+    </div>
+  </section>
+{% endblock %}

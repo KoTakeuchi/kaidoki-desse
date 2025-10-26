@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-danger">商品削除確認</h2>
+    <div class="alert alert-warning">
+        <p>「{{ product.product_name }}」の商品を本当に削除しますか？</p>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">削除する</button>
+        <a href="{% url 'main:product_list' %}" class="btn btn-secondary ms-2">キャンセル</a>
+    </form>
+</div>
+{% endblock %}

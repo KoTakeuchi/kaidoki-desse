@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}買い時でっせ | あなたの“買い時”を逃さない{% endblock %}
+
+{% block content %}
+
+<!-- ファーストビュー -->
+<section class="hero">
+    <div class="hero-inner">
+        <h1>買い時を、逃さない。</h1>
+        <p>価格の変化を自動で追いかけ、<br>あなたにベストなタイミングを教えてくれるアプリです。</p>
+
+        <div class="hero-buttons">
+            <a href="/signup/" class="btn btn-signup">新規登録して始める</a>
+            <a href="/login/" class="btn btn-login">ログイン</a>
+        </div>
+    </div>
+</section>
+
+<!-- できること -->
+<section class="features">
+    <h2>できること</h2>
+    <ul>
+        <li>📉 過去の価格推移をグラフで確認</li>
+        <li>🔔 設定した価格以下になったら通知</li>
+        <li>⭐ 気になる商品の「買い時」フラグを管理</li>
+    </ul>
+</section>
+
+<!-- 開発の背景 -->
+<section class="background">
+    <h2>開発の背景</h2>
+    <div class="background-grid">
+        <div class="bg-card">
+            <h3>💭 個人的な思い</h3>
+            <ul>
+                <li>「安くなったら買いたい」と思っても<br>毎回確認するのは面倒だった</li>
+                <li>気になる商品を自動で追ってくれる<br>仕組みが欲しかった</li>
+            </ul>
+        </div>
+        <div class="bg-card">
+            <h3>💡 経験として積みたかったこと</h3>
+            <ul>
+                <li>データベースエンジニア職に興味があり<br>その初期段階を体験したかった</li>
+                <li>監視や運用の基礎を成果物として<br>自分の手で形にしてみたかった</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

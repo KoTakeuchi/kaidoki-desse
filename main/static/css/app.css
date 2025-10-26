@@ -1,0 +1,276 @@
+:root {
+    --primary: #C35656; /* メイン */
+    --accent: #F7CB6E;  /* サブ */
+    --text: #333;
+    --bg: #FFF8F8;
+    --filter-bg: #FAE5E5; /* 🎨 絞り込みブロック背景：前より少し白寄り */
+}
+
+/* === 共通 === */
+body {
+    margin: 0;
+    font-family: system-ui, "Noto Sans JP", sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+}
+.container {
+    max-width: 1100px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+/* === ヘッダー／フッター === */
+.site-header,
+.site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+}
+.brand a {
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+.site-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+/* === ボタン === */
+.btn {
+    border-radius: 8px;
+    border: none;
+    transition: background 0.2s;
+}
+.btn-primary {
+    background-color: var(--primary);
+    color: #fff;
+}
+.btn-primary:hover {
+    background-color: #a94444;
+    color: #fff;
+}
+.btn-outline-primary,
+.btn-outline-danger {
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+.btn-outline-primary:hover,
+.btn-outline-danger:hover {
+    background-color: var(--primary);
+    color: #fff;
+}
+
+/* === 絞り込みブロック === */
+.filter-card {
+    background-color: var(--filter-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.filter-label {
+    font-weight: 700;
+    color: #333;
+    font-size: 1.1rem;
+}
+.category-inline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+}
+
+/* === 絞り込みタグ色分け === */
+.badge.filter-tag-common { background-color: #4CAF50; color: #fff; } /* 共通カテゴリ:緑 */
+.badge.filter-tag-stock { background-color: #F7CB6E; color: #000; } /* 在庫:黄色 */
+.badge.filter-tag-priority { background-color: #C35656; color: #fff; } /* 優先度:赤 */
+.badge.filter-tag-sort { background-color: #fff; color: #000; border: 1px solid #000; } /* 並び順:白黒 */
+.badge.filter-tag-default { background-color: #bbb; color: #fff; } /* その他 */
+
+/* === 並び順ボタン === */
+.sort-button {
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #555;
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+.sort-button:hover {
+    background: #f8f8f8;
+    color: #222;
+}
+
+/* === 商品カード === */
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+/* 🩶 在庫なしカード背景濃く修正 */
+.card.out-of-stock {
+    background-color: #efefef !important;
+}
+
+/* 通知枠線を太く（1.5倍→2倍） */
+.border-warning { border: 3px solid var(--accent) !important; }
+.border-danger { border: 3px solid var(--primary) !important; }
+.border-secondary { border: 2px solid #ccc !important; }
+
+.badge {
+    font-size: 0.75rem;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+/* === 画像 === */
+.product-thumb {
+    height: 200px;
+    object-fit: contain;
+    background-color: #fff;
+}
+
+
+/* === チェックボックス === */
+.form-check-input {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* === ページング === */
+.pagination {
+    justify-content: center;
+}
+.pagination .page-link {
+    color: var(--primary);
+    border: 1px solid #ddd;
+}
+.pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+.pagination .page-link:hover {
+    background-color: #fbeaea;
+    color: var(--primary);
+}
+
+/* === 状態タグ（カテゴリ色・優先度） === */
+.bg-success { background-color: #4CAF50 !important; } /* 共通カテゴリ */
+.bg-info { background-color: #5aa1e3 !important; }    /* 独自カテゴリ */
+.bg-warning { background-color: var(--accent) !important; }
+.bg-danger { background-color: var(--primary) !important; }
+
+
+/* === 商品カード：ホバー拡大（控えめ） === */
+.product-card {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  will-change: transform;
+  transform-origin: center center;
+}
+.product-card:hover {
+  transform: scale(1.08);
+  z-index: 5;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+/* === 編集ボタンの余白調整（Bootstrapより優先）=== */
+.card-footer .btn.btn-outline-primary.btn-sm {
+  padding-left: 0.05rem !important;   /* ← 左右の余白を狭める（標準1rem） */
+  padding-right: 0.05rem !important;
+  min-width: 60px !important;         /* ボタン幅のバランス維持 */
+}
+
+/* === 絞り込みブロック：優先度グループを右に寄せる === */
+.filter-label.me-2 + label.me-2 + label.me-2 + label.me-3 + span.filter-label.me-2 {
+  margin-left: 1.5rem !important; /* ← 好みで調整：1.5rem〜2rem程度 */
+}
+
+/* === 登録フォーム全体 === */
+.card {
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+/* === 入力欄 === */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  transition: all 0.2s ease-in-out;
+}
+.form-control:focus {
+  border-color: #C35656;
+  box-shadow: 0 0 0 0.2rem rgba(195, 86, 86, 0.15);
+}
+
+/* === 商品URL 説明欄 === */
+.url-help {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 4px;
+}
+
+/* === 通知フラグ選択 === */
+.flag-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.flag-option {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.flag-option:hover {
+  background-color: #fff5f5;
+  border-color: #C35656;
+}
+input[type="radio"]:checked + .flag-option {
+  background-color: #C35656;
+  color: white;
+  border-color: #C35656;
+}
+
+/* === 価格入力グループ === */
+.price-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.price-card {
+  flex: 1;
+  min-width: 200px;
+}
+.price-card label {
+  font-weight: 600;
+  color: #555;
+}
+
+/* === 登録ボタン === */
+.btn-submit {
+  background-color: #C35656;
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 10px 30px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+.btn-submit:hover {
+  background-color: #a83f3f;
+}

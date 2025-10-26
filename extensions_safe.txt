@@ -1,0 +1,13 @@
+ms-python.python
+ms-python.black-formatter
+ms-python.isort
+ms-python.vscode-pylance
+batisteo.vscode-django
+bibhasdn.django-html
+HookyQR.beautify
+dracula-theme.theme-dracula
+ms-ceintl.vscode-language-pack-ja
+eamodio.gitlens
+njpwerner.autodocstring
+ms-toolsai.jupyter
+github.copilot

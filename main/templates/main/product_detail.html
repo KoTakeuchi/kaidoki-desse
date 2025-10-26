@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ product.product_name }} の詳細{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+        <div class="row">
+            <!-- 左：商品画像 -->
+            <div class="col-md-5 text-center">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.product_name }}"
+                    class="img-fluid rounded {% if not product.is_in_stock %}opacity-50{% endif %}">
+                {% else %}
+                <img src="{% static 'images/no_image.png' %}" alt="no_image"
+                    class="img-fluid rounded {% if not product.is_in_stock %}opacity-50{% endif %}">
+                {% endif %}
+
+                <!-- ✅ 在庫なしメッセージ -->
+                {% if not product.is_in_stock %}
+                <div class="alert alert-secondary small mt-3" role="alert">
+                    現在この商品は在庫切れです。再入荷時に通知を受け取りたい場合は「在庫復活通知」を設定してください。
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 右：商品情報 -->
+            <div class="col-md-7">
+                <h3 class="mb-3">
+                    {{ product.product_name }}
+                    {% if not product.is_in_stock %}
+                    <span class="badge bg-secondary ms-2">在庫なし</span>
+                    {% else %}
+                    <span class="badge bg-success ms-2">在庫あり</span>
+                    {% endif %}
+                </h3>
+
+                <p class="text-muted mb-2">カテゴリ：{{ product.category.category_name }}</p>
+                <p class="text-muted mb-2">ショップ名：{{ product.shop_name|default:"不明" }}</p>
+                <hr>
+
+                <p class="mb-1"><strong>定価：</strong>
+                    {% if product.regular_price %}
+                    ¥{{ product.regular_price|floatformat:0 }}
+                    {% else %}<span class="text-muted">未設定</span>{% endif %}
+                </p>
+
+                <p class="mb-1"><strong>登録時価格：</strong>
+                    {% if product.initial_price %}
+                    ¥{{ product.initial_price|floatformat:0 }}
+                    {% else %}<span class="text-muted">未設定</span>{% endif %}
+                </p>
+
+                <p class="mb-1"><strong>買い時価格：</strong>
+                    {% if product.threshold_price %}
+                    ¥{{ product.threshold_price|floatformat:0 }}
+                    {% else %}<span class="text-muted">未設定</span>{% endif %}
+                </p>
+
+                <p class="mb-2">
+                    <strong>優先度：</strong>
+                    <span class="badge {% if product.priority == '高' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ product.priority }}
+                    </span>
+                </p>
+
+                <a href="{{ product.product_url }}"
+                    class="btn btn-outline-primary mt-3 {% if not product.is_in_stock %}disabled{% endif %}"
+                    target="_blank">
+                    商品ページを開く
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 買い時価格設定カード -->
+    <div class="card shadow-sm p-4 mt-4">
+        <h5 class="mb-3">買い時価格の設定</h5>
+
+        {% if is_kaidoki %}
+        <div id="kaidoki-banner" class="alert alert-success py-2 text-center fw-bold">
+            買い時！ 🎯
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-info text-center py-2 mt-2">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endif %}
+
+        <script>
+            const banner = document.getElementById('kaidoki-banner');
+            if (banner) {
+                banner.style.opacity = 0;
+                banner.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                banner.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    banner.style.opacity = 1;
+                    banner.style.transform = 'scale(1)';
+                }, 200);
+            }
+        </script>
+
+        <form method="post" class="d-flex align-items-center justify-content-center gap-3">
+            {% csrf_token %}
+            {{ form.threshold_price }}
+            <button type="submit" class="btn btn-primary">保存</button>
+        </form>
+
+        {% if form.threshold_price.errors %}
+        <div class="text-danger small text-center mt-2">
+            {{ form.threshold_price.errors.0 }}
+        </div>
+        {% endif %}
+    </div>
+
+    {{ price_data_json|json_script:"price-data-json" }}
+
+    <!-- 🔹 価格 × 在庫推移グラフ -->
+    <div class="card shadow-sm p-4 mt-4">
+        <h5 class="mb-3">価格 × 在庫推移グラフ</h5>
+        <div class="chart-wrap" style="height: 340px; min-height: 340px;">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById("priceChart");
+            const elem = document.getElementById("price-data-json");
+            if (!canvas || !elem) return;
+
+            let priceData = [];
+            try {
+                const rawText = elem.textContent.replace(/\n/g, '').trim();
+                priceData = JSON.parse(rawText);
+                if (typeof priceData === "string") priceData = JSON.parse(priceData);
+            } catch {
+                console.error("価格データの読み込みに失敗しました");
+                return;
+            }
+
+            if (!Array.isArray(priceData) || priceData.length === 0) {
+                canvas.insertAdjacentHTML("beforebegin",
+                    "<p class='text-center text-muted'>価格データがありません。</p>");
+                return;
+            }
+
+            // 🔹 データ整形（NaN・null対策込み）
+            const labels = priceData.map(p => p.date);
+            const prices = priceData.map(p => parseFloat(p.price));
+            const stocks = priceData.map(p => {
+                const val = parseFloat(p.stock);
+                return isNaN(val) ? 0 : val;
+            });
+            const threshold = parseFloat("{{ product.threshold_price|default:'0' }}") || 0;
+
+            // 🔹 在庫軸スケールを自動補正
+            const maxStock = Math.max(...stocks);
+            const suggestedMaxStock = maxStock > 0 ? maxStock + 1 : 1;
+
+            new Chart(canvas.getContext("2d"), {
+                data: {
+                    labels,
+                    datasets: [
+                        // 🔸価格（折れ線）
+                        {
+                            label: "価格（円）",
+                            data: prices,
+                            yAxisID: "yPrice",
+                            type: "line",
+                            borderColor: "#C35656",           // ブランド赤
+                            backgroundColor: "transparent",    // 塗りなし
+                            borderWidth: 2.5,
+                            fill: false,
+                            tension: 0.25,
+                            pointRadius: 4,
+                            pointBackgroundColor: prices.map(v =>
+                                v < threshold && threshold > 0 ? "#FF4B4B" : "#C35656"
+                            ),
+                            order: 1
+                        },
+                        // 🔹在庫（棒グラフ）
+                        {
+                            label: "在庫数（個）",
+                            data: stocks,
+                            yAxisID: "yStock",
+                            type: "bar",
+                            backgroundColor: "rgba(106, 144, 181, 0.6)", // 青みグレー（#6A90B5）
+                            borderColor: "#6A90B5",
+                            borderWidth: 1,
+                            order: 2
+                        },
+                        // 🟡買い時ライン（アクセント）
+                        ...(threshold > 0 ? [{
+                            label: "買い時価格",
+                            data: Array(labels.length).fill(threshold),
+                            yAxisID: "yPrice",
+                            borderColor: "#F7CB6E",   // ブランド黄色
+                            borderDash: [5, 4],
+                            borderWidth: 5,           // ← 2 → 5 に太く変更
+                            type: "line",
+                            fill: false,
+                            pointRadius: 0,
+                            order: 10,                // ← 最前面で描画されるよう調整
+                            segment: {
+                                borderDashOffset: 0,  // ダッシュ線を明瞭に
+                            },
+                        }] : []),
+
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: "日付" }
+                        },
+                        yPrice: {
+                            type: "linear",
+                            position: "left",
+                            title: { display: true, text: "価格（円）" },
+                            grid: { drawOnChartArea: true },
+                        },
+                        yStock: {
+                            type: "linear",
+                            position: "right",
+                            title: { display: true, text: "在庫数（個）" },
+                            grid: { drawOnChartArea: false },
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                stepSize: 1,
+                                callback: value => Number.isInteger(value) ? value : ''
+                            },
+                            suggestedMax: suggestedMaxStock
+                        }
+                    },
+                    plugins: {
+                        legend: { position: "bottom" }
+                    }
+                }
+            });
+
+        });
+    </script>
+
+</div>
+{% endblock %}

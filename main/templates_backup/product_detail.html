@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ product.product_name }} の詳細{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm p-4">
+
+        <div class="row">
+            <!-- 左：商品画像 -->
+            <div class="col-md-5 text-center">
+                {% if product.url %}
+                <img src="{{ product.url }}" alt="{{ product.product_name }}" class="img-fluid rounded">
+                {% else %}
+                <img src="{% static 'images/no_image.png' %}" alt="no_image" class="img-fluid rounded">
+                {% endif %}
+            </div>
+
+            <!-- 右：商品情報 -->
+            <div class="col-md-7">
+                <h3 class="mb-3">{{ product.product_name }}</h3>
+                <p class="text-muted mb-2">カテゴリ：{{ product.category.category_name }}</p>
+                <p class="text-muted mb-2">ショップ名：{{ product.shop_name|default:"不明" }}</p>
+                <hr>
+
+                <p class="mb-1"><strong>定価：</strong> ¥{{ product.regular_price|floatformat:0 }}</p>
+                <p class="mb-1"><strong>登録時価格：</strong> ¥{{ product.initial_price|floatformat:0 }}</p>
+                {% if product.threshold_price %}
+                <p class="mb-1"><strong>買い時価格：</strong> ¥{{ product.threshold_price|floatformat:0 }}</p>
+                {% endif %}
+                <p class="mb-2">
+                    <strong>優先度：</strong>
+                    <span class="badge {% if product.priority == '高' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ product.priority }}
+                    </span>
+                </p>
+
+                <a href="{{ product.product_url }}" class="btn btn-outline-primary mt-3" target="_blank">
+                    商品ページを開く
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 買い時価格設定カード -->
+    <div class="card shadow-sm p-4 mt-4">
+        <h5 class="mb-3">買い時価格の設定</h5>
+
+        {% if is_kaidoki %}
+        <div id="kaidoki-banner" class="alert alert-success py-2 text-center fw-bold">
+            買い時！ 🎯
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-info text-center py-2 mt-2">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endif %}
+
+
+        <script>
+            // ✅ 買い時バナーのフェードイン
+            const banner = document.getElementById('kaidoki-banner');
+            if (banner) {
+                banner.style.opacity = 0;
+                banner.style.transition = 'opacity 0.8s ease-out, transform 0.8s ease-out';
+                banner.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    banner.style.opacity = 1;
+                    banner.style.transform = 'scale(1)';
+                }, 200);
+            }
+
+        </script>
+
+        <form method="post" class="d-flex align-items-center justify-content-center gap-3">
+            {% csrf_token %}
+            {{ form.threshold_price }}
+            <button type="submit" class="btn btn-primary">保存</button>
+        </form>
+    </div>
+
+    <!-- ✅ Djangoのjson_scriptで安全に埋め込む -->
+    {{ price_data_json|json_script:"price-data-json" }}
+
+    <!-- ✅ 価格推移グラフ（重複削除済み） -->
+    <div class="card shadow-sm p-4 mt-4">
+        <h5 class="mb-3">価格推移グラフ</h5>
+        <div class="chart-wrap" style="height: 320px; min-height: 320px;">
+            <canvas id="priceChart"></canvas>
+        </div>
+
+    </div>
+
+
+    <!-- ▼ グラフ描画スクリプト -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById("priceChart");
+            const elem = document.getElementById("price-data-json");
+
+            if (!canvas || !elem) {
+                console.warn("⛔ グラフ用の要素が見つかりません。");
+                return;
+            }
+
+            // ✅ Canvasサイズを固定
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 320;
+
+            let priceData = [];
+            try {
+                const rawText = elem.textContent.replace(/\n/g, '').trim();
+                priceData = JSON.parse(rawText);
+
+                // ✅ もし文字列が含まれていたらもう一度JSON化（2重エンコード対策）
+                if (typeof priceData === "string") {
+                    priceData = JSON.parse(priceData);
+                }
+
+                console.log("✅ 最終パース後 priceData:", priceData);
+            } catch (err) {
+                console.error("❌ JSON解析失敗:", err);
+                return;
+            }
+
+            // ✅ データ検証
+            if (!Array.isArray(priceData) || priceData.length === 0) {
+                console.warn("⚠️ priceDataが空:", priceData);
+                canvas.insertAdjacentHTML("beforebegin", "<p class='text-center text-muted'>価格データがありません。</p>");
+                return;
+            }
+
+            // ✅ 日付＆価格配列を作成
+            const labels = priceData.map(p => p.date);
+            const prices = priceData.map(p => parseFloat(p.price));
+            const threshold = parseFloat("{{ product.threshold_price|default:'0' }}") || 0;
+
+            console.log("📈 labels:", labels);
+            console.log("📊 prices:", prices);
+
+            const datasets = [{
+                label: "価格（円）",
+                data: prices,
+                borderColor: "rgba(195, 86, 86, 1)",
+                backgroundColor: "rgba(195, 86, 86, 0.15)",
+                borderWidth: 2,
+                fill: true,
+                tension: 0.25,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }];
+
+            if (threshold > 0) {
+                datasets.push({
+                    label: "買い時価格",
+                    data: Array(labels.length).fill(threshold),
+                    borderColor: "rgba(247, 203, 110, 1)",
+                    borderDash: [5, 4],
+                    pointRadius: 0,
+                    fill: false
+                });
+            }
+
+            // ✅ Chart.js描画
+            new Chart(canvas.getContext("2d"), {
+                type: "line",
+                data: {
+                    labels,
+                    datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "日付"
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "価格（円）"
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+    </script>
+
+</div>
+{% endblock %}

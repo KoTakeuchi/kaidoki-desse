@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}商品一覧{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">商品一覧</h3>
+
+    {% if products %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for product in products %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                {% if product.url %}
+                <img src="{{ product.url }}" alt="{{ product.product_name }}" class="card-img-top"
+                    style="object-fit: cover; height: 180px;">
+                {% else %}
+                <img src="{% static 'images/no_image.png' %}" alt="no_image" class="card-img-top"
+                    style="object-fit: cover; height: 180px;">
+                {% endif %}
+
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ product.product_name }}
+                        {% if product.is_kaidoki %}
+                        <span class="badge bg-success ms-2">買い時！</span>
+                        {% endif %}
+                    </h5>
+                    <p class="text-muted mb-1">カテゴリ：{{ product.category.category_name }}</p>
+                    <p class="text-muted mb-1">最新価格：¥{{ product.latest_price|default:"-" }}</p>
+                    <p class="text-muted mb-1">買い時価格：¥{{ product.threshold_price|default:"未設定" }}</p>
+                </div>
+
+                <!-- <div class="card-footer text-center">
+                    <a href="{% url 'main:product_detail' product.id %}"
+                        class="btn btn-outline-primary btn-sm w-75">詳細を見る</a>
+                </div> -->
+                <div class="card-footer text-center">
+                    {% if product.id %}
+                    <a href="{% url 'main:product_detail' product.id %}"
+                        class="btn btn-outline-primary btn-sm">詳細を見る</a>
+                    {% else %}
+                    <span class="text-muted small">詳細リンクなし</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>登録された商品はありません。</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">カテゴリ一覧</h2>
+        <a href="{% url 'main:category_create' %}" class="btn btn-primary">＋ 新規カテゴリ登録</a>
+    </div>
+
+    {% if categories %}
+    <div class="row">
+        {% for category in categories %}
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-3">
+                        <a href="{% url 'main:product_list_by_category' category.id %}"
+                            class="text-decoration-none text-dark fw-semibold">
+                            {{ category.category_name }}
+                        </a>
+                    </h5>
+
+                    {% if category.is_global %}
+                    <span class="badge bg-secondary">共通カテゴリ</span>
+                    {% else %}
+                    <span class="badge bg-primary">自分のカテゴリ</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-light border text-center" role="alert">
+        カテゴリが登録されていません。
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

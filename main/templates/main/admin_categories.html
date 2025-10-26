@@ -1,0 +1,57 @@
+<!-- 実行ディレクトリ: I:\school\kaidoki-desse\main\templates\main\admin_categories.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4" style="max-width:720px;">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold mb-0 me-2 text-danger">⚙ 共通カテゴリ管理</h2>
+        <span class="text-muted small">（全ユーザー共有カテゴリの管理）</span>
+    </div>
+
+    <!-- ✅ 共通カテゴリ一覧 -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-light fw-semibold">
+            共通カテゴリ一覧
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for cat in common_categories %}
+            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                <span class="fw-semibold">{{ cat.category_name }}</span>
+                <div class="d-flex align-items-center">
+                    <form method="POST" class="d-flex align-items-center me-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="edit_id" value="{{ cat.id }}">
+                        <input type="text" name="new_name" placeholder="新しい名前" class="form-control form-control-sm w-auto me-2" style="width: 250px;">
+                        <button type="submit" class="btn btn-sm text-white" style="background-color:#C35656;">✏ 変更</button>
+                    </form>
+                    <form method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_id" value="{{ cat.id }}">
+                        <button type="submit" class="btn btn-sm text-white" style="background-color:#555;">🗑 削除</button>
+                    </form>
+                </div>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted">共通カテゴリが登録されていません。</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- ✅ 新規追加 -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light fw-semibold">
+            新しい共通カテゴリを追加
+        </div>
+        <div class="card-body">
+            <form method="POST" class="d-flex align-items-center flex-wrap">
+                {% csrf_token %}
+                <input type="text" name="add_name" placeholder="カテゴリ名を入力" class="form-control me-3 mb-2" style="max-width: 250px;" required>
+                <button type="submit" class="btn text-white mb-2" style="background-color:#C35656;">＋ 追加</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary">← 商品一覧へ戻る</a>
+    </div>
+</div>
+{% endblock %}

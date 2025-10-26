@@ -1,0 +1,46 @@
+<!-- 実行ディレクトリ: D:\school\kaidoki-desse\main\templates\main\error_list.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">エラーログ一覧</h2>
+
+    {% if logs %}
+    <table class="table table-striped table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>発生日時</th>
+                <th>ユーザー</th>
+                <th>種別</th>
+                <th>発生箇所</th>
+                <th>詳細</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.occurred_at|date:"Y/m/d H:i" }}</td>
+                <td>{{ log.user.username }}</td>
+                <td>{{ log.type }}</td>
+                <td>{{ log.source }}</td>
+                <td class="text-truncate" style="max-width: 400px;">{{ log.detail|truncatechars:80 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <nav>
+        <ul class="pagination">
+            {% if logs.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ logs.previous_page_number }}">前へ</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">ページ {{ logs.number }} / {{ logs.paginator.num_pages }}</span></li>
+            {% if logs.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ logs.next_page_number }}">次へ</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <p>エラーログはまだ登録されていません。</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+<!-- 実行ディレクトリ: I:\school\kaidoki-desse\templates\auth\login.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5" style="max-width: 400px;">
+    <h2 class="text-center mb-4 fw-bold text-dark">ログイン</h2>
+
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {% for error in form.username.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="mb-3 position-relative">
+            {{ form.password.label_tag }}
+            <div class="input-group">
+                {{ form.password }}
+                <span class="input-group-text toggle-password bi bi-eye-slash"
+                      role="button" data-target="{{ form.password.id_for_label }}"></span>
+            </div>
+            {% for error in form.password.errors %}
+            <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="d-grid mt-3">
+            <button type="submit" class="btn btn-danger">ログイン</button>
+        </div>
+    </form>
+
+    <div class="text-center mt-3">
+        <a href="{% url 'signup' %}">新規登録はこちら</a><br>
+        <a href="{% url 'password_reset' %}">パスワードをお忘れの方</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleIcons = document.querySelectorAll(".toggle-password");
+    toggleIcons.forEach(icon => {
+        icon.addEventListener("click", () => {
+            const input = document.querySelector(`#${icon.dataset.target}`);
+            const type = input.getAttribute("type") === "password" ? "text" : "password";
+            input.setAttribute("type", type);
+            icon.classList.toggle("bi-eye");
+            icon.classList.toggle("bi-eye-slash");
+        });
+    });
+});
+</script>
+{% endblock %}

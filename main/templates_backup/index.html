@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">商品一覧</h2>
+
+    <!-- 検索フォーム -->
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-6">
+            <input type="text" name="q" value="{{ query|default_if_none:'' }}" class="form-control"
+                placeholder="商品名・ショップ名で検索">
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-select">
+                <option value="">すべてのカテゴリ</option>
+                <!-- prettier-ignore-start -->
+                {% for cat in categories %}
+                <option value="{{ cat.id }}"
+                    {% if category_id|default_if_none:'' == cat.id|stringformat:"s" %}selected{% endif %}>
+                    {{ cat.category_name }}
+                </option>
+                {% endfor %}
+                <!-- prettier-ignore-end -->
+
+            </select>
+        </div>
+        <div class="col-md-2 text-end">
+            <button type="submit" class="btn btn-primary w-100">検索</button>
+        </div>
+    </form>
+
+    <!-- 登録ボタン -->
+    <div class="text-end mb-3">
+        <a href="{% url 'main:product_create' %}" class="btn btn-success">＋ 商品登録</a>
+    </div>
+
+    <!-- 商品カード一覧 -->
+    <div class="row g-3">
+        {% for product in products %}
+        <div class="col-md-3 col-sm-6">
+            <div class="card h-100 shadow-sm">
+                <!-- 画像 -->
+                {% if product.image_url and product.image_url != 'None' and product.image_url != 'null' and product.image_url|length > 10 %}
+                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.product_name }}">
+                {% else %}
+                <img src="{% static 'images/no_image.png' %}" class="card-img-top" alt="No image">
+                {% endif %}
+
+
+                <!-- 内容 -->
+                <div class="card-body">
+                    <h5 class="card-title text-truncate" title="{{ product.product_name }}">
+                        {{ product.product_name }}
+                    </h5>
+                    <p class="mb-1 text-muted small">
+                        カテゴリ：{{ product.category.category_name|default:"未分類" }}
+                    </p>
+                    <p class="mb-1">登録価格：¥{{ product.initial_price|default:"-" }}</p>
+                    <p class="mb-2">優先度：
+                        {% if product.priority == "高" %}
+                        <span class="badge bg-danger">高</span>
+                        {% else %}
+                        <span class="badge bg-secondary">普通</span>
+                        {% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'main:product_detail' product.id %}"
+                            class="btn btn-outline-primary btn-sm">詳細</a>
+                        <a href="{% url 'main:product_edit' product.id %}"
+                            class="btn btn-outline-secondary btn-sm">編集</a>
+                        <a href="{% url 'main:product_delete' product.id %}"
+                            class="btn btn-outline-danger btn-sm">削除</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">まだ商品が登録されていません。</p>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
