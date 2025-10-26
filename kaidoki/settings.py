@@ -64,7 +64,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # ✅ process_exceptionが確実に呼ばれるよう最後に置く
-    "main.middleware.ErrorLoggingMiddleware",
+    # "main.middleware.ErrorLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "kaidoki.urls"
@@ -199,6 +199,6 @@ else:
 # 楽天API
 # =============================
 
-RAKUTEN_APP_ID = os.getenv("RAKUTEN_APP_ID","1016082687225252652")
-RAKUTEN_BASE_URL = os.getenv("RAKUTEN_BASE_URL","https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601")
-
+RAKUTEN_APP_ID = os.getenv("RAKUTEN_APP_ID", "1016082687225252652")
+RAKUTEN_BASE_URL = os.getenv(
+    "RAKUTEN_BASE_URL", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601")

@@ -1,83 +1,79 @@
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\utils\rakuten_api.py
-import re
+# ==============================================================
+# ファイル名: rakuten_api.py
+# 所在地: I:\school\kaidoki-desse\main\utils\rakuten_api.py
+# 概要: 楽天APIから商品情報を取得してJSON形式で返す
+# ==============================================================
+
 import requests
 from django.conf import settings
 
 
-def fetch_rakuten_item(rakuten_url):
+def fetch_rakuten_data(item_url: str):
     """
-    楽天商品URLから商品情報を取得
-    - itemCode検索が失敗したら keyword検索に自動フォールバック
-    - 定価は説明文から抽出（見つからなければ販売価格を使用）
+    楽天市場の商品URLから商品情報を取得する。
+    戻り値は product_name / shop_name / itemPrice / image_url を含む辞書。
     """
     try:
-        # URLからshopCodeとitemCode抽出
-        match = re.search(
-            r"item\.rakuten\.co\.jp/([^/]+)/([^/?#]+)", rakuten_url)
-        if not match:
-            return {"error": "楽天市場の商品URL形式ではありません。"}
-        shop_code, item_code = match.groups()
+        base_url = settings.RAKUTEN_BASE_URL
+        app_id = settings.RAKUTEN_APP_ID
 
-        app_id = getattr(settings, "RAKUTEN_APP_ID", None)
-        if not app_id:
-            return {"error": "RAKUTEN_APP_ID が設定されていません。"}
+        # --- URLから itemCode 抽出 ---
+        # 例: https://item.rakuten.co.jp/nissoplus/np-brl23e/
+        import re
+        m = re.search(r"rakuten\.co\.jp/([^/]+)/([^/?#]+)", item_url)
+        if not m:
+            return {"error": "URL形式が不正です。"}
+        shop_code, item_code = m.groups()
+        item_code_full = f"{shop_code}:{item_code}"
 
-        endpoint = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
+        print(
+            f"[RakutenAPI] Primary Request: {base_url} {{'applicationId': '{app_id}', 'shopCode': '{shop_code}', 'itemCode': '{item_code_full}'}}")
 
-        # --- ① itemCode検索 ---
-        params_primary = {
+        # --- ① itemCode指定で検索 ---
+        params = {
             "applicationId": app_id,
             "shopCode": shop_code,
-            "itemCode": f"{shop_code}:{item_code}",
+            "itemCode": item_code_full,
             "format": "json",
             "hits": 1,
         }
-        print("[RakutenAPI] Primary Request:", endpoint, params_primary)
-        res = requests.get(endpoint, params=params_primary, timeout=5)
-        print("[RakutenAPI] Response:", res.status_code)
+        r = requests.get(base_url, params=params)
+        print(f"[RakutenAPI] Response: {r.status_code}")
 
-        # --- ② itemCode検索が400なら keyword検索に切り替え ---
-        if res.status_code != 200:
-            print("[RakutenAPI] Fallback to keyword search")
-            params_keyword = {
-                "applicationId": app_id,
-                "keyword": item_code,
-                "format": "json",
-                "hits": 1,
-            }
-            res = requests.get(endpoint, params=params_keyword, timeout=5)
-            print("[RakutenAPI] Keyword Response:", res.status_code)
+        # --- 成功時 ---
+        if r.status_code == 200:
+            data = r.json()
+            if data.get("Items"):
+                item = data["Items"][0]["Item"]
+                return {
+                    "product_name": item.get("itemName"),
+                    "shop_name": item.get("shopName"),
+                    "itemPrice": item.get("itemPrice"),
+                    "image_url": item.get("mediumImageUrls", [{}])[0].get("imageUrl"),
+                }
 
-        if res.status_code != 200:
-            return {"error": f"楽天APIエラー: ステータスコード {res.status_code}"}
-
-        data = res.json()
-        if not data.get("Items"):
-            return {"error": "商品情報が見つかりませんでした。"}
-
-        item = data["Items"][0]["Item"]
-
-        # --- 各項目抽出 ---
-        product_name = item.get("itemName", "")
-        shop_name = item.get("shopName", "")
-        initial_price = item.get("itemPrice", None)
-        image_url = item.get("mediumImageUrls", [{}])[0].get("imageUrl", "")
-
-        # --- 定価（説明文から抽出） ---
-        caption = (item.get("catchcopy", "") or "") + \
-            " " + (item.get("itemCaption", "") or "")
-        match_price = re.search(r"(定価|希望小売価格|通常価格)[^\d]*(\d{3,6})円?", caption)
-        regular_price = int(match_price.group(
-            2)) if match_price else initial_price
-
-        return {
-            "product_name": product_name,
-            "shop_name": shop_name,
-            "regular_price": regular_price,
-            "initial_price": initial_price,
-            "image_url": image_url,
+        # --- ② itemCodeで取れなければ keyword 検索 ---
+        print("[RakutenAPI] Fallback to keyword search")
+        params = {
+            "applicationId": app_id,
+            "keyword": item_code,
+            "format": "json",
+            "hits": 1,
         }
+        r2 = requests.get(base_url, params=params)
+        if r2.status_code == 200:
+            data = r2.json()
+            if data.get("Items"):
+                item = data["Items"][0]["Item"]
+                return {
+                    "product_name": item.get("itemName"),
+                    "shop_name": item.get("shopName"),
+                    "itemPrice": item.get("itemPrice"),
+                    "image_url": item.get("mediumImageUrls", [{}])[0].get("imageUrl"),
+                }
+
+        return {"error": f"楽天APIから商品情報を取得できません（{r.status_code}）"}
 
     except Exception as e:
-        print("[RakutenAPI] Error:", e)
-        return {"error": f"API通信エラー: {str(e)}"}
+        print("[RakutenAPI] Exception:", e)
+        return {"error": str(e)}

@@ -8,7 +8,6 @@ from . import (
     views_dashboard,
     views_admin_notifications,
 )
-from django.contrib.auth import views as auth_views
 
 app_name = "main"
 
@@ -29,8 +28,9 @@ urlpatterns = [
          views_product.product_delete, name="product_delete"),
 
     # --- 楽天API ---
-    path("api/fetch_rakuten_item/", views_product.fetch_rakuten_info,
-         name="fetch_rakuten_info"),
+    path("api/fetch_rakuten_item/", views_product.fetch_rakuten_item,
+         name="fetch_rakuten_item"),
+
     # --- カテゴリ ---
     path("categories/", views_category.category_list, name="category_list"),
     path("categories/create/", views_category.category_create,

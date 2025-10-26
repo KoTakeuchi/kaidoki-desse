@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load form_tags %}
 {% load django_bootstrap5 %}
 
@@ -18,8 +19,6 @@
   border-color: #C35656;
   box-shadow: 0 0 0 0.2rem rgba(195, 86, 86, 0.15);
 }
-
-/* ✅ 編集不可項目をグレーアウト表示 */
 .form-control[disabled],
 .form-select[disabled] {
   background-color: #f7f7f7 !important;
@@ -28,7 +27,6 @@
   border-color: #ddd !important;
   opacity: 1 !important;
 }
-
 .url-help {
   font-size: 0.9rem;
   color: #777;
@@ -83,8 +81,34 @@ input[type="radio"]:checked + .flag-option {
 .btn-submit:hover {
   background-color: #a83f3f;
 }
-.text-danger.small {
-  margin-top: 4px;
+.text-danger.small { margin-top: 4px; }
+
+/* ✅ API通信ステータス */
+#api-status-message {
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 8px;
+  display: none;
+}
+#api-status-message.success {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+#api-status-message.error {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+/* ✅ プレビュー画像 */
+#preview-image {
+  width: 400px;
+  height: 400px;
+  object-fit: contain;
+  background-color: #fff;
+  border: 2px solid #eee;
+  border-radius: 10px;
 }
 </style>
 
@@ -98,20 +122,28 @@ input[type="radio"]:checked + .flag-option {
         {% csrf_token %}
         <div class="card shadow-sm p-4">
 
-            <!-- ✅ 商品URL（編集時は非表示） -->
+            <!-- ✅ 商品URL -->
             {% if not is_edit %}
             <div class="mb-4">
                 <label class="form-label fw-bold">商品URL</label>
                 {{ form.product_url }}
                 <div class="url-help">
-                    楽天市場 <strong>https://item.rakuten.co.jp/</strong> から登録する商品ページのURLをコピペしてください。
+                    楽天市場 <strong>https://item.rakuten.co.jp/</strong> の商品URLを入力してください。
                 </div>
                 <div id="url-error" class="text-danger small mt-1"></div>
             </div>
             {% endif %}
 
+            <!-- ✅ API通信ステータス -->
+            <div id="api-status-message" class="mt-2 small text-center"></div>
+
+            <!-- ✅ プレビュー画像 -->
+            <div class="text-center mt-3">
+                <img id="preview-image" src="{% static 'images/noimage.png' %}" alt="商品画像プレビュー">
+            </div>
+
             <!-- 商品名・ショップ名 -->
-            <div class="row mb-3">
+            <div class="row mb-3 mt-4">
                 <div class="col-md-6">
                     <label class="form-label fw-bold">商品名</label>
                     {{ form.product_name }}
@@ -122,46 +154,19 @@ input[type="radio"]:checked + .flag-option {
                 </div>
             </div>
 
-            <!-- ✅ 通知条件（新規のみ表示） -->
-            {% if not is_edit and form.flag_type %}
-            <div class="mb-4">
-                <label class="form-label fw-bold">通知条件</label>
-                <div class="flag-group">
-                    <label>
-                        <input type="radio" name="flag_type" value="price" hidden>
-                        <div class="flag-option">買い時価格</div>
-                    </label>
-                    <label>
-                        <input type="radio" name="flag_type" value="rate" hidden>
-                        <div class="flag-option">割引率</div>
-                    </label>
-                    <label>
-                        <input type="radio" name="flag_type" value="drop" hidden>
-                        <div class="flag-option">最安値</div>
-                    </label>
-                </div>
-                <div class="form-text text-muted mt-1">
-                    どの条件で「買い時」と判断するかを選択してください。
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- 価格入力 -->
+            <!-- 価格群 -->
             <div class="price-group mb-4">
                 <div class="price-card">
                     <label>定価</label>
                     {{ form.regular_price }}
-                    <div class="text-muted small">未設定</div>
                 </div>
                 <div class="price-card">
                     <label>登録時価格</label>
                     {{ form.initial_price }}
-                    <div class="text-muted small">未設定</div>
                 </div>
                 <div class="price-card">
                     <label>買い時価格</label>
                     {{ form.threshold_price }}
-                    <div class="text-muted small">未設定</div>
                 </div>
             </div>
 
@@ -171,7 +176,6 @@ input[type="radio"]:checked + .flag-option {
                 {{ form.priority }}
             </div>
 
-            <!-- 登録ボタン -->
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-submit">
                     {% if is_edit %}更新する{% else %}登録する{% endif %}
@@ -182,76 +186,76 @@ input[type="radio"]:checked + .flag-option {
 </div>
 
 {% if not is_edit %}
-<!-- ✅ 新規登録時のみ：楽天API自動入力・通知条件動作スクリプト -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const urlInput = document.getElementById("id_product_url");
-  const errorArea = document.getElementById("url-error");
+document.addEventListener("DOMContentLoaded", function () {
+  const urlInput = document.querySelector("input[name='product_url']");
+  const previewImage = document.querySelector("#preview-image");
+  const apiStatus = document.querySelector("#api-status-message");
+  const errorArea = document.querySelector("#url-error");
 
-  // 楽天API連携
-  urlInput.addEventListener("change", async () => {
+  console.log("✅ JS Loaded: fetch_rakuten_item ready");
+
+  if (!urlInput) {
+    console.error("❌ URL入力フィールドが見つかりません");
+    return;
+  }
+
+  const triggerFetch = async () => {
     const url = urlInput.value.trim();
     if (!url) return;
 
+    console.log("📡 Fetch start:", url);
+
+    apiStatus.style.display = "none";
     errorArea.textContent = "";
-    urlInput.classList.remove("is-invalid");
 
     try {
-      const res = await fetch(`/main/api/fetch_rakuten_item/?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
+      const response = await fetch(`/main/api/fetch_rakuten_item/?url=${encodeURIComponent(url)}`);
+      const data = await response.json();
 
-      if (!res.ok || data.error) {
-        errorArea.textContent = data.error || "楽天市場の商品ページではありません。";
-        urlInput.classList.add("is-invalid");
-        return;
-      }
+      console.log("✅ RakutenAPI Response:", data);
 
-      // 自動入力
-      document.getElementById("id_product_name").value = data.product_name || "";
-      document.getElementById("id_shop_name").value = data.shop_name || "";
-      document.getElementById("id_regular_price").value = data.regular_price || "";
-      document.getElementById("id_initial_price").value = data.initial_price || "";
-      document.getElementById("id_image_url").value = data.image_url || "";
+      if (!response.ok || data.error) throw new Error(data.error || `HTTP ${response.status}`);
 
-    } catch (e) {
-      errorArea.textContent = "通信エラーが発生しました。";
+      // --- 値をフォームにセット（name属性ベースで安全） ---
+      const setValue = (name, value) => {
+        const field = document.querySelector(`[name='${name}']`);
+        if (field) field.value = value || "";
+      };
+
+      setValue("product_name", data.product_name);
+      setValue("shop_name", data.shop_name);
+      setValue("regular_price", data.regular_price);
+      setValue("initial_price", data.initial_price);
+
+      // --- 画像更新 ---
+      previewImage.src = data.image_url || "{% static 'images/noimage.png' %}";
+
+      // --- 成功メッセージ ---
+      apiStatus.textContent = "✅ 楽天API通信成功（商品情報を取得しました）";
+      apiStatus.className = "mt-2 small text-center success";
+      apiStatus.style.display = "block";
+
+    } catch (err) {
+      console.error("❌ Fetch Error:", err);
+      previewImage.src = "{% static 'images/noimage.png' %}";
+      apiStatus.textContent = "⚠️ 楽天API通信に失敗しました。";
+      apiStatus.className = "mt-2 small text-center error";
+      apiStatus.style.display = "block";
     }
-  });
+  };
 
-  // 通知条件動的切り替え
-  const flagRadios = document.querySelectorAll("input[name='flag_type']");
-  const thresholdInput = document.getElementById("id_threshold_price");
-  const thresholdLabel = thresholdInput.closest(".price-card").querySelector("label");
-
-  const selectDiscount = document.createElement("select");
-  selectDiscount.classList.add("form-select");
-  for (let i = 5; i <= 95; i += 5) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = `${i}% 割引`;
-    selectDiscount.appendChild(opt);
-  }
-
-  flagRadios.forEach(radio => {
-    radio.addEventListener("change", e => {
-      const type = e.target.value;
-
-      thresholdInput.style.display = "none";
-      selectDiscount.remove();
-      thresholdLabel.textContent = "買い時価格";
-
-      if (type === "price") {
-        thresholdInput.style.display = "block";
-        thresholdLabel.textContent = "買い時価格";
-      } else if (type === "rate") {
-        thresholdLabel.textContent = "割引率";
-        thresholdInput.after(selectDiscount);
-      } else if (type === "drop") {
-        thresholdLabel.textContent = "最安値（入力不要）";
-      }
-    });
+  // ✅ URL入力の確定時イベント
+  urlInput.addEventListener("change", triggerFetch);
+  urlInput.addEventListener("blur", triggerFetch);
+  urlInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      triggerFetch();
+    }
   });
 });
 </script>
+
 {% endif %}
 {% endblock %}

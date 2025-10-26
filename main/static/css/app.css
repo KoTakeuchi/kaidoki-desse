@@ -271,6 +271,31 @@ input[type="radio"]:checked + .flag-option {
   border-radius: 10px;
   transition: 0.2s;
 }
+
 .btn-submit:hover {
   background-color: #a83f3f;
+}
+.alert {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+
+.alert-info {
+  background-color: #e7f1ff;
+  border-color: #b6d4fe;
+  color: #084298;
+}
+
+.alert-success {
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+  color: #0f5132;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+  color: #842029;
 }

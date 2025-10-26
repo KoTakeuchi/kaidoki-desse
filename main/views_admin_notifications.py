@@ -1,4 +1,4 @@
-# 実行ディレクトリ: D:\school\kaidoki-desse\main\views_admin_notifications.py
+
 from django.contrib.auth.decorators import login_required
 from main.models import ErrorLog  # すでに存在しているモデルを利用
 from django.shortcuts import render, get_object_or_404, redirect
