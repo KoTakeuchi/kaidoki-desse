@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}買い時でっせ｜マイページ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/user.css' %}?v={{ STATIC_VERSION }}">
+{% endblock %}
+
+{% block header %}
+<header class="header-bar">
+  <div class="header-inner px-3">
+    <!-- 🔹 左側：アイコン＋タイトル -->
+    <a class="header-brand" href="{% url 'main:product_list' %}">
+      <div class="header-icon-wrapper">
+        <img src="{% static 'images/icon_kaidoki.svg' %}" alt="買い時でっせ">
+      </div>
+      <span class="header-title">買い時でっせ</span>
+    </a>
+
+    <!-- 🔹 右側：ナビゲーションメニュー -->
+    <div class="header-actions">
+      <ul class="navbar-nav ms-auto d-flex align-items-center flex-row gap-3 mb-0">
+
+        <!-- 商品 -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
+            <img src="{% static 'images/icon_product.png' %}" alt="商品" class="nav-icon me-1">商品
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'main:product_create' %}">商品登録</a></li>
+            <li><a class="dropdown-item" href="{% url 'main:product_list' %}">商品一覧</a></li>
+            <li><a class="dropdown-item" href="{% url 'main:category_list' %}">カテゴリ管理</a></li>
+          </ul>
+        </li>
+
+        <!-- 通知 -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
+            <img src="{% static 'images/icon_notification.png' %}" alt="通知" class="nav-icon-small me-1">通知
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'main:notifications' %}">通知一覧</a></li>
+            <li><a class="dropdown-item" href="{% url 'main:flag_setting' %}">通知設定</a></li>
+          </ul>
+        </li>
+
+        <!-- ユーザー -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
+            <img src="{% static 'images/icon_user.png' %}" alt="ユーザー" class="nav-icon me-1">
+            {{ user.username }} さん
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'main:user_edit' %}">ユーザー編集</a></li>
+            <li>
+              <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger"
+                  style="background:none; border:none; width:100%; text-align:left;">
+                  ログアウト
+                </button>
+              </form>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block user_content %}
+<div class="container py-4">
+  {% block page_content %}{% endblock %}
+</div>
+{% endblock %}
