@@ -217,7 +217,7 @@
                                     <p class="small text-muted mb-1">最新価格：¥{{ p.initial_price|default:"-" }}</p>
                                     <p class="small text-muted mb-1">買い時価格：¥{{ p.threshold_price|default:"未設定" }}</p>
                                     <p class="small text-muted mb-0">優先度：
-                                        <span class="badge {% if p.priority == '高' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        <span class="badge {% if p.priority == '高' %}badge-priority-high{% else %}badge-priority-normal{% endif %}">
                                             {{ p.priority }}
                                         </span>
                                     </p>

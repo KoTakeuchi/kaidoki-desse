@@ -95,7 +95,7 @@ body {
 }
 
 .header-actions .nav-link:hover {
-    transform: scale(1.15);
+    transform: scale(1.05);
     opacity: 1;
 }
 
@@ -804,4 +804,63 @@ select.form-select {
 select.form-select option {
     padding: 6px;
     /* 選択肢の縦余白を確保 */
+}
+
+/* ================================================
+   ✅ 通知アイコン・バッジ統一（ヘッダー右上）
+   ================================================ */
+
+
+/* 通知数の赤丸（メインカラーに統一） */
+.notification-badge,
+.nav-link .badge {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+    border: 1px solid #fff !important;
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border-radius: 50% !important;
+    padding: 2px 4px !important;
+    min-width: 22px !important;
+    min-height: 22px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ================================================
+   ✅ 優先度バッジのカラー統一（商品カード内）
+   ================================================ */
+
+/* 優先度：高 → メインカラー */
+.badge-priority-high {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding: 0.35em 0.75em !important;
+}
+
+/* 優先度：普通 → アクセントカラー */
+.badge-priority-normal {
+    /* background-color: var(--accent) !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+    padding: 0.35em 0.75em !important; */
+    font-weight: 500 !important;
+
+}
+
+/* 共通hover */
+.badge-priority-high:hover,
+.badge-priority-normal:hover {
+    opacity: 0.85;
+}
+
+/* ================================================
+   ✅ 在庫バッジ文字色を白に統一
+   ================================================ */
+.badge.bg-secondary,
+.badge.bg-warning {
+    color: #fff !important;
 }

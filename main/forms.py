@@ -12,15 +12,25 @@ from .models import Product, Category, NotificationSetting, UserNotificationSett
 User = get_user_model()
 
 
-# ============================================================
-# 商品登録・編集フォーム
-# ============================================================
-
-
 class ProductForm(forms.ModelForm):
     """商品登録・編集フォーム（複数カテゴリ＋楽天URL＋通知フラグ対応）"""
 
-    # ① 商品名（必須）
+    # ① 商品URL（楽天市場のみ）
+    product_url = forms.URLField(
+        label="商品URL",
+        required=True,
+        widget=forms.URLInput(attrs={
+            "placeholder": "https://item.rakuten.co.jp/ショップ名/商品コード/",
+            "class": "form-control",
+            "id": "id_product_url",
+        }),
+        error_messages={
+            "required": "商品URLを入力してください。",
+            "invalid": "正しいURLを入力してください。",
+        },
+    )
+
+    # ② 商品名（必須）
     product_name = forms.CharField(
         label="商品名",
         required=True,
@@ -30,7 +40,7 @@ class ProductForm(forms.ModelForm):
         error_messages={"required": "商品名を入力してください。"},
     )
 
-    # ② 定価
+    # ③ 定価
     regular_price = forms.DecimalField(
         label="定価",
         required=False,
@@ -42,7 +52,7 @@ class ProductForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ③ 登録時価格
+    # ④ 登録時価格
     initial_price = forms.DecimalField(
         label="登録時価格",
         required=False,
@@ -54,7 +64,7 @@ class ProductForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ④ 買い時価格
+    # ⑤ 買い時価格
     threshold_price = forms.DecimalField(
         label="買い時価格（この金額以下で通知）",
         required=False,
@@ -66,7 +76,7 @@ class ProductForm(forms.ModelForm):
         widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ⑤ カテゴリ（複数選択）
+    # ⑥ カテゴリ（複数選択）
     categories = forms.ModelMultipleChoiceField(
         queryset=Category.objects.none(),
         required=False,
@@ -118,10 +128,7 @@ class ProductForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields["flag_type"].disabled = True
 
-        # --- 商品URL説明補助 ---
-        self.fields["product_url"].widget.attrs.update({
-            "placeholder": "https://item.rakuten.co.jp/カテゴリ名/商品名",
-        })
+        # --- 商品URL補助文 ---
         self.fields["product_url"].help_text = (
             "楽天市場（https://item.rakuten.co.jp/）の商品URLを貼り付けてください。"
         )
@@ -139,8 +146,7 @@ class ProductForm(forms.ModelForm):
             raise ValidationError("ユーザー情報が取得できません。")
 
         existing = Product.objects.filter(
-            user=self.user, product_url=product_url
-        )
+            user=self.user, product_url=product_url)
         if self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
 
@@ -152,6 +158,7 @@ class ProductForm(forms.ModelForm):
     # ============================================================
     # 総合バリデーション（価格関係・フラグ依存）
     # ============================================================
+
     def clean(self):
         cleaned_data = super().clean()
         regular_price = cleaned_data.get("regular_price")

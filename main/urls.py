@@ -1,5 +1,7 @@
 # 実行ディレクトリ: I:\school\kaidoki-desse\main\urls.py
 from django.urls import path
+
+from main import views_api
 from . import (
     views,
     views_flag,
@@ -60,7 +62,7 @@ urlpatterns = [
          views_product.product_delete, name="product_delete"),
 
     # --- 楽天API ---
-    path("fetch_rakuten_item/", views_api.fetch_rakuten_item,
+    path("api/fetch_rakuten_item/", views_api.fetch_rakuten_item,
          name="fetch_rakuten_item"),
     path("api/categories/", views_category.api_category_list,
          name="api_category_list"),

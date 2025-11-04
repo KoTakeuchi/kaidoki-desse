@@ -222,13 +222,13 @@ select:focus {
 }
 
 /* ✅ 商品一覧ページのカードホバーはアニメ削除 */
-.page-products .card:hover {
+/* .page-products .card:hover {
   transform: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
+} */
 
 /* 通常カードのホバー */
-.card:hover {
+.product-list-wrapper .product-card:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

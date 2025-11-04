@@ -4,7 +4,7 @@ from PIL import Image
 
 # 入力・出力パス
 input_path = r"I:\school\kaidoki-desse\main\static\images\no_image.png"
-output_path = r"I:\school\kaidoki-desse\main\static\images\noimage.png"
+output_path = r"I:\school\kaidoki-desse\main\static\images\no_image.png"
 
 # 画像を開く
 img = Image.open(input_path).convert("RGB")

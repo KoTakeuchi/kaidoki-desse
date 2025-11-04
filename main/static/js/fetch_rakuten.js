@@ -49,13 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             // --- 通信成功だが商品情報なし or 不正 ---
             else {
-                previewImage.src = "/static/images/noimage.png";
+                previewImage.src = "/static/images/no_image.png";
                 messageBox.textContent = data.error || "商品情報を取得できませんでした。";
                 messageBox.className = "alert alert-danger mt-2"; // 赤背景
             }
         } catch (error) {
             // --- 通信失敗時 ---
-            previewImage.src = "/static/images/noimage.png";
+            previewImage.src = "/static/images/no_image.png";
             messageBox.textContent = "楽天API通信中にエラーが発生しました。";
             messageBox.className = "alert alert-danger mt-2";
         }

@@ -40,7 +40,7 @@ urlpatterns = [
         name="logout",
     ),
 
-    # --- パスワードリセット（関数ベース＋Django標準画面構成） ---
+    # --- パスワードリセット ---
     path("password_reset/", custom_password_reset_view, name="password_reset"),
     path(
         "password_reset/done/",
@@ -65,7 +65,13 @@ urlpatterns = [
     ),
 ]
 
+
 # --- メディアファイル設定 ---
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
+
+# --- 静的ファイル設定（★追加）---
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL,
+                          document_root=settings.STATICFILES_DIRS[0])

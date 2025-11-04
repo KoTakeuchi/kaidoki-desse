@@ -98,7 +98,7 @@ USE_TZ = True
 
 # ===== 静的ファイル =====
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     BASE_DIR / "main" / "static",
 ]

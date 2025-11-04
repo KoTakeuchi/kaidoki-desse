@@ -4,7 +4,6 @@
 {% block body_class %}product-form-page{% endblock %}
 
 {% block page_content %}
-<link rel="stylesheet" href="{% static 'css/product_form.css' %}">
 
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -41,7 +40,7 @@
       <!-- ✅ 画像プレビュー（編集時は既存画像） -->
       <div class="text-center my-3">
         <img id="preview-image"
-             src="{% if is_edit and product.image_url %}{{ product.image_url }}{% else %}{% static 'images/noimage.png' %}{% endif %}"
+             src="{% if is_edit and product.image_url %}{{ product.image_url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
              alt="商品画像プレビュー">
       </div>
 
@@ -156,5 +155,8 @@
   </form>
 </div>
 
+<script>
+  const FETCH_RAKUTEN_URL = "{% url 'main:fetch_rakuten_item' %}";
+</script>
 <script src="{% static 'js/product_form.js' %}"></script>
 {% endblock %}

@@ -428,13 +428,6 @@ def product_detail(request, pk):
 # ▼ 楽天API関連ビュー
 # =====================================================
 
-
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
-
-
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
-
-
 def fetch_rakuten_item(request):
     """
     楽天商品URLからAPI経由で商品情報を取得
@@ -487,12 +480,17 @@ def fetch_rakuten_item(request):
         # --- 画像URL整形 ---
         if item.get("mediumImageUrls"):
             raw_url = item["mediumImageUrls"][0]["imageUrl"]
-            if "?_ex=" in raw_url:
-                image_url = raw_url.split("?")[0] + "?_ex=300x300"
+            # すでに _ex パラメータがある場合はそのまま利用
+            if "_ex=" in raw_url:
+                image_url = raw_url
             else:
-                image_url = raw_url + "?_ex=300x300"
+                # クエリを削除し、?ではなく&_ex=を安全に追加
+                if "?" in raw_url:
+                    image_url = raw_url.split("?")[0] + "&_ex=300x300"
+                else:
+                    image_url = raw_url + "?_ex=300x300"
         else:
-            image_url = "/static/images/noimage.png"
+            image_url = "/static/images/no_image.png"
 
         # --- 価格を数値化 ---
         try:
