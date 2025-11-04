@@ -1,0 +1,160 @@
+{% extends "layout-user.html" %}
+{% load static %}
+{% load django_bootstrap5 %}
+{% block body_class %}product-form-page{% endblock %}
+
+{% block page_content %}
+<link rel="stylesheet" href="{% static 'css/product_form.css' %}">
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{% if is_edit %}商品編集{% else %}新規商品登録{% endif %}</h2>
+    <a href="{% url 'main:product_list' %}" class="btn btn-secondary">一覧へ戻る</a>
+  </div>
+
+  <!-- ✅ 登録・編集を切り替え -->
+  <form method="POST"
+        action="{% if is_edit %}{% url 'main:product_edit' pk=product.id %}{% else %}{% url 'main:product_create' %}{% endif %}"
+        novalidate>
+    {% csrf_token %}
+    <div class="card shadow-sm p-4">
+
+      {% if not is_edit %}
+      <!-- 商品URL -->
+      <div class="mb-3">
+        <label class="form-label section-title">商品URL</label>
+        {{ form.product_url }}
+        {% if form.product_url.errors %}
+        <div class="error-text">{{ form.product_url.errors.0 }}</div>
+        {% endif %}
+        <div class="mt-1 text-muted small">
+          楽天市場 <a href="https://item.rakuten.co.jp/" target="_blank"
+              class="text-decoration-underline text-primary">https://item.rakuten.co.jp/</a>
+          の商品URLを入力してください。
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- APIステータス表示 -->
+      <div id="api-status-message" class="mt-2 small text-center"></div>
+
+      <!-- ✅ 画像プレビュー（編集時は既存画像） -->
+      <div class="text-center my-3">
+        <img id="preview-image"
+             src="{% if is_edit and product.image_url %}{{ product.image_url }}{% else %}{% static 'images/noimage.png' %}{% endif %}"
+             alt="商品画像プレビュー">
+      </div>
+
+      <!-- 商品名 / ショップ名 / 登録時価格 -->
+      <div class="row g-3 mb-2">
+        <div class="col-md-6">
+          <label class="form-label section-title">商品名</label>
+          {{ form.product_name }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label section-title">ショップ名</label>
+          {{ form.shop_name }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label section-title">登録時価格</label>
+          <div class="yen-group">
+            {{ form.initial_price }}<span>円</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ カテゴリ（複数選択対応） -->
+      <div class="mb-3">
+        <label class="form-label section-title">カテゴリ（複数選択可）</label>
+        <select name="categories" id="id_categories" class="form-select" multiple>
+          {% for cat in global_categories %}
+            {% if cat.category_name != "未分類" %}
+              <option value="{{ cat.id }}"
+                {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
+                [共通] {{ cat.category_name }}
+              </option>
+            {% endif %}
+          {% endfor %}
+          {% for cat in user_categories %}
+            {% if cat.category_name != "未分類" %}
+              <option value="{{ cat.id }}"
+                {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
+                {{ cat.category_name }}
+              </option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- 優先度スイッチ -->
+      <div class="mb-4">
+        <div class="form-label section-title">優先度</div>
+        <div class="d-flex align-items-center gap-3">
+          <div class="form-switch d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="prioritySwitch"
+              {% if form.priority.value == "高" %}checked{% endif %}>
+            <label for="prioritySwitch" class="form-check-label fw-bold ms-2" id="priorityLabel">
+              {% if form.priority.value == "高" %}高{% else %}普通{% endif %}
+            </label>
+          </div>
+          <div class="text-muted small" id="priorityDesc">
+            24時間ごとに最新価格を取得。アプリ通知・メール通知なし。
+          </div>
+          <!-- ✅ hidden field明示 -->
+          <input type="hidden" name="priority" id="id_priority" value="{{ form.priority.value }}">
+        </div>
+      </div>
+
+      <!-- 通知条件 -->
+      <div class="mb-4">
+        <div class="form-label section-title">通知条件</div>
+        <div class="flag-buttons">
+          <div class="flag-btn {% if form.flag_type.value == 'buy_price' %}active{% endif %}"
+            data-type="buy_price"
+            data-desc="指定価格以下になったとき通知します。最も基本的な通知方法です。">買い時価格</div>
+          <div class="flag-btn {% if form.flag_type.value == 'percent_off' %}active{% endif %}"
+            data-type="percent_off"
+            data-desc="定価から指定％OFFになったとき通知します。セールやイベント検知に便利です。">割引率</div>
+          <div class="flag-btn {% if form.flag_type.value == 'lowest_price' %}active{% endif %}"
+            data-type="lowest_price"
+            data-desc="登録以来の最安値を更新したら通知します。価格履歴に基づいた通知です。">最安値</div>
+          <div class="flag-desc-box" id="flagDesc">ボタンにマウスを乗せると説明が表示されます。</div>
+        </div>
+
+        {% if form.flag_type.errors %}
+          <div class="error-text">{{ form.flag_type.errors.0 }}</div>
+        {% endif %}
+
+        <div class="row g-3 mt-2">
+          <div class="col-md-3" id="wrap_regular" {% if form.flag_type.value == 'percent_off' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <label class="form-label section-title">定価</label>
+            <div class="yen-group">{{ form.regular_price }}<span>円</span></div>
+          </div>
+
+          <div class="col-md-3" id="wrap_threshold" {% if form.flag_type.value == 'buy_price' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <label class="form-label section-title">買い時価格</label>
+            <div class="yen-group">{{ form.threshold_price }}<span>円</span></div>
+          </div>
+
+          <div class="col-md-3" id="wrap_percent" {% if form.flag_type.value == 'percent_off' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
+            <label class="form-label section-title">割引率</label>
+            {{ form.flag_value }}
+          </div>
+        </div>
+
+        <input type="hidden" name="flag_type" id="flagTypeHidden" value="{{ form.flag_type.value }}">
+      </div>
+
+      <!-- 登録・更新ボタン -->
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-danger px-4"
+          style="background:#C35656;border:none;">
+          {% if is_edit %}更新する{% else %}登録する{% endif %}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="{% static 'js/product_form.js' %}"></script>
+{% endblock %}

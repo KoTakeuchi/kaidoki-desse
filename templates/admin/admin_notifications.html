@@ -1,0 +1,106 @@
+{% extends "layout-admin.html" %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | 通知ログ{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4">
+  <h2 class="fw-bold mb-4 text-dark">通知ログ</h2>
+
+  <!-- ======================== -->
+  <!-- 🔍 検索フォーム -->
+  <!-- ======================== -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label class="form-label fw-semibold text-secondary">キーワード</label>
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・商品名・内容">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-semibold text-secondary">開始日</label>
+      <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-semibold text-secondary">終了日</label>
+      <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+    </div>
+    <div class="col-md-2 text-end">
+      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+    </div>
+  </form>
+
+  <!-- ======================== -->
+  <!-- 📋 通知ログ一覧 -->
+  <!-- ======================== -->
+  {% if logs %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
+      <thead class="table-light">
+        <tr class="text-secondary">
+          <th>ID</th>
+          <th>ユーザー</th>
+          <th>商品</th>
+          <th>内容</th>
+          <th>日時</th>
+          <th>既読</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{{ log.user.username }}</td>
+          <td>{{ log.product.product_name|default:"-" }}</td>
+          <td class="text-truncate" style="max-width: 260px;">{{ log.message }}</td>
+          <td>{{ log.notified_at|date:"Y/m/d H:i" }}</td>
+          <td>
+            {% if log.is_read %}
+              <span class="badge bg-secondary rounded-0">既読</span>
+            {% else %}
+              <span class="badge bg-primary rounded-0" style="background-color:#3CA9A9;">未読</span>
+            {% endif %}
+          </td>
+          <td>
+            <button class="btn btn-sm text-white rounded-0"
+                    style="background-color:#3CA9A9;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#notificationDetailModal{{ log.id }}">
+              詳細
+            </button>
+          </td>
+        </tr>
+
+        <!-- ▼ モーダル -->
+        <div class="modal fade" id="notificationDetailModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 rounded-0">
+              <div class="modal-header" style="background-color:#b4e4e4;">
+                <h5 class="modal-title fw-bold text-dark">通知詳細</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+              </div>
+              <div class="modal-body">
+                <table class="table table-borderless mb-0">
+                  <tr><th class="text-secondary" style="width: 25%;">ID</th><td>{{ log.id }}</td></tr>
+                  <tr><th class="text-secondary">ユーザー</th><td>{{ log.user.username }}</td></tr>
+                  <tr><th class="text-secondary">商品</th><td>{{ log.product.product_name|default:"-" }}</td></tr>
+                  <tr><th class="text-secondary">通知内容</th><td>{{ log.message }}</td></tr>
+                  <tr><th class="text-secondary">送信日時</th><td>{{ log.notified_at|date:"Y/m/d H:i" }}</td></tr>
+                  <tr><th class="text-secondary">既読状態</th>
+                      <td>{% if log.is_read %}既読{% else %}未読{% endif %}</td></tr>
+                </table>
+              </div>
+              <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mt-3">通知ログはまだ登録されていません。</p>
+  {% endif %}
+</div>
+{% endblock %}

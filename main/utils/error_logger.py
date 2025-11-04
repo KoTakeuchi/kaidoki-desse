@@ -25,23 +25,24 @@ def log_error(user=None, type_name=None, source=None, err=None):
         実際の例外オブジェクト
     """
 
-    try:
-        # ErrorLogモデルに記録
-        ErrorLog.objects.create(
-            user=user,
-            type_name=type_name or (
-                type(err).__name__ if err else "UnknownError"),
-            source=source or "unknown",
-            message=str(err) if err else "(no message)",
-            created_at=timezone.now(),
-        )
+    # try:
+    #     # ErrorLogモデルに記録
+    #     ErrorLog.objects.create(
+    #         user=user,
+    #         type_name=type_name or (
+    #             type(err).__name__ if err else "UnknownError"),
+    #         source=source or "unknown",
+    #         message=str(err) if err else "(no message)",
+    #         created_at=timezone.now(),
+    #     )
 
-        print(
-            f"[ErrorLoggingMiddleware] ログ保存完了: "
-            f"{type_name or type(err).__name__} / {source}"
-        )
+    #     print(
+    #         f"[ErrorLoggingMiddleware] ログ保存完了: "
+    #         f"{type_name or type(err).__name__} / {source}"
+    #     )
 
-    except Exception as e:
-        # DBに書き込めない場合も安全に出力
-        print("[ErrorLoggingMiddleware] 保存または送信失敗:", e)
-        print(f"[ErrorLoggingMiddleware] 元エラー: {err}")
+    # except Exception as e:
+    #     # DBに書き込めない場合も安全に出力
+    #     print("[ErrorLoggingMiddleware] 保存または送信失敗:", e)
+    #     print(f"[ErrorLoggingMiddleware] 元エラー: {err}")
+    raise err

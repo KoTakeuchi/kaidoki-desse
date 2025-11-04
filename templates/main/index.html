@@ -1,0 +1,178 @@
+<!-- 実行ディレクトリ: I:\school\kaidoki-desse\main\templates\main\index.html -->
+{% extends "layout-user.html" %}
+{% load static %}
+
+{% block page_content %}
+<div class="container-fluid py-4">
+    <h2 class="mb-4 fw-bold">商品一覧</h2>
+
+    <!-- 🔹 上部ボタン群 -->
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <a href="{% url 'main:product_create' %}" class="btn btn-success me-2">＋ 商品登録</a>
+        <a href="{% url 'main:categories' %}" class="btn btn-outline-primary me-2">カテゴリ編集</a>
+        {% if user.is_staff %}
+        <a href="{% url 'main:admin_categories' %}" class="btn btn-outline-danger">カテゴリ管理</a>
+        {% endif %}
+    </div>
+
+    <!-- =============================
+         🔍 絞り込みブロック
+    ============================== -->
+    <div class="border rounded shadow-sm p-3 mb-3" style="background-color:#f1f3f5;">
+        <form method="get" class="p-3 border rounded" style="background-color:#ffffff;">
+            <input type="hidden" name="current_sort" value="{{ sort }}">
+
+            <!-- 🔹 検索 -->
+            <div class="mb-2">
+                <input type="text" name="q" value="{{ query|default_if_none:'' }}" class="form-control" placeholder="商品名・ショップ名で検索">
+            </div>
+
+            <!-- 🔹 カテゴリ（共通・独自） -->
+            <div class="mb-2">
+                <span class="fw-semibold me-1">カテゴリ(共通)</span><br>
+                {% for cat in common_categories %}
+                <div class="form-check form-check-inline me-1 mb-1">
+                    <input class="form-check-input" type="checkbox" name="category" id="cat_common{{ cat.id }}" value="{{ cat.id }}" {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                    <label class="form-check-label" for="cat_common{{ cat.id }}">{{ cat.category_name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-2">
+                <span class="fw-semibold me-1">カテゴリ(独自)</span><br>
+                {% for cat in custom_categories %}
+                <div class="form-check form-check-inline me-1 mb-1">
+                    <input class="form-check-input" type="checkbox" name="category" id="cat_custom{{ cat.id }}" value="{{ cat.id }}" {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                    <label class="form-check-label" for="cat_custom{{ cat.id }}">{{ cat.category_name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- 🔹 在庫＋優先度 -->
+            <div class="d-flex align-items-center justify-content-between flex-wrap mt-2">
+                <div>
+                    <span class="fw-semibold me-1">在庫</span>
+                    {% for val, label in stock_choices %}
+                    <div class="form-check form-check-inline me-1">
+                        <input class="form-check-input" type="radio" name="stock" id="stock_{{ val }}" value="{{ val }}" {% if stock_filter == val %}checked{% endif %}>
+                        <label class="form-check-label" for="stock_{{ val }}">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="ms-3">
+                    <span class="fw-semibold me-1">優先度</span>
+                    {% for val, label in priority_choices %}
+                    <div class="form-check form-check-inline me-1">
+                        <input class="form-check-input" type="radio" name="priority" id="pri_{{ val }}" value="{{ val }}" {% if priority_filter == val %}checked{% endif %}>
+                        <label class="form-check-label" for="pri_{{ val }}">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 🔹 ボタン -->
+                <div class="ms-auto">
+                    {% if is_filtered %}
+                    <a href="{% url 'main:product_list' %}?sort={{ sort }}" class="btn btn-outline-secondary me-2">クリア</a>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">絞り込み</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- 🏷️ 絞り込みタグ -->
+        <div class="mt-2">
+            {% if query %}<span class="badge bg-primary me-1">{{ query }}</span>{% endif %}
+            {% if stock_filter == "in" %}<span class="badge bg-success me-1">在庫あり</span>{% endif %}
+            {% if stock_filter == "low" %}<span class="badge bg-warning text-dark me-1">在庫わずか</span>{% endif %}
+            {% if stock_filter == "out" %}<span class="badge bg-dark me-1">在庫なし</span>{% endif %}
+            {% if priority_filter != "all" %}<span class="badge bg-danger me-1">優先度：{{ priority_filter }}</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- =============================
+         ⚙️ ソート・登録・削除 行
+    ============================== -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <select name="sort" class="form-select w-auto d-inline" onchange="location.href='?sort='+this.value;">
+                <option value="new" {% if sort == "new" %}selected{% endif %}>新しい順</option>
+                <option value="old" {% if sort == "old" %}selected{% endif %}>古い順</option>
+                <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>安い順</option>
+                <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>高い順</option>
+            </select>
+        </div>
+        <div>
+            <button type="button" id="bulk-delete-btn" class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" style="display:none;">
+                一括削除
+            </button>
+            <a href="{% url 'main:product_create' %}" class="btn btn-success">＋ 商品登録</a>
+        </div>
+    </div>
+
+    <!-- =============================
+         📦 商品カード一覧
+    ============================== -->
+    <div class="row g-3" id="product-list">
+        {% for product in products %}
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="card product-card position-relative h-100 shadow-sm
+                {% if product.is_kaidoki and product.is_low_stock %}
+                    border-3" style="border-color:#000000;" {% elif product.is_kaidoki %} border-danger border-3 {% elif product.is_low_stock %} border-warning border-3 {% else %} border-light {% endif %}" data-href="{% url 'main:product_detail' product.id %}">
+                <input type="checkbox" name="selected_products" value="{{ product.id }}" class="form-check-input position-absolute top-0 start-0 m-2 card-select">
+                <img src="{% static 'images/no_image.png' %}" class="card-img-top" alt="No image">
+
+                <div class="position-absolute top-0 end-0 d-flex flex-column align-items-end m-2">
+                    {% if product.is_kaidoki %}
+                    <span class="badge mb-1" style="background-color:#F8D7DA; color:#7A1E1E;">買い時</span>
+                    {% endif %}
+                    {% if product.is_low_stock %}
+                    <span class="badge" style="background-color:#FFF3CD; color:#8A6D3B;">在庫わずか</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body text-center">
+                    <h5 class="card-title text-truncate">{{ product.product_name }}</h5>
+                    <p class="mb-1 text-muted small">カテゴリ {{ product.category.category_name|default:"未分類" }}</p>
+                    <p class="mb-1">最新価格 ¥{{ product.latest_price|default:"-" }}</p>
+                    <p class="mb-2">優先度
+                        {% if product.priority == "高" %}
+                        <span class="badge bg-danger">高</span>
+                        {% else %}
+                        <span class="badge bg-secondary">普通</span>
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'main:product_edit' product.id %}" class="btn btn-danger w-75">編集</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">商品が登録されていません。</p>
+        {% endfor %}
+    </div>
+
+    <!-- =============================
+         🗑 一括削除モーダル
+    ============================== -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">削除確認</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                </div>
+                <div class="modal-body">選択した商品を削除しますか？</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <form method="post" id="bulk-delete-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">削除する</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% endblock %}

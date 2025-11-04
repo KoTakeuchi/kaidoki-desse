@@ -1,33 +1,53 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
 
 from .views_api import (
-    HealthCheck, ProductViewSet, NotificationEventViewSet, ProductPriceHistoryView,
-    UserNotificationSettingView, CategoryViewSet,
+    HealthCheck,
+    ProductViewSet,
+    NotificationEventViewSet,
+    ProductPriceHistoryView,
+    UserNotificationSettingView,
+    CategoryViewSet,
 )
+from . import views_product  # ✅ 楽天APIビューを追加
 
+
+# === DRFルーター定義 ===
 router = DefaultRouter()
-router.register(r'products', ProductViewSet, basename='product')
-router.register(r'notifications', NotificationEventViewSet,
-                basename='notification')
-router.register(r'categories', CategoryViewSet, basename='category')  # ✅ 追加
+router.register(r"products", ProductViewSet, basename="product")
+router.register(r"notifications", NotificationEventViewSet,
+                basename="notification")
+router.register(r"categories", CategoryViewSet, basename="category")
 
+# === URL定義 ===
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 
-    path('health/', HealthCheck.as_view(), name='api-health'),
-    path('products/<int:product_id>/price-history/', ProductPriceHistoryView.as_view(),
-         name='product-price-history'),
-    path('user/settings/', UserNotificationSettingView.as_view(),
-         name='user-settings'),
+    # --- ヘルスチェック ---
+    path("health/", HealthCheck.as_view(), name="api-health"),
+
+    # --- 商品価格履歴 ---
+    path(
+        "products/<int:product_id>/price-history/",
+        ProductPriceHistoryView.as_view(),
+        name="product-price-history",
+    ),
+
+    # --- ユーザー通知設定 ---
+    path("user/settings/", UserNotificationSettingView.as_view(),
+         name="user-settings"),
+
+    # --- 楽天API ---
+    path("fetch_rakuten_item/", views_product.fetch_rakuten_item,
+         name="fetch_rakuten_item"),  # ✅ 追加
 ]
 
-
+# === JWT認証 ===
 urlpatterns += [
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]

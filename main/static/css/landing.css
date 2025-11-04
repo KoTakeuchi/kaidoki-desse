@@ -1,0 +1,337 @@
+:root {
+    --primary: #C35656;
+    --accent: #F7CB6E;
+    --text-dark: #333;
+    --bg: #fff;
+    --header-h: 80px;
+}
+
+/* ========================
+   全体設定
+   ======================== */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h, 80px) + 10px);
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    background-color: #f7f8f9;
+    background-image: url("/static/images/paper-fibers_header-background-lightpink.png");
+    background-repeat: repeat;
+    background-size: cover;
+    background-attachment: fixed;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* アンカー移動時に固定ヘッダーで隠れないよう補正 */
+.lp-section {
+    scroll-margin-top: var(--header-h);
+}
+
+/* ========================
+   Hero全体（上下均等バランス版）
+   ======================== */
+#section-intro.hero {
+    position: relative;
+    min-height: calc(100vh - var(--header-h));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    overflow: visible;
+
+
+
+    /* ✅ ヘッダー直下から開始し、上下の余白を均等化 */
+    margin-top: var(--header-h);
+    margin-bottom: var(--header-h);
+
+    max-width: 1700px;
+    margin-inline: auto;
+    padding-inline: 2vw;
+    box-sizing: border-box;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    z-index: 0;
+}
+
+/* ========================
+   Carousel領域
+   ======================== */
+#heroCarousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    z-index: 10;
+}
+
+#heroCarousel .carousel-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* ========================
+   Carousel 横スライド（完全同期版）
+   ======================== */
+#heroCarousel.custom-pan .carousel-inner {
+    position: relative;
+    overflow: hidden;
+}
+
+#heroCarousel.custom-pan .carousel-item {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    transition: transform 50ms ease-in-out;
+    will-change: transform;
+    z-index: 1;
+}
+
+/* 表示中 */
+#heroCarousel.custom-pan .carousel-item.active {
+    position: relative;
+    z-index: 2;
+    transform: translateX(0);
+}
+
+/* === 自動・右ボタン（dir-next） ===================== */
+/* 次スライドは左（-100%）から入ってくる */
+#heroCarousel.custom-pan.dir-next .carousel-item-next {
+    transform: translateX(-100%);
+}
+
+/* 現在スライドは右へ抜ける（0→+100%） */
+#heroCarousel.custom-pan.dir-next .active.carousel-item-start {
+    transform: translateX(100%);
+}
+
+/* 次スライドは左から中央へ（-100%→0） */
+#heroCarousel.custom-pan.dir-next .carousel-item-next.carousel-item-start {
+    transform: translateX(0);
+}
+
+/* === 左ボタン（dir-prev） ===================== */
+/* 次スライドは右（+100%）から入ってくる */
+#heroCarousel.custom-pan.dir-prev .carousel-item-prev {
+    transform: translateX(100%);
+}
+
+/* 現在スライドは左へ抜ける（0→-100%） */
+#heroCarousel.custom-pan.dir-prev .active.carousel-item-end {
+    transform: translateX(-100%);
+}
+
+/* 次スライドは右から中央へ（+100%→0） */
+#heroCarousel.custom-pan.dir-prev .carousel-item-prev.carousel-item-end {
+    transform: translateX(0);
+}
+
+/* Bootstrapの干渉除去 */
+#heroCarousel.custom-pan .carousel-item-start,
+#heroCarousel.custom-pan .carousel-item-end,
+#heroCarousel.custom-pan .carousel-item-next,
+#heroCarousel.custom-pan .carousel-item-prev {
+    opacity: 1 !important;
+    transition: transform 750ms ease-in-out;
+}
+
+/* ========================
+   フレーム（中央構成を維持）
+   ======================== */
+.hero-frame {
+    position: relative;
+    width: 100%;
+    height: 88vh;
+    margin-inline: auto;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+}
+
+/* 背景画像（上下位置微調整） */
+.hero-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    transform: none;
+    border-radius: inherit;
+}
+
+/* ========================
+   テキスト層
+   ======================== */
+.hero-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+}
+
+.hero-content {
+    background: rgba(255, 255, 255, .8);
+    backdrop-filter: blur(6px);
+    border-radius: 1rem;
+    padding: 2rem 3rem;
+    max-width: 600px;
+    text-align: center;
+}
+
+/* ========================
+   矢印ボタン
+   ======================== */
+#heroCarousel .carousel-control-prev,
+#heroCarousel .carousel-control-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: rgba(195, 86, 86, .9);
+    opacity: 1;
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    /* ← 反応を速める */
+    pointer-events: auto;
+}
+
+/* アイコン */
+#heroCarousel .carousel-control-prev-icon,
+#heroCarousel .carousel-control-next-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    background-size: 100% 100%;
+}
+
+/* 白枠外に配置 */
+#heroCarousel .carousel-control-prev {
+    left: -1.4rem;
+}
+
+#heroCarousel .carousel-control-next {
+    right: -1.4rem;
+}
+
+/* ホバー */
+#heroCarousel .carousel-control-prev:hover,
+#heroCarousel .carousel-control-next:hover {
+    background: rgba(195, 86, 86, 1);
+}
+
+
+
+/* モバイル対応 */
+@media (max-width:768px) {
+
+    #heroCarousel .carousel-control-prev,
+    #heroCarousel .carousel-control-next {
+        width: 2.2rem;
+        height: 2.2rem;
+        background: rgba(195, 86, 86, 0.85);
+        left: auto;
+        right: auto;
+        z-index: 100;
+    }
+
+    #heroCarousel .carousel-control-prev {
+        left: 0.6rem;
+    }
+
+    #heroCarousel .carousel-control-next {
+        right: 0.6rem;
+    }
+}
+
+/* ========================
+   ヘッダー・フッター
+   ======================== */
+.header-nav {
+    color: #fff;
+    font-weight: 500;
+}
+
+.header-nav a {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.header-nav a:hover {
+    transform: scale(1.1);
+}
+
+.header-actions .btn {
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.header-actions .btn-light {
+    background-color: var(--primary);
+    color: #fff;
+    border: none;
+}
+
+.header-actions .btn-light:hover {
+    background-color: #a84545;
+}
+
+.header-actions .btn-outline-light {
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
+    background: transparent;
+}
+
+.header-actions .btn-outline-light:hover {
+    background-color: var(--primary);
+    color: #fff;
+}
+
+.footer-brand {
+    background-image: url("/static/images/paper-fibers_header-footer.png");
+    background-size: cover;
+    background-repeat: repeat;
+    background-position: center;
+    color: #fff;
+    text-align: center;
+    font-size: 0.9rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 0.4rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+.footer-brand a {
+    color: #fff;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+.footer-brand a:hover {
+    opacity: 0.8;
+}
+
+/* 固定ヘッダーの高さぶんを補正 */
+.lp-section,
+.section {
+    scroll-margin-top: var(--header-h);
+}

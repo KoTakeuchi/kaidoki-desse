@@ -14,13 +14,12 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 # ----------------------------------------
 # トップページ / LP
 # ----------------------------------------
-
-
 def landing_page(request):
     """未ログイン時のトップページ"""
     if request.user.is_authenticated:
         return redirect("main:product_list")
-    return render(request, "main/landing.html")
+    # ▼ テンプレート名を正しく（layout-landing.html）
+    return render(request, "layout-landing.html")
 
 # ----------------------------------------
 # ログイン / ログアウト / サインアップ
@@ -48,25 +47,26 @@ def logout_view(request):
     """ログアウト処理"""
     logout(request)
     messages.info(request, "ログアウトしました。")
+    # ▼ URL名のタイプミス修正（landing-_page → main:landing_page）
     return redirect("main:landing_page")
 
 
 def signup_view(request):
-    """新規登録処理（メール必須版）"""
+    """新規登録処理（メール必須版・エラーハンドリング改良）"""
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "登録が完了しました。")
+            messages.success(request, "登録が完了しました。ようこそ、買い時でっせへ！")
             return redirect("main:product_list")
         else:
-            messages.error(request, "入力内容に誤りがあります。")
+            # バリデーションエラー詳細をテンプレートに渡す
+            messages.error(request, "入力内容に誤りがあります。ご確認ください。")
     else:
         form = CustomUserCreationForm()
 
     return render(request, "auth/signup.html", {"form": form})
-
 # ----------------------------------------
 # 商品一覧
 # ----------------------------------------

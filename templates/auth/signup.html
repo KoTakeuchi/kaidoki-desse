@@ -1,0 +1,74 @@
+{% extends "layout-auth.html" %}
+{% block title %}買い時でっせ｜新規登録{% endblock %}
+
+{% block page_content %}
+<div class="auth-wrapper">
+    <div class="auth-content">
+        <h1 class="page-title"><span class="marker">新規登録</span></h1>
+
+        <div class="auth-card">
+            <form method="post" autocomplete="off">
+                {% csrf_token %}
+
+                <!-- ユーザー名 -->
+                <div class="input-wrapper">
+                    <label for="id_username" class="form-label">ユーザー名</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="error-message">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- パスワード -->
+                <div class="input-wrapper">
+                    <label for="id_password1" class="form-label">パスワード</label>
+                    <div class="password-wrapper">
+                        {{ form.password1 }}
+                        <button type="button" class="toggle-password" data-target="id_password1">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.errors %}
+                        <div class="error-message">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- パスワード確認用 -->
+                <div class="input-wrapper">
+                    <label for="id_password2" class="form-label">パスワード【確認用】</label>
+                    <div class="password-wrapper">
+                        {{ form.password2 }}
+                        <button type="button" class="toggle-password" data-target="id_password2">
+                            <i class="fa fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                        <div class="error-message">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- メールアドレス -->
+                <div class="input-wrapper">
+                    <label for="id_email" class="form-label">メールアドレス</label>
+                    {{ form.email }}
+                    <p class="form-note">※買い時通知を受信するための連絡先</p>
+                    {% if form.email.errors %}
+                        <div class="error-message">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- 登録ボタン -->
+                <div class="auth-btn-wrapper">
+                    <button type="submit" class="auth-btn">登録する</button>
+                </div>
+
+                <!-- ログインリンク -->
+                <div class="auth-links mt-3">
+                    すでにアカウントをお持ちの方は
+                    <a href="{% url 'login' %}">ログインはこちら</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

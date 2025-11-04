@@ -1,19 +1,26 @@
 # 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
+from django.http import HttpResponse, JsonResponse
+from main.forms import ProductForm
+from django.shortcuts import render, redirect
 import requests
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.conf import settings
-
-from main.models import Product, Category
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from main.models import Product, Category, PriceHistory
 from .forms import ProductForm
 from main.utils.error_logger import log_error
-
+from main.constants import SORT_OPTIONS as sort_options
 
 # =====================================================
 # ▼ 内部共通関数群
 # =====================================================
+
+
 def _selected_category_ids(request):
     """GETパラメータ 'cat' をリストで取得（絞り込み保持用）"""
     return request.GET.getlist("cat")
@@ -34,7 +41,7 @@ def _build_filter_tags(keyword, selected_cats, stock, priority, sort, all_catego
     """画面上部に表示する条件タグを構築"""
     tags = []
     if keyword:
-        tags.append(("keyword", f"キーワード: {keyword}"))
+        tags.append(("key   word", f"キーワード: {keyword}"))
 
     if selected_cats:
         id_to_name = {str(c.id): c.category_name for c in all_categories}
@@ -63,11 +70,17 @@ def _build_filter_tags(keyword, selected_cats, stock, priority, sort, all_catego
 
 
 # =====================================================
-# ▼ 商品関連ビュー
+# ▼ 商品関連ビュー（最終整合版）
+# =====================================================
+
+
+# =====================================================
+# 商品一覧
 # =====================================================
 def product_list(request):
     """商品一覧ページ"""
     try:
+        # --- 一括削除処理 ---
         if request.method == "POST":
             if request.POST.get("bulk_action") == "delete":
                 ids = request.POST.getlist("selected")
@@ -80,48 +93,74 @@ def product_list(request):
 
         user = request.user if request.user.is_authenticated else None
 
+        # --- カテゴリ取得 ---
         global_categories = Category.objects.filter(is_global=True)
         user_categories = Category.objects.filter(is_global=False, user=user)
         all_categories = list(global_categories) + list(user_categories)
 
+        # --- 検索・絞り込み条件 ---
         keyword = request.GET.get("keyword", "").strip()
         selected_cats = _selected_category_ids(request)
         stock = request.GET.get("stock", "all")
         priority = request.GET.get("priority", "all")
         sort = request.GET.get("sort", "")
+        buy_flag = request.GET.get("buy_flag")
 
-        qs = Product.objects.all()
+        # --- ソートオプション ---
+        sort_options = [
+            ("new", "新しい順"),
+            ("old", "古い順"),
+            ("cheap", "安い順"),
+            ("expensive", "高い順"),
+        ]
+
+        # --- 商品クエリ構築 ---
+        qs = Product.objects.filter(
+            user=user) if user else Product.objects.none()
 
         if keyword:
-            qs = qs.filter(Q(product_name__icontains=keyword)
-                           | Q(shop_name__icontains=keyword))
+            qs = qs.filter(
+                Q(product_name__icontains=keyword) | Q(
+                    shop_name__icontains=keyword)
+            )
+
         if selected_cats:
-            qs = qs.filter(category_id__in=selected_cats)
+            qs = qs.filter(categories__id__in=selected_cats).distinct()
+
         if stock == "low":
             qs = qs.filter(is_in_stock=True, latest_stock_count__lte=3)
         elif stock == "none":
             qs = qs.filter(is_in_stock=False)
+
         if priority in ("高", "普通"):
             qs = qs.filter(priority=priority)
 
-        if sort == "cheap":
-            qs = qs.order_by("initial_price")
-        elif sort == "expensive":
-            qs = qs.order_by("-initial_price")
-        elif sort == "old":
-            qs = qs.order_by("created_at")
-        else:
-            qs = qs.order_by("-created_at")
+        if buy_flag == "1":
+            qs = qs.filter(flag_reached=True)
 
+        # --- 並び替え ---
+        order_map = {
+            "cheap": "initial_price",
+            "expensive": "-initial_price",
+            "old": "created_at",
+            "new": "-created_at",
+        }
+        qs = qs.order_by(order_map.get(sort, "-created_at"))
+
+        # --- ページネーション ---
         paginator = Paginator(qs, 12)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
+        page_obj = paginator.get_page(request.GET.get("page"))
 
+        # --- フィルタ状態 ---
         filter_tags = _build_filter_tags(
             keyword, selected_cats, stock, priority, sort, all_categories)
-        is_filtered = _has_filter(
-            keyword, selected_cats, stock, priority, sort)
+        if buy_flag == "1":
+            filter_tags.append(("buy_flag", "買い時のみ"))
 
+        is_filtered = _has_filter(
+            keyword, selected_cats, stock, priority, sort) or (buy_flag == "1")
+
+        # --- 出力 ---
         return render(request, "main/product_list.html", {
             "products": page_obj.object_list,
             "page_obj": page_obj,
@@ -133,136 +172,350 @@ def product_list(request):
             "stock": stock,
             "priority": priority,
             "sort": sort,
+            "sort_options": sort_options,
             "filter_tags": filter_tags,
             "is_filtered": is_filtered,
+            "buy_flag": buy_flag,
         })
 
     except Exception as e:
-        user = request.user if request.user.is_authenticated else None
-        log_error(user=user, type_name=type(e).__name__,
-                  source="product_list", err=e)
+        log_error(user=request.user if request.user.is_authenticated else None,
+                  type_name=type(e).__name__, source="product_list", err=e)
         return render(request, "main/error_generic.html", {"error": e})
 
 
+# =====================================================
+# 商品詳細
+# =====================================================
+@login_required
 def product_detail(request, pk):
-    """商品詳細"""
+    """商品詳細ページ"""
     try:
-        product = get_object_or_404(Product, pk=pk)
-        return render(request, "main/product_detail.html", {"product": product})
+        product = get_object_or_404(Product, pk=pk, user=request.user)
+
+        # --- 在庫通知トグル ---
+        if request.method == "POST" and "toggle_restock_notify" in request.POST:
+            product.restock_notify_enabled = not product.restock_notify_enabled
+            product.save(update_fields=["restock_notify_enabled"])
+            status = "有効" if product.restock_notify_enabled else "無効"
+            messages.success(request, f"在庫復活通知を{status}にしました。")
+            return redirect("main:product_detail", pk=pk)
+
+        # --- 買い時価格更新 ---
+        if request.method == "POST" and "save_threshold" in request.POST:
+            form = ProductForm(
+                request.POST, instance=product, user=request.user)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "買い時価格を更新しました。")
+                return redirect("main:product_detail", pk=pk)
+        else:
+            form = ProductForm(instance=product, user=request.user)
+
+        # --- 履歴データ生成 ---
+        history = product.pricehistory_set.all().order_by("checked_at")
+        price_data = [{"date": h.checked_at.strftime("%Y-%m-%d"),
+                       "price": float(h.price),
+                       "stock": h.stock_count or 0} for h in history]
+
+        # --- 買い時判定 ---
+        is_kaidoki = bool(
+            price_data and product.threshold_price and price_data[-1]["price"] <= float(product.threshold_price))
+
+        return render(request, "main/product_detail.html", {
+            "product": product,
+            "form": form,
+            "price_data_json": json.dumps(price_data, ensure_ascii=False),
+            "has_history": bool(price_data),
+            "is_kaidoki": is_kaidoki,
+        })
+
     except Exception as e:
-        user = request.user if request.user.is_authenticated else None
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_detail", err=e)
+        return render(request, "main/error_generic.html", {"error": e})
+
+
+# =====================================================
+# 商品登録
+# =====================================================
+@login_required
+def product_create(request):
+    """商品登録ページ"""
+    try:
+        if request.method == "POST":
+            form = ProductForm(request.POST, user=request.user)
+            if form.is_valid():
+                product = form.save(commit=False)
+                product.user = request.user
+                if product.flag_type == "buy_price":
+                    product.threshold_price = product.flag_value
+                product.save()
+                form.save_m2m()
+
+                # 登録時に初回履歴を追加
+                PriceHistory.objects.create(
+                    product=product,
+                    price=product.initial_price or product.regular_price or 0,
+                    stock_count=product.latest_stock_count or 0,
+                )
+                messages.success(request, f"「{product.product_name}」を登録しました。")
+                return redirect("main:product_list")
+        else:
+            form = ProductForm(user=request.user)
+
+        percent_list = [i for i in range(5, 55, 5)]
+
+        return render(request, "main/product_form.html", {
+            "form": form,
+            "is_edit": False,
+            "percent_list": percent_list,
+        })
+
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_create", err=e)
+        return render(request, "main/error_generic.html", {"error": e})
+
+
+# =====================================================
+# 商品編集
+# =====================================================
+@login_required
+def product_edit(request, pk):
+    """商品編集ページ"""
+    try:
+        product = get_object_or_404(Product, pk=pk, user=request.user)
+        if request.method == "POST":
+            form = ProductForm(
+                request.POST, instance=product, user=request.user)
+            if form.is_valid():
+                updated = form.save(commit=False)
+                if updated.flag_type == "buy_price":
+                    updated.threshold_price = updated.flag_value
+                updated.save()
+                form.save_m2m()
+
+                # 履歴追加
+                PriceHistory.objects.create(
+                    product=updated,
+                    price=updated.initial_price or updated.regular_price or 0,
+                    stock_count=updated.latest_stock_count or 0,
+                )
+                messages.success(request, f"「{updated.product_name}」を更新しました。")
+                return redirect("main:product_detail", pk=updated.pk)
+        else:
+            form = ProductForm(instance=product, user=request.user)
+
+        percent_list = [i for i in range(5, 55, 5)]
+
+        return render(request, "main/product_form.html", {
+            "form": form,
+            "is_edit": True,
+            "product": product,
+            "percent_list": percent_list,
+        })
+
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_edit", err=e)
+        return render(request, "main/error_generic.html", {"error": e})
+
+
+# =====================================================
+# 商品削除
+# =====================================================
+@login_required
+def product_delete(request, pk):
+    """商品削除"""
+    try:
+        product = get_object_or_404(Product, pk=pk, user=request.user)
+        if request.method == "POST":
+            product.delete()
+            messages.success(request, f"「{product.product_name}」を削除しました。")
+            return redirect("main:product_list")
+
+        return render(request, "main/product_confirm_delete.html", {"product": product})
+
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_delete", err=e)
+        return render(request, "main/error_generic.html", {"error": e})
+
+# =====================================================
+# 商品詳細（最終整合版）
+# =====================================================
+
+
+@login_required
+def product_detail(request, pk):
+    """商品詳細ページ"""
+    user = request.user if request.user.is_authenticated else None
+    try:
+        product = get_object_or_404(Product, pk=pk, user=user)
+
+        # =============================
+        # ✅ POST処理分岐
+        # =============================
+        if request.method == "POST":
+            # --- 在庫復活通知トグル ---
+            if "toggle_restock_notify" in request.POST:
+                product.restock_notify_enabled = not product.restock_notify_enabled
+                product.save(update_fields=["restock_notify_enabled"])
+                status = "有効" if product.restock_notify_enabled else "無効"
+                messages.success(request, f"在庫復活通知を{status}にしました。")
+                return redirect("main:product_detail", pk=pk)
+
+            # --- 買い時価格更新 ---
+            elif "save_threshold" in request.POST:
+                form = ProductForm(request.POST, instance=product, user=user)
+                if form.is_valid():
+                    form.save()
+
+                    # ✅ 履歴登録（価格変動があった場合）
+                    PriceHistory.objects.create(
+                        product=product,
+                        price=product.regular_price or product.initial_price or 0,
+                        stock_count=product.latest_stock_count or 0,
+                    )
+
+                    messages.success(request, "買い時価格を更新しました。")
+                    return redirect("main:product_detail", pk=pk)
+                else:
+                    messages.error(request, "入力内容に誤りがあります。")
+            else:
+                messages.warning(request, "無効な操作です。")
+                return redirect("main:product_detail", pk=pk)
+        else:
+            form = ProductForm(instance=product, user=user)
+
+        # =============================
+        # ✅ 履歴データ取得・グラフ整形
+        # =============================
+        history = product.pricehistory_set.all().order_by("checked_at")
+        price_data = [
+            {"date": h.checked_at.strftime("%Y-%m-%d"),
+             "price": float(h.price),
+             "stock": h.stock_count or 0}
+            for h in history
+        ]
+
+        # ✅ 買い時判定
+        is_kaidoki = (
+            bool(price_data)
+            and product.threshold_price
+            and price_data[-1]["price"] <= float(product.threshold_price)
+        )
+
+        # =============================
+        # ✅ レンダリング
+        # =============================
+        return render(request, "main/product_detail.html", {
+            "product": product,
+            "form": form,
+            "price_data_json": json.dumps(price_data, ensure_ascii=False),
+            "has_history": bool(price_data),
+            "is_kaidoki": is_kaidoki,
+        })
+
+    except Exception as e:
         log_error(user=user, type_name=type(e).__name__,
                   source="product_detail", err=e)
         return render(request, "main/error_generic.html", {"error": e})
 
 
-def product_create(request):
-    """商品登録"""
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect("main:product_list")
-    else:
-        form = ProductForm()
-    return render(request, "main/product_form.html", {"form": form})
-
-
-def product_edit(request, pk):
-    """商品編集"""
-    product = get_object_or_404(Product, pk=pk)
-    if request.method == "POST":
-        form = ProductForm(request.POST, request.FILES, instance=product)
-        if form.is_valid():
-            form.save()
-            return redirect("main:product_detail", pk=product.pk)
-    else:
-        form = ProductForm(instance=product)
-    return render(request, "main/product_form.html", {"form": form, "product": product})
-
-
-def product_delete(request, pk):
-    """個別削除"""
-    product = get_object_or_404(Product, pk=pk)
-    if request.method == "POST":
-        product.delete()
-        return redirect("main:product_list")
-    return render(request, "main/product_confirm_delete.html", {"product": product})
-
-
 # =====================================================
-# ▼ 楽天API関連
+# ▼ 楽天API関連ビュー
 # =====================================================
-def fetch_rakuten_data(item_url: str):
-    """楽天APIから商品情報を取得"""
+
+
+# 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
+
+
+# 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
+
+
+def fetch_rakuten_item(request):
+    """
+    楽天商品URLからAPI経由で商品情報を取得
+    例: /api/fetch_rakuten_item/?url=https://item.rakuten.co.jp/shopname/itemcode/
+    """
+    item_url = request.GET.get("url")
+    if not item_url:
+        return JsonResponse({"error": "urlパラメータが指定されていません。"}, status=400)
+
     try:
+        # --- URL形式チェック ---
         if "rakuten.co.jp" not in item_url:
-            return {"error": "楽天の商品URLを入力してください。"}
+            return JsonResponse({"error": "楽天市場の商品URLを指定してください。"}, status=400)
 
-        # ✅ URL正規化処理
+        # --- URL正規化 ---
         clean_url = item_url.split("?")[0].rstrip("/")
         parts = clean_url.replace("https://item.rakuten.co.jp/", "").split("/")
         if len(parts) < 2:
-            return {"error": "商品URLの形式が不正です。"}
+            return JsonResponse({"error": "商品URLの形式が不正です。"}, status=400)
 
         shop_code, item_code = parts[0], parts[1]
         base_url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
 
-        # --- ① itemCode検索 ---
+        # --- itemCode検索 ---
         params_item = {
             "applicationId": settings.RAKUTEN_APP_ID,
             "itemCode": f"{shop_code}:{item_code}",
             "format": "json",
             "hits": 1,
         }
-        print("[RakutenAPI] Try itemCode:", params_item)
-        res = requests.get(base_url, params=params_item)
+        res = requests.get(base_url, params=params_item, timeout=10)
         data = res.json()
 
-        # --- ② keyword検索（①で見つからなかった場合） ---
+        # --- keyword検索 fallback ---
         if res.status_code != 200 or not data.get("Items"):
-            print("[RakutenAPI] Fallback → keyword search")
             params_keyword = {
                 "applicationId": settings.RAKUTEN_APP_ID,
                 "keyword": item_code,
                 "format": "json",
                 "hits": 1,
             }
-            res = requests.get(base_url, params=params_keyword)
+            res = requests.get(base_url, params=params_keyword, timeout=10)
             data = res.json()
 
         if not data.get("Items"):
-            print("[RakutenAPI] No items found")
-            return {"error": "楽天APIで商品情報を取得できませんでした。"}
+            return JsonResponse({"error": "楽天APIで商品情報を取得できませんでした。"}, status=404)
 
         item = data["Items"][0]["Item"]
-        print("[RakutenAPI] Success:", item.get("itemName"))
 
-        return {
+        # --- 画像URL整形 ---
+        if item.get("mediumImageUrls"):
+            raw_url = item["mediumImageUrls"][0]["imageUrl"]
+            if "?_ex=" in raw_url:
+                image_url = raw_url.split("?")[0] + "?_ex=300x300"
+            else:
+                image_url = raw_url + "?_ex=300x300"
+        else:
+            image_url = "/static/images/noimage.png"
+
+        # --- 価格を数値化 ---
+        try:
+            price = int(item.get("itemPrice", 0))
+        except (ValueError, TypeError):
+            price = 0
+
+        # --- JSON出力（日本語をそのまま表示） ---
+        json_data = json.dumps({
             "product_name": item.get("itemName", ""),
             "shop_name": item.get("shopName", ""),
-            "regular_price": item.get("itemPrice", ""),
-            "initial_price": item.get("itemPrice", ""),
-            "image_url": item["mediumImageUrls"][0]["imageUrl"]
-            if item.get("mediumImageUrls")
-            else "/static/images/noimage.png",
-        }
+            "regular_price": price,
+            "initial_price": price,
+            "image_url": image_url,
+            "url": item_url,
+        }, ensure_ascii=False)
+
+        return HttpResponse(json_data, content_type="application/json; charset=utf-8")
+
+    except requests.exceptions.RequestException as e:
+        log_error(None, "RequestException", "fetch_rakuten_item", e)
+        return JsonResponse({"error": f"外部API通信エラー: {e}"}, status=500)
 
     except Exception as e:
-        print("❌ fetch_rakuten_data Error:", e)
-        return {"error": f"サーバー側で例外発生: {e}"}
-
-
-def fetch_rakuten_item(request):
-    """JSからのfetch用API"""
-    item_url = request.GET.get("url", "").strip()
-    print(f"[View] Fetching Rakuten item for URL: {item_url}")
-
-    if not item_url:
-        return JsonResponse({"error": "商品URLが指定されていません。"}, status=400)
-
-    data = fetch_rakuten_data(item_url)
-    if "error" in data:
-        return JsonResponse(data, status=500)
-
-    return JsonResponse(data)
+        log_error(None, type(e).__name__, "fetch_rakuten_item", e)
+        return JsonResponse({"error": f"サーバー内部エラー: {e}"}, status=500)

@@ -1,0 +1,262 @@
+/* ============================= */
+/*  ログインページ  */
+/* ============================= */
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 180px);
+    padding-top: 4rem;
+    background: none;
+}
+
+/* タイトル位置調整 */
+.auth-content {
+    text-align: center;
+    width: 100%;
+    /* margin-top: -2em; */
+}
+
+/* === カード本体 === */
+.auth-card {
+    background: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0rem auto 3rem;
+    padding: 2.5rem 2.5rem 3rem;
+    /* 下だけ少し広げる */
+    text-align: left;
+    margin-top: -1rem;
+}
+
+/* === 入力フォーム === */
+.form-label {
+    margin-bottom: 0.4rem;
+    /* ラベルと入力欄の間に余白 */
+    font-weight: 700;
+    color: #333;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 0.6rem 2.2rem 0.6rem 0.8rem;
+    font-size: 1rem;
+    transition: border 0.2s ease;
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary, #c35656);
+    box-shadow: 0 0 0 2px rgba(195, 86, 86, 0.1);
+}
+
+/* === 目玉ボタン === */
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #c35656;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.toggle-password:hover {
+    color: #a94444;
+}
+
+/* === ボタン（全ページ共通） === */
+.auth-btn {
+    display: inline-block;
+    /* ← block → inline-block に変更 */
+    width: auto;
+    /* ← 全幅から自動幅に変更 */
+    background-color: var(--primary, #c35656);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.5rem 1.4rem;
+    /* ← テキスト分×1.5 の幅を確保 */
+    border: none;
+    border-radius: 1.5rem;
+    margin-top: 2.5rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    /* 改行を防ぐ */
+    text-align: center;
+}
+
+
+.auth-btn:hover {
+    background-color: #a94444;
+    text-decoration: none;
+}
+
+/* ボタンを囲む専用ラッパー */
+.auth-btn-wrapper {
+    text-align: center;
+    /* ← 中央寄せ */
+}
+
+/* 中央寄せ内のボタン自体の設定 */
+.auth-btn-wrapper .auth-btn {
+    display: inline-block;
+    width: auto;
+    margin-top: 1rem;
+}
+
+/* === 下部リンク === */
+.auth-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-links a {
+    display: block;
+    color: var(--primary, #c35656);
+    text-decoration: none;
+    margin-top: 0.3rem;
+    font-weight: 600;
+}
+
+
+/* スマホ対応 */
+@media (max-width: 490px) {
+    .auth-card {
+        margin: 0.5rem;
+        padding: 1.5rem;
+    }
+
+    .auth-btn {
+        font-size: 0.95rem;
+    }
+}
+
+/* ============================= */
+/*  新規登録ページ  */
+/* ============================= */
+/* 入力欄の間隔調整 */
+.input-wrapper {
+    margin-bottom: 1.2rem;
+}
+
+/* メール補足文 */
+.form-note {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.2rem;
+}
+
+/* ログインリンク統一 */
+.auth-links a {
+    color: var(--primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+/* === パスワード表示切替ボタン位置調整 === */
+.input-wrapper {
+    position: relative;
+    /* 各入力欄ごとに基準を作る */
+}
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 2.2rem;
+    /* アイコン分の余白を確保 */
+}
+
+/* ===== エラーメッセージ ===== */
+.error-message {
+    color: #c35656;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    margin-left: 0.2rem;
+}
+
+
+.toggle-password {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.toggle-password i {
+    pointer-events: none;
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+/* =======================================
+   パスワード再設定：送信完了ページ専用
+   ======================================= */
+.reset-done-page .auth-card {
+    max-width: 800px;
+    text-align: center;
+}
+
+.reset-done-page .reset-desc {
+    margin-bottom: 0.8rem;
+    line-height: 1.8;
+    color: #333;
+}
+
+.reset-done-page .reset-sample-title {
+    margin-top: 3rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.reset-done-page .reset-sample-img {
+    width: 85%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 0 auto 1.2rem;
+    display: block;
+}
+
+.reset-done-page .reset-back-btn {
+    display: inline-block;
+    width: auto;
+    padding: 0.6rem 1.2rem;
+    text-decoration: none;
+    margin-top: 1.5rem;
+}
+
+.reset-done-page .reset-back-btn:hover {
+    text-decoration: none;
+}
+
+/* === aタグで作られたボタンの下線を除去 === */
+.auth-btn,
+.auth-btn:hover,
+.auth-btn:focus,
+.auth-btn:visited {
+    text-decoration: none !important;
+}

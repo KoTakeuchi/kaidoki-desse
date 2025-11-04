@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+import logging
 
 
 # --- ここで確実に .env を読み込む ---
@@ -13,6 +14,7 @@ load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv("SECRET_KEY", "dummy-secret-key")
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
 
 # 環境フラグ（dev/prod）
 ENV = os.getenv("ENV", "dev").lower()   # dev / prod
@@ -104,14 +106,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== 認証・遷移 =====
 LOGIN_URL = "login"
-LOGOUT_REDIRECT_URL = "landing"
+LOGOUT_REDIRECT_URL = "/main/"
 LOGIN_REDIRECT_URL = "main:index"
 
 # ===== メール =====
 if ENV == "dev":
     # 開発環境ではコンソールに出力
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-    DEFAULT_FROM_EMAIL = "kaidoki@example.com"
+    DEFAULT_FROM_EMAIL = 'no-reply@kaidoki-desse.local'
 else:
     # 本番環境ではSMTP経由で送信
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -202,3 +204,10 @@ else:
 RAKUTEN_APP_ID = os.getenv("RAKUTEN_APP_ID", "1016082687225252652")
 RAKUTEN_BASE_URL = os.getenv(
     "RAKUTEN_BASE_URL", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601")
+
+
+# --- 認証後のリダイレクト先を専用ビューに統一 ---
+LOGIN_REDIRECT_URL = "/main/after_login/"
+
+# （任意）ログアウト後の遷移
+LOGOUT_REDIRECT_URL = "/main/index/"

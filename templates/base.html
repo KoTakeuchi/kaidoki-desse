@@ -1,119 +1,67 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>買い時でっせ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}買い時でっせ{% endblock %}</title>
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon">
+  <!-- ▼ Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- ✅ Bootstrap（CSSのみ上で読み込む） -->
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+
+  <!-- ✅ 共通CSS（Bootstrapの上書き順） -->
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v={{ STATIC_VERSION }}" />
+  <link rel="stylesheet" href="{% static 'css/header.css' %}?v={{ STATIC_VERSION }}" />
+
+  <!-- favicon -->
+  <link rel="icon" href="{% static 'images/favicon.ico' %}" type="image/x-icon" />
+
+  {% block extra_css %}{% endblock %}
 </head>
 
-<body class="bg-light">
+<body>
+  <div class="page-wrapper d-flex flex-column min-vh-100">
+    {% block header %}{% endblock %}
 
-    <!-- ヘッダー -->
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-            {% if user.is_authenticated %}
-            <!-- 🔹ログイン済み：商品一覧へ -->
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'main:product_list' %}">
-                <img src="{% static 'images/icon_kaidoki.svg' %}" alt="買い時でっせアイコン" height="48">
-                <span class="fw-bold text-primary ms-2">買い時でっせ</span>
-            </a>
-            {% else %}
-            <!-- 🔹未ログイン：ランディングページへ -->
-            <a class="navbar-brand d-flex align-items-center" href="{% url 'main:landing_page' %}">
-                <img src="{% static 'images/icon_kaidoki.svg' %}" alt="買い時でっせアイコン" height="48">
-                <span class="fw-bold text-primary ms-2">買い時でっせ</span>
-            </a>
-            {% endif %}
-
-            <!-- 🔹 ナビ右側メニュー -->
-            <ul class="navbar-nav ms-auto align-items-center">
-                {% if user.is_authenticated %}
-                <li class="nav-item me-3">
-                    <span class="text-muted small">{{ user.username }} さん</span>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'main:product_list' %}">商品一覧</a>
-                </li>
-                <li class="nav-item position-relative">
-                    <a class="nav-link position-relative" href="{% url 'main:notifications' %}">
-                        通知
-                        <span id="unread-count"
-                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                            style="font-size: 0.7rem; display: none;">
-                        </span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'main:product_create' %}" class="btn btn-outline-primary ms-2">＋ 商品登録</a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'logout' %}" class="btn btn-outline-danger ms-2">ログアウト</a>
-                </li>
-
-                {% if user.is_superuser %}
-                <li class="nav-item">
-                    <a class="nav-link text-danger fw-bold" href="{% url 'main:error_logs' %}">
-                        エラーログ
-                    </a>
-                </li>
-                {% endif %}
-
-                {% else %}
-                <li class="nav-item">
-                    <a href="{% url 'login' %}" class="btn btn-outline-primary">ログイン</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-    </header>
-
-    <!-- メイン -->
-    <main class="container py-4">
-        {% block content %}
-        {% endblock %}
+    <main class="container-fluid p-0 flex-grow-1">
+      {% block page_content %}{% endblock %}
+      {% block admin_content %}{% endblock %}
     </main>
 
-    <!-- フッター -->
-    <footer class="text-center text-muted py-3">
-        <small>© 2025 買い時でっせ　
-            <a href="#" class="text-decoration-none">利用規約</a>　
-            <a href="#" class="text-decoration-none">プライバシー</a>
-        </small>
+    <footer class="footer-brand text-center text-white mt-auto">
+      <div class="container py-4">
+        <div class="footer-branding mb-3 d-flex justify-content-center align-items-center">
+          <div class="footer-icon-wrapper me-2">
+            <img src="{% static 'images/icon_kaidoki.svg' %}" alt="買い時でっせ" height="42" />
+          </div>
+          <p class="footer-catchcopy mb-0 fw-bold text-white">買い時を、もっとスマートに。</p>
+        </div>
+        <div class="footer-links mb-2">
+          <a href="#" class="text-white text-decoration-none mx-2">利用規約</a>｜
+          <a href="#" class="text-white text-decoration-none mx-2">プライバシー</a>｜
+          <a href="mailto:support@kaidoki.com" class="text-white text-decoration-none mx-2">お問い合わせ</a>
+        </div>
+        <small class="text-white-50">© 2025 Kaidoki-Desse All rights reserved.</small>
+      </div>
     </footer>
 
-    <!-- ✅ Ajaxで未読通知バッジを更新 -->
-    <script>
-        async function updateUnreadCount() {
-            try {
-                const response = await fetch("{% url 'main:unread_count_api' %}");
-                if (!response.ok) throw new Error("Network response was not ok");
-                const data = await response.json();
-                const badge = document.getElementById("unread-count");
-                if (badge) {
-                    if (data.unread_count > 0) {
-                        badge.textContent = data.unread_count;
-                        badge.style.display = "inline-block";
-                    } else {
-                        badge.style.display = "none";
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching unread count:", error);
-            }
-        }
-        document.addEventListener("DOMContentLoaded", updateUnreadCount);
-        setInterval(updateUnreadCount, 60000);
-    </script>
+    <!-- ✅ 署名マーカー -->
+    <!-- BASE_SIGNATURE: templates/base.html -->
+  </div>
 
+  <!-- ✅ 共通：上に戻るボタン -->
+  <button id="scrollTopBtn" class="scroll-top-btn" aria-label="ページ上部へ戻る">↑</button>
+
+  <!-- ✅ Bootstrap JSはここ（body直前）に移動 -->
+  <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+  {% block extra_js %}{% endblock %}
 </body>
 
 </html>

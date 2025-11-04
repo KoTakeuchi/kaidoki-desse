@@ -1,0 +1,103 @@
+{% extends "layout-admin.html" %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | 商品一覧{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4">
+  <h2 class="fw-bold mb-4 text-dark">商品管理</h2>
+
+  <!-- ======================== -->
+  <!-- 🔍 検索フォーム -->
+  <!-- ======================== -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-5">
+      <label class="form-label fw-semibold text-secondary">キーワード検索</label>
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="商品名・ユーザー名・カテゴリ">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+    </div>
+  </form>
+
+  <!-- ======================== -->
+  <!-- 📋 商品一覧 -->
+  <!-- ======================== -->
+  {% if products %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
+      <thead class="table-light">
+        <tr class="text-secondary">
+          <th>ID</th>
+          <th>商品名</th>
+          <th>ユーザー</th>
+          <th>カテゴリ</th>
+          <th>価格</th>
+          <th>登録日</th>
+          <th>更新日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td class="text-truncate" style="max-width:220px;">{{ p.product_name }}</td>
+          <td>{{ p.user.username }}</td>
+          <td>{{ p.category.category_name|default:"-" }}</td>
+          <td>{{ p.current_price|default:"-" }} 円</td>
+          <td>{{ p.created_at|date:"Y/m/d" }}</td>
+          <td>{{ p.updated_at|date:"Y/m/d" }}</td>
+          <td>
+            <button class="btn btn-sm text-white rounded-0"
+                    style="background-color:#3CA9A9;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#productDetailModal{{ p.id }}">
+              詳細
+            </button>
+          </td>
+        </tr>
+
+        <!-- ▼ モーダル -->
+        <div class="modal fade" id="productDetailModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 rounded-0">
+              <div class="modal-header" style="background-color:#b4e4e4;">
+                <h5 class="modal-title fw-bold text-dark">商品詳細</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+              </div>
+              <div class="modal-body">
+                <table class="table table-borderless mb-0">
+                  <tr><th class="text-secondary" style="width:25%;">商品名</th><td>{{ p.product_name }}</td></tr>
+                  <tr><th class="text-secondary">ユーザー</th><td>{{ p.user.username }}</td></tr>
+                  <tr><th class="text-secondary">カテゴリ</th><td>{{ p.category.category_name|default:"-" }}</td></tr>
+                  <tr><th class="text-secondary">現在価格</th><td>{{ p.current_price|default:"-" }} 円</td></tr>
+                  <tr><th class="text-secondary">登録日</th><td>{{ p.created_at|date:"Y/m/d H:i" }}</td></tr>
+                  <tr><th class="text-secondary">最終更新</th><td>{{ p.updated_at|date:"Y/m/d H:i" }}</td></tr>
+                  <tr><th class="text-secondary">商品URL</th>
+                      <td>
+                        {% if p.product_url %}
+                          <a href="{{ p.product_url }}" target="_blank" class="text-decoration-underline text-dark">{{ p.product_url }}</a>
+                        {% else %}
+                          -
+                        {% endif %}
+                      </td>
+                  </tr>
+                  <tr><th class="text-secondary">メモ</th><td>{{ p.memo|default:"-" }}</td></tr>
+                </table>
+              </div>
+              <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mt-3">商品データはまだ登録されていません。</p>
+  {% endif %}
+</div>
+{% endblock %}

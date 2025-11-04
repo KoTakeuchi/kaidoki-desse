@@ -1,6 +1,8 @@
+from .models import Product, Category
 from django import forms
+from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
 from django.core.exceptions import ValidationError
 from .models import Product, Category, NotificationSetting, UserNotificationSetting
 
@@ -11,12 +13,24 @@ User = get_user_model()
 
 
 # ============================================================
-# 商品フォーム（登録・編集）
+# 商品登録・編集フォーム
 # ============================================================
-class ProductForm(forms.ModelForm):
-    """商品登録・編集フォーム（複数カテゴリ＋楽天URL＋フラグ仕様対応）"""
 
-    # ✅ 定価
+
+class ProductForm(forms.ModelForm):
+    """商品登録・編集フォーム（複数カテゴリ＋楽天URL＋通知フラグ対応）"""
+
+    # ① 商品名（必須）
+    product_name = forms.CharField(
+        label="商品名",
+        required=True,
+        widget=forms.TextInput(attrs={
+            "placeholder": "例）Uネック裏起毛リブカットソー",
+        }),
+        error_messages={"required": "商品名を入力してください。"},
+    )
+
+    # ② 定価
     regular_price = forms.DecimalField(
         label="定価",
         required=False,
@@ -25,10 +39,10 @@ class ProductForm(forms.ModelForm):
             "min_value": "定価は1円以上で入力してください。",
             "invalid": "定価は数値で入力してください。",
         },
-        widget=forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+        widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ✅ 登録時価格
+    # ③ 登録時価格
     initial_price = forms.DecimalField(
         label="登録時価格",
         required=False,
@@ -37,10 +51,10 @@ class ProductForm(forms.ModelForm):
             "min_value": "登録時価格は1円以上で入力してください。",
             "invalid": "登録時価格は数値で入力してください。",
         },
-        widget=forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+        widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ✅ 買い時価格（この金額以下で通知）
+    # ④ 買い時価格
     threshold_price = forms.DecimalField(
         label="買い時価格（この金額以下で通知）",
         required=False,
@@ -49,12 +63,12 @@ class ProductForm(forms.ModelForm):
             "min_value": "買い時価格は1円以上で入力してください。",
             "invalid": "買い時価格は数値で入力してください。",
         },
-        widget=forms.NumberInput(attrs={"class": "form-control", "min": "1"}),
+        widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
-    # ✅ カテゴリ（複数選択可能）
+    # ⑤ カテゴリ（複数選択）
     categories = forms.ModelMultipleChoiceField(
-        queryset=Category.objects.none(),  # 初期は空、__init__で絞り込み
+        queryset=Category.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple,
         label="カテゴリ（複数選択可）",
@@ -66,17 +80,15 @@ class ProductForm(forms.ModelForm):
             "product_name",
             "product_url",
             "shop_name",
-            "categories",       # ← category → categories に変更
+            "categories",
             "regular_price",
             "initial_price",
             "threshold_price",
             "priority",
             "flag_type",
             "flag_value",
-            "image_url",
         ]
         labels = {
-            "threshold_price": "買い時価格（この金額以下で通知）",
             "flag_type": "通知条件フラグ",
             "flag_value": "通知条件値",
         }
@@ -85,55 +97,50 @@ class ProductForm(forms.ModelForm):
             "flag_type": forms.RadioSelect,
         }
 
-    # ============================================================
-    # 初期化処理
-    # ============================================================
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        # ✅ ログインユーザーに紐づくカテゴリのみ表示
+        # --- ユーザー固有＋共通カテゴリを対象にする ---
         if user:
             self.fields["categories"].queryset = Category.objects.filter(
                 Q(user=user) | Q(is_global=True)
             ).order_by("category_name")
             self.user = user
 
-        # ✅ Bootstrapスタイル適用
+        # --- Bootstrapクラス適用 ---
         for field in self.fields.values():
             if not isinstance(field.widget, (forms.RadioSelect, forms.CheckboxSelectMultiple)):
-                field.widget.attrs.update({"class": "form-control"})
+                css_class = field.widget.attrs.get("class", "")
+                field.widget.attrs["class"] = f"{css_class} form-control".strip()
 
-        # ✅ 既存商品の場合、flag_type を編集不可に
+        # --- 編集時は flag_type を変更不可 ---
         if self.instance and self.instance.pk:
-            if "flag_type" in self.fields:
-                self.fields["flag_type"].disabled = True
+            self.fields["flag_type"].disabled = True
 
-        # ✅ 商品URLプレースホルダ・説明追加
+        # --- 商品URL説明補助 ---
         self.fields["product_url"].widget.attrs.update({
             "placeholder": "https://item.rakuten.co.jp/カテゴリ名/商品名",
         })
         self.fields["product_url"].help_text = (
-            "楽天市場 https://item.rakuten.co.jp/ から登録する商品URLをコピペしてください。"
+            "楽天市場（https://item.rakuten.co.jp/）の商品URLを貼り付けてください。"
         )
 
     # ============================================================
-    # URLバリデーション（楽天URLチェック＋重複防止）
+    # URLバリデーション（楽天URL＋重複防止）
     # ============================================================
     def clean_product_url(self):
         product_url = self.cleaned_data.get("product_url")
 
-        # 楽天市場URL形式チェック
         if not product_url.startswith("https://item.rakuten.co.jp/"):
             raise ValidationError("このURLは楽天市場の商品ページではありません。")
 
-        # ユーザー情報確認
         if not hasattr(self, "user"):
             raise ValidationError("ユーザー情報が取得できません。")
 
-        # 重複チェック
         existing = Product.objects.filter(
-            user=self.user, product_url=product_url)
+            user=self.user, product_url=product_url
+        )
         if self.instance.pk:
             existing = existing.exclude(pk=self.instance.pk)
 
@@ -152,22 +159,28 @@ class ProductForm(forms.ModelForm):
         flag_type = cleaned_data.get("flag_type")
         flag_value = cleaned_data.get("flag_value")
 
-        # ✅ 買い時価格 < 定価チェック
+        # ✅ 定価・買い時価格の整合性
         if regular_price and threshold_price and threshold_price > regular_price:
-            raise ValidationError("買い時価格は通常価格以下に設定してください。")
+            raise ValidationError("買い時価格は定価以下に設定してください。")
 
         # ✅ フラグ依存制御
         if flag_type == "buy_price":
             if not threshold_price:
-                raise ValidationError("買い時価格を入力してください。")
+                raise ValidationError("『買い時価格』を入力してください。")
+            cleaned_data["flag_value"] = threshold_price
 
         elif flag_type == "percent_off":
             if not regular_price:
-                raise ValidationError("割引率通知を選択する場合は定価を入力してください。")
+                raise ValidationError("『％OFF』通知を選択する場合は定価を入力してください。")
             if flag_value is None:
-                raise ValidationError("割引率を入力してください（5〜95の範囲で5刻み）。")
-            if not (5 <= flag_value <= 95):
-                raise ValidationError("割引率は5〜95の範囲で入力してください。")
+                raise ValidationError("『％OFF』値を入力してください（5〜95の範囲で5刻み）。")
+            if not (5 <= flag_value <= 95 and flag_value % 5 == 0):
+                raise ValidationError(
+                    "％OFFは5〜95の範囲で5刻み（5,10,15,…,95）で指定してください。")
+
+        elif flag_type == "lowest_price":
+            cleaned_data["flag_value"] = None
+            cleaned_data["threshold_price"] = None
 
         return cleaned_data
 
@@ -265,7 +278,6 @@ class UserNotificationSettingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # メールアドレスは参照専用
         self.fields["email"].widget.attrs["readonly"] = True
         # Bootstrap整形
         for field in self.fields.values():
@@ -280,7 +292,7 @@ class UserNotificationSettingForm(forms.ModelForm):
 # ユーザー登録フォーム（新規登録）
 # ============================================================
 class CustomUserCreationForm(UserCreationForm):
-    """サインアップ用フォーム（メール必須）"""
+    """サインアップ用フォーム（日本語化＋重複チェック）"""
 
     email = forms.EmailField(
         label="メールアドレス",
@@ -292,21 +304,51 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
-        widgets = {
-            "username": forms.TextInput(attrs={"class": "form-control"}),
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        labels = {
+            "username": "ユーザー名",
+            "email": "メールアドレス",
+            "password1": "パスワード",
+            "password2": "パスワード（確認用）",
+        }
+        error_messages = {
+            "username": {"unique": "同じユーザー名が既に登録されています。"},
+            "email": {"unique": "このメールアドレスは既に登録されています。"},
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Bootstrap統一
-        for name in ["password1", "password2"]:
+        for name in ["username", "email", "password1", "password2"]:
             self.fields[name].widget.attrs.update({"class": "form-control"})
             self.fields[name].help_text = None
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        if commit:
-            user.save()
-        return user
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("このメールアドレスは既に登録されています。")
+        return email
+
+
+# ============================================================
+# パスワード再設定フォーム（未登録アドレスにエラー表示）
+# ============================================================
+class CustomPasswordResetForm(PasswordResetForm):
+    """登録されていないメールアドレスならエラーを出すフォーム"""
+
+    email = forms.EmailField(
+        label="メールアドレス",
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            "class": "form-control",
+            "placeholder": "example@example.com",
+            "autocomplete": "email",
+        }),
+        error_messages={"required": "メールアドレスを入力してください。"},
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").strip()
+        if not email:
+            raise ValidationError("メールアドレスを入力してください。")
+        if not User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise ValidationError("指定のメールアドレスは登録されていません。")
+        return email

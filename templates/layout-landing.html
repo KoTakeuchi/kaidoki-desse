@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}買い時でっせ｜トップページ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}?v={{ STATIC_VERSION }}" />
+{% endblock %}
+
+{% block header %}
+<header class="header-bar">
+  <div class="header-inner px-3">
+    <a class="header-brand" href="#section-intro">
+      <div class="header-icon-wrapper">
+        <img src="{% static 'images/icon_kaidoki.png' %}" alt="買い時でっせ" />
+      </div>
+      <span class="header-title">買い時でっせ</span>
+    </a>
+    <nav class="header-nav">
+      <a class="header-link" href="#section-features">できること</a>｜
+      <a class="header-link" href="#section-background">背景</a>｜
+      <a class="header-link" href="#section-design">デザイン</a>｜
+      <a class="header-link" href="#section-structure">構成</a>｜
+      <a class="header-link" href="#section-schedule">工数</a>｜
+      <a class="header-link" href="#section-expansion">拡張</a>
+    </nav>
+    <div class="header-actions">
+      <a href="{% url 'signup' %}" class="btn btn-light btn-sm fw-bold">新規登録</a>
+      <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">ログイン</a>
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block page_content %}
+<div class="landing-page">
+
+  <!-- 🎯 ファーストビュー -->
+  <section id="section-intro" class="hero lp-section">
+    <div id="heroCarousel" class="carousel slide custom-pan">
+      <div class="carousel-inner">
+        <!-- slide 1 -->
+        <div class="carousel-item active">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_1.svg' %}" alt="買い時を、もっとスマートに。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>買い時を、もっとスマートに。</h1>
+              <p>あなたの「買いたい」をデータで応援するアプリ</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- slide 2 -->
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_2.svg' %}" alt="日常の買い物を、もっと楽しく。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>日常の買い物を、もっと楽しく。</h1>
+              <p>価格データから最適なタイミングをお知らせします。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- slide 3 -->
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_3.svg' %}" alt="買い時の見逃しをゼロに。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>買い時の見逃しをゼロに。</h1>
+              <p>商品ごとの買い時をデータで可視化。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- slide 4 -->
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_4.svg' %}" alt="あなたの「買いたい」を、逃さない。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>あなたの「買いたい」を、逃さない。</h1>
+              <p>通知と履歴で、買い時を賢く管理。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- arrows -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- ===== 💡 2. できること ===== -->
+<section id="section-features" class="section container my-5 p-5 bg-white rounded-4 shadow-sm">
+  <h2 class="text-center mb-4 fw-bold">💡 できること</h2>
+  <p class="text-center text-muted mb-5 fs-5">
+    「買い時でっせ」は、ユーザーの“買いたい”を逃さないように、<br />
+    商品価格・在庫・セール情報を自動で追跡・可視化し、買い時を通知するデータ支援アプリです。
+  </p>
+
+  <div class="row g-5">
+    <div class="col-md-6">
+      <h4 class="fw-bold text-primary">👤 ユーザー視点</h4>
+      <ul class="fs-5 mt-3">
+        <li>🛒 <strong>商品価格を自動で追跡</strong>し、設定価格を下回ると通知</li>
+        <li>📬 <strong>メール通知＋履歴機能</strong>で「いつ・どれくらい下がったか」を把握</li>
+        <li>📱 シンプルで直感的なUIで、スマホでも快適に利用可能</li>
+        <li>⭐ 「お気に入り」登録で、複数商品の比較・ランキングが可能</li>
+        <li>🔍 過去の価格データをグラフ表示し、買い時を一目で判断</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h4 class="fw-bold text-primary">🧭 管理者視点</h4>
+      <ul class="fs-5 mt-3">
+        <li>📊 <strong>商品・価格履歴の一括管理</strong>（新規登録・削除・編集対応）</li>
+        <li>🗂 <strong>通知ログ・エラーログ</strong>の自動記録・フィルタリング表示</li>
+        <li>⚙️ 管理画面からユーザー別の通知設定や挙動をテスト可能</li>
+        <li>💬 例外処理・API連携エラーを即時に検知して安全にログ化</li>
+        <li>🧾 運用データのバックアップ・統計出力にも対応予定</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 💭 3. 作成の背景 ===== -->
+<section id="section-background" class="section container my-5 p-5 bg-white rounded-4 shadow-sm">
+  <h2 class="fw-bold text-center mb-4">💭 作成の背景</h2>
+  <div class="row g-5 align-items-center">
+    <div class="col-md-6">
+      <h4 class="fw-bold mb-3">💭 きっかけ</h4>
+      <p class="fs-6">
+        ほしい商品の値動きをチェックしているうちに、<br>
+        「あのとき買えばよかった」「また値上がりしてる…」という後悔を感じたことが多くありました。<br>
+        この体験をもとに、「買い時を逃さない仕組み」を自動化したいと考えました。
+      </p>
+      <ul class="fs-6 mt-3">
+        <li>📉 価格の上下に気づくのが遅れる</li>
+        <li>📅 定期的にチェックするのが面倒</li>
+        <li>⏰ 割引タイミングを逃して損をする</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h4 class="fw-bold mb-3">💡 狙い</h4>
+      <ul class="fs-6">
+        <li>🧠 「買い時」をデータで判断できる環境を提供</li>
+        <li>💻 Django＋API連携を用いた実践的な開発スキルの習得</li>
+        <li>📈 ポートフォリオとして「学習×実装×分析」を一体化</li>
+        <li>🌐 将来的にはEC横断の価格比較プラットフォームへ拡張</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 🎨 4. デザイン ===== -->
+<section id="section-design" class="section container my-5 p-5 bg-white rounded-4 shadow-sm text-center">
+  <h2 class="fw-bold mb-4">🎨 デザインコンセプト</h2>
+  <p class="fs-5 mb-4">
+    「価格比較アプリ＝業務的」という印象を避け、<br>
+    日常的に触ってもストレスを感じない “やわらかさ” を意識しました。
+  </p>
+  <div class="row justify-content-center g-4">
+    <div class="col-md-5 p-4 rounded-4 shadow-sm bg-light">
+      <h5 class="fw-bold text-primary mb-3">ユーザー側（M PLUS Rounded 1c）</h5>
+      <p class="text-muted mb-2">柔らかい丸ゴシックと余白重視のレイアウトで、安心感と温かみを演出。</p>
+      <ul class="text-start mx-auto" style="max-width: 400px;">
+        <li>背景に淡い和紙テクスチャを使用</li>
+        <li>角丸ボタン・影付きカードで立体感を演出</li>
+        <li>アニメーションを最小限にして読み込みを軽快化</li>
+      </ul>
+    </div>
+    <div class="col-md-5 p-4 rounded-4 shadow-sm bg-white border">
+      <h5 class="fw-bold text-secondary mb-3">管理者側（Roboto）</h5>
+      <p class="text-muted mb-2">情報密度の高い画面でも可読性を確保するため、直線的・論理的な構成を採用。</p>
+      <ul class="text-start mx-auto" style="max-width: 400px;">
+        <li>Bootstrap標準コンポーネントを再構成して統一感を確保</li>
+        <li>テーブル／グリッド配置で情報管理を効率化</li>
+        <li>アラートやエラー表示を明瞭にし、UXを重視</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ⚙️ 5. 開発構成 ===== -->
+<section id="section-structure" class="section container my-5 p-5 bg-white rounded-4 shadow-sm">
+  <h2 class="fw-bold text-center mb-4">⚙️ 開発構成</h2>
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-6">
+      <h5 class="fw-bold mb-2">🧩 使用技術</h5>
+      <ul class="fs-6">
+        <li><strong>Django 5.2 / Python 3.12：</strong> Webアプリ基盤の構築・ルーティング・モデル管理</li>
+        <li><strong>Bootstrap 5：</strong> レイアウト・コンポーネント・レスポンシブ対応</li>
+        <li><strong>SQLite（開発）／MySQL（本番）:</strong> 商品・履歴・ログデータの管理</li>
+        <li><strong>Rakuten Ichiba API：</strong> 商品価格データ・商品情報の取得</li>
+        <li><strong>AWS構成：</strong> EC2・RDS・S3・CloudWatchによる運用を前提</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h5 class="fw-bold mb-2">📦 ディレクトリ構成（主要部）</h5>
+      <pre class="bg-light rounded-3 p-3 small text-start border">kaidoki-desse/
+├─ main/
+│  ├─ models.py（商品・履歴・通知ログ）
+│  ├─ views_product.py（一覧・登録・削除）
+│  ├─ utils/error_logger.py（例外安全なログ保存）
+│  ├─ static/css, js, images/
+│  └─ templates/
+├─ templates/
+│  ├─ layout-landing.html
+│  ├─ layout-admin.html
+│  └─ base.html
+└─ static/
+   ├─ css/
+   └─ images/
+</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 🕒 6. スケジュール感 ===== -->
+<section id="section-schedule" class="section container my-5 p-5 bg-white rounded-4 shadow-sm text-center">
+  <h2 class="fw-bold mb-4">🕒 スケジュール感</h2>
+  <p class="fs-5">職業訓練期間内（約4か月）で、企画〜実装〜発表までを一貫して完遂。</p>
+  <div class="timeline mx-auto text-start" style="max-width:700px;">
+    <ul class="list-unstyled fs-6">
+      <li><strong>1か月目：</strong> 環境構築、ER図・画面遷移図・AWS設計書作成</li>
+      <li><strong>2か月目：</strong> Django実装（モデル・ビュー・フォーム・API連携）完了</li>
+      <li><strong>3か月目：</strong> UIデザイン・バリデーション・テストケース実装</li>
+      <li><strong>4か月目：</strong> ドキュメント整理、発表資料作成、AWS検証環境構築</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== 🚀 7. 今後の拡張 ===== -->
+<section id="section-expansion" class="section container my-5 p-5 bg-white rounded-4 shadow-sm text-center">
+  <h2 class="fw-bold mb-4">🚀 今後の拡張</h2>
+  <p class="fs-5 mb-4">
+    「データで買い時を見極める」から「買う行動を支援する」アプリへ。<br>
+    ユーザー体験をより快適にするため、機能拡張を継続予定です。
+  </p>
+
+  <div class="row justify-content-center g-4">
+    <div class="col-md-5 p-4 rounded-4 shadow-sm bg-light">
+      <h5 class="fw-bold text-primary mb-3">🔔 通知形式</h5>
+      <p class="text-muted mb-0">
+        現在はメール通知のみ。将来的にはLINE・Slackなど、リアルタイムチャット連携を予定。<br>
+        EC連携API（Rakuten, Yahoo, Amazon）を統合し、複数商品を一括追跡できる仕組みへ進化。
+      </p>
+    </div>
+    <div class="col-md-5 p-4 rounded-4 shadow-sm bg-light">
+      <h5 class="fw-bold text-primary mb-3">⏰ 通知パターン</h5>
+      <p class="text-muted mb-0">
+        条件ベース通知（割引率・価格閾値・在庫変動）に加えて、<br>
+        将来的にはAIによる「次の買い時予測」モデルを導入予定。
+      </p>
+    </div>
+  </div>
+
+  <div class="row justify-content-center g-4 mt-4">
+    <div class="col-md-10 p-4 rounded-4 shadow-sm bg-white border">
+      <h5 class="fw-bold text-secondary mb-3">💡 他の構想</h5>
+      <ul class="text-start fs-6 mb-0" style="display:inline-block;">
+        <li>📈 価格推移グラフの拡張（移動平均・期間指定・月別傾向）</li>
+        <li>🤝 ユーザー同士の「買い時共有」・人気商品ランキング</li>
+        <li>🤖 AIによるセール時期予測・トレンド検出</li>
+        <li>🌍 マルチEC比較（Amazon／楽天／Yahoo!／Qoo10／価格.comなど）</li>
+        <li>📊 ダッシュボードでの可視化・データ分析ページの新設</li>
+        <li>🧭 通知履歴・購入履歴の連動とレコメンド機能</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/landing.js' %}?v={{ STATIC_VERSION }}" defer></script>
+<!-- <script src="{% static 'js/smooth-scroll.js' %}?v={{ STATIC_VERSION }}" defer></script> -->
+
+<!-- 既存：上に戻るボタン -->
+<script src="{% static 'js/scrolltop.js' %}" defer></script>
+{% endblock %}

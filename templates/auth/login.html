@@ -1,0 +1,52 @@
+{% extends "layout-auth.html" %}
+
+{% block page_content %}
+<div class="auth-wrapper">
+  <div class="auth-content">
+    <h1 class="page-title"><span class="marker">ログイン</span></h1>
+
+    <div class="auth-card">
+      <form method="post" action="{% url 'login' %}" id="login-form" autocomplete="on" novalidate>
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <!-- ユーザー名 -->
+        <div class="form-group mb-3">
+          <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+          <div class="input-wrapper">
+            {{ form.username }}
+          </div>
+          {% for error in form.username.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <!-- パスワード -->
+        <div class="form-group mb-3">
+          <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+          <div class="input-wrapper password-wrapper">
+            {{ form.password }}
+            <button type="button" class="toggle-password" aria-label="パスワード表示切替">
+              <i class="fa-solid fa-eye-slash"></i>
+            </button>
+          </div>
+          {% for error in form.password.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="auth-btn-wrapper">
+          <button type="submit" class="auth-btn">ログイン</button>
+        </div>
+      </form>
+
+      <div class="auth-links">
+        <a href="{% url 'signup' %}">新規登録はこちら</a>
+        <a href="{% url 'password_reset' %}">パスワードをお忘れの方</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

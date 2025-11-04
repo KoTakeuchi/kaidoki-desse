@@ -4,6 +4,26 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/user.css' %}?v={{ STATIC_VERSION }}">
+<style>
+  /* 🔔 未読通知バッジ */
+  .notif-badge {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    background: #dc3545;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0 6px;
+    border-radius: 50%;
+    display: none;
+    transform: translate(25%, -25%);
+  }
+
+  .notif-badge.active {
+    display: inline-block;
+  }
+</style>
 {% endblock %}
 
 {% block header %}
@@ -19,24 +39,31 @@
 
     <!-- 🔹 右側：ナビゲーションメニュー -->
     <div class="header-actions">
-      <ul class="navbar-nav ms-auto d-flex align-items-center flex-row gap-3 mb-0">
+      <ul class="navbar-nav ms-auto d-flex align-items-center flex-row gap-4 mb-0">
 
         <!-- 商品 -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
-            <img src="{% static 'images/icon_product.png' %}" alt="商品" class="nav-icon me-1">商品
+            <img src="{% static 'images/icon_product.png' %}" alt="商品" class="nav-icon me-2">商品
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{% url 'main:product_create' %}">商品登録</a></li>
             <li><a class="dropdown-item" href="{% url 'main:product_list' %}">商品一覧</a></li>
-            <li><a class="dropdown-item" href="{% url 'main:category_list' %}">カテゴリ管理</a></li>
+            <li><a class="dropdown-item" href="{% url 'main:category_my' %}">カテゴリ管理</a></li>
           </ul>
         </li>
 
         <!-- 通知 -->
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown position-relative">
           <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
-            <img src="{% static 'images/icon_notification.png' %}" alt="通知" class="nav-icon-small me-1">通知
+            <img src="{% static 'images/icon_notification.png' %}" alt="通知" class="nav-icon-small me-2">
+            通知
+            <!-- 🔔 未読件数バッジ -->
+            <span id="unread-badge"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+              style="font-size: 0.75rem; display: none;">
+              0
+            </span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><a class="dropdown-item" href="{% url 'main:notifications' %}">通知一覧</a></li>
@@ -44,10 +71,11 @@
           </ul>
         </li>
 
+
         <!-- ユーザー -->
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle text-white fw-bold" href="#" data-bs-toggle="dropdown">
-            <img src="{% static 'images/icon_user.png' %}" alt="ユーザー" class="nav-icon me-1">
+            <img src="{% static 'images/icon_user.png' %}" alt="ユーザー" class="nav-icon me-2">
             {{ user.username }} さん
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
@@ -69,8 +97,13 @@
 </header>
 {% endblock %}
 
-{% block user_content %}
+{% block page_content %}
 <div class="container py-4">
-  {% block page_content %}{% endblock %}
-</div>
-{% endblock %}
+  {% endblock %}
+
+  {% block extra_js %}
+  <script src="{% static 'js/header_notifications.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script src="{% static 'js/unread_badge.js' %}?v={{ STATIC_VERSION }}"></script>
+  <script src="{% static 'js/notification_read.js' %}?v={{ STATIC_VERSION }}"></script>
+
+  {% endblock %}

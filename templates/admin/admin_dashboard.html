@@ -1,0 +1,118 @@
+{% extends "layout-admin.html" %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | ダッシュボード{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid px-0">
+  <h2 class="mb-4 fw-bold text-dark">ダッシュボード</h2>
+
+  <!-- ======================== -->
+  <!-- メトリクスカード -->
+  <!-- ======================== -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 bg-light">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">登録ユーザー数</h6>
+          <h3 class="fw-bold text-dark">{{ stats.user_count }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-light">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">登録商品数</h6>
+          <h3 class="fw-bold text-dark">{{ stats.product_count }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-light">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">今週の通知数</h6>
+          <h3 class="fw-bold text-dark">{{ stats.notification_week }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 bg-light">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">総エラーログ数</h6>
+          <h3 class="fw-bold text-dark">{{ stats.error_count }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- 最新商品登録 -->
+  <!-- ======================== -->
+  <div class="card border-0 mb-4">
+    <div class="card-header bg-white border-0 border-bottom" style="border-color:#b4e4e4 !important;">
+      <h5 class="fw-bold mb-0 text-dark">最新の登録商品</h5>
+    </div>
+    <div class="card-body p-0">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr class="text-secondary">
+            <th>商品名</th>
+            <th>ユーザー</th>
+            <th>登録日</th>
+            <th>価格</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in latest_products %}
+          <tr>
+            <td>{{ product.product_name }}</td>
+            <td>{{ product.user.username }}</td>
+            <!-- 最新通知テーブル内 -->
+            <td>{{ n.notified_at|date:"Y-m-d H:i" }}</td>
+            <td>{{ product.current_price }} 円</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted py-3">データなし</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ======================== -->
+  <!-- 最新通知 -->
+  <!-- ======================== -->
+  <div class="card border-0">
+    <div class="card-header bg-white border-0 border-bottom" style="border-color:#b4e4e4 !important;">
+      <h5 class="fw-bold mb-0 text-dark">最新の通知</h5>
+    </div>
+    <div class="card-body p-0">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr class="text-secondary">
+            <th>通知内容</th>
+            <th>ユーザー</th>
+            <th>送信日</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for n in latest_notifications %}
+          <tr>
+            <td>{{ n.message }}</td>
+            <td>{{ n.user.username }}</td>
+            <td>{{ n.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="text-center text-muted py-3">データなし</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+/* ==========================
+   カスタムフォント定義
+========================== */
+@font-face {
+    font-family: 'MakinasFlat';
+    src: url('../fonts/Makinas-4-Flat.otf') format('opentype');
+    font-display: swap;
+}
+
+/* ==========================
+   カラースキーム変数
+========================== */
+:root {
+    --main: #3CA9A9;
+    --accent: #b4e4e4;
+    --text: #0d2626;
+    --bg: #f6f8f8;
+}
+
+/* ==========================
+   基本設定
+========================== */
+body {
+    font-family: 'MakinasFlat', 'Source Han Sans JP', 'Noto Sans JP', sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+}
+
+/* ==========================
+   サイドバー
+========================== */
+.sidebar {
+    width: 240px;
+    background-color: var(--main);
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    background-color: #2c7e7e;
+    text-align: center;
+    font-size: 1.3rem;
+    letter-spacing: 0.03em;
+    user-select: none;
+    font-family: 'MakinasFlat', sans-serif;
+}
+
+.sidebar .nav {
+    flex-grow: 1;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sidebar .nav-link {
+    color: #fff;
+    display: block;
+    padding: 0.8rem 1.2rem;
+    font-weight: 500;
+    border-left: 4px solid transparent;
+    text-decoration: none;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--accent);
+    color: var(--text);
+    border-left: 4px solid #fff;
+}
+
+/* ==========================
+   メインコンテンツ
+========================== */
+.content {
+    margin-left: 240px;
+    background-color: #fff;
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'MakinasFlat', 'Source Han Sans JP', sans-serif;
+}
+
+/* ==========================
+   テーブル / ボタン
+========================== */
+.table thead {
+    background-color: var(--accent);
+}
+
+.btn-main {
+    background-color: var(--main);
+    color: #fff;
+    border: none;
+    font-family: 'MakinasFlat', sans-serif;
+}
+
+.btn-main:hover {
+    background-color: #2c7e7e;
+}
+
+/* ==========================
+   不要な丸みの除去
+========================== */
+.btn,
+.form-control,
+.table,
+.modal-content {
+    border-radius: 0 !important;
+}

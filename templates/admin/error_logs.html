@@ -1,0 +1,43 @@
+{% extends "layout-admin.html" %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | エラーログ一覧{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4">
+  <h3 class="fw-bold text-dark mb-4">⚠ エラーログ一覧</h3>
+
+  {% if logs %}
+  <div class="table-responsive">
+    <table class="table align-middle mb-0 border-top" style="border-color:#b4e4e4;">
+      <thead class="table-light">
+        <tr class="text-secondary">
+          <th>ID</th>
+          <th>ユーザー</th>
+          <th>発生箇所</th>
+          <th>エラー種類</th>
+          <th>内容</th>
+          <th>日時</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td>{{ log.id }}</td>
+          <td>{{ log.user|default:"-" }}</td>
+          <td>{{ log.source }}</td>
+          <td>{{ log.type_name }}</td>
+          <td>
+            <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ log.err }}</pre>
+          </td>
+          <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted mt-3">エラーログはまだありません。</p>
+  {% endif %}
+</div>
+{% endblock %}

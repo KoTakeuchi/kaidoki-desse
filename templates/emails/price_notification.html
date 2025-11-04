@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【買い時でっせ】買い時通知</title>
+  <style>
+    body {
+      font-family: "Noto Sans JP", sans-serif;
+      background-color: #fafafa;
+      color: #333;
+      padding: 20px;
+    }
+    h2 {
+      color: #C35656;
+      border-bottom: 2px solid #F7CB6E;
+      padding-bottom: 5px;
+    }
+    .product {
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .product img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 15px;
+    }
+    .product-info a {
+      font-weight: bold;
+      text-decoration: none;
+      color: #333;
+    }
+    .footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h2>📢 本日の買い時まとめ（{{ send_date }}）</h2>
+
+  <p>{{ user.username }} さん、以下の商品が買い時価格になりました！</p>
+
+  {% for e in events %}
+    <div class="product">
+      {% if e.product.image_url %}
+        <img src="{{ e.product.image_url }}" alt="{{ e.product.product_name }}">
+      {% endif %}
+      <div class="product-info">
+        <a href="{{ e.product.product_url }}">{{ e.product.product_name }}</a><br>
+        <small>{{ e.message }}</small><br>
+        <small>通知日時：{{ e.occurred_at|date:"Y-m-d H:i" }}</small>
+      </div>
+    </div>
+  {% endfor %}
+
+  <div class="footer">
+    このメールは「買い時でっせ」から自動送信されています。<br>
+    <a href="{{ site_url }}">{{ site_name }}</a>
+  </div>
+</body>
+</html>

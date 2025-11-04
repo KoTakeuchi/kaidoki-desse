@@ -1,0 +1,135 @@
+{% extends "layout-user.html" %}
+{% load static %}
+{% block title %}カテゴリ管理{% endblock %}
+
+{% block page_content %}
+<div class="container py-4">
+  <div class="page-header">
+    <h1 class="page-title">
+      <span class="title-inner">カテゴリ管理</span>
+    </h1>
+  </div>
+
+  <!-- カテゴリ管理ヘッダー部分 -->
+  <div class="category-header d-flex justify-content-between align-items-start mb-2"
+    style="width: 66%; margin: 0 auto;">
+    <p class="text-muted small category-note mb-0">
+      共通カテゴリは自動提供されます。<br>
+      自分専用カテゴリのみ操作できます（最大5件）。
+    </p>
+    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal"
+      data-bs-target="#createModal">
+      ＋ カテゴリ追加
+    </button>
+  </div>
+
+  <!-- カテゴリ一覧テーブル -->
+  <div class="category-table-wrapper shadow-sm rounded-4 p-3 bg-white">
+    <table class="table align-middle text-center mb-0 category-table">
+      <thead class="table-header-row">
+        <tr>
+          <th style="width:10%;">No.</th>
+          <th style="width:45%;">カテゴリ名</th>
+          <th style="width:15%;">登録数</th>
+          <th style="width:30%;">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr data-id="{{ cat.id }}" data-count="{{ cat.product_count }}">
+          <td>{{ forloop.counter }}</td>
+          <td>{{ cat.category_name }}</td>
+          <td>
+            <span class="badge bg-light text-dark border border-secondary-subtle">
+              {{ cat.product_count }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-outline-secondary btn-sm me-1 rounded-pill" data-bs-toggle="modal"
+              data-bs-target="#editModal" data-id="{{ cat.id }}" data-name="{{ cat.category_name }}">
+              編集
+            </button>
+            <button class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal"
+              data-bs-target="#deleteModal" data-id="{{ cat.id }}">
+              削除
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-muted small">カテゴリがまだ登録されていません。</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- カテゴリ追加モーダル -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">カテゴリ追加</h5>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">カテゴリ名（全角10文字以内）</label>
+        <input type="text" id="createCategoryInput" class="form-control rounded-pill" placeholder="カテゴリ名を入力"
+          maxlength="10">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger rounded-pill" id="confirmCreateBtn">登録</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">カテゴリ編集</h5>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">カテゴリ名（全角10文字以内）</label>
+        <input type="text" id="editCategoryInput" class="form-control rounded-pill" maxlength="10">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger rounded-pill" id="confirmEditBtn">更新</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 削除モーダル -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">カテゴリ削除</h5>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-2">
+          このカテゴリを削除しますか？<br>
+          商品は「未分類」に移動します。
+        </p>
+        <p class="small text-muted mb-2">
+          確認のため、カテゴリ名を入力してください。
+        </p>
+        <input type="text" id="deleteConfirmInput" class="form-control rounded-pill text-center" placeholder="カテゴリ名を入力">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-danger rounded-pill" id="confirmDeleteBtn" disabled>削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ✅ JS読込（統合版のみ） -->
+<script src="{% static 'js/category_manage.js' %}"></script>
+{% endblock %}

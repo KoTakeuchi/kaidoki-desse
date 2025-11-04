@@ -1,9 +1,12 @@
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\models.py
 from django.db import models
+from django.db.models.signals import pre_save, post_save
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 # ========================================
 # 共通：正の値バリデータ
@@ -16,9 +19,26 @@ def validate_positive(value):
         raise ValidationError("価格は1円以上で入力してください。")
 
 
-# ========================================
-# カテゴリテーブル
-# ========================================
+# ==========================================================
+# カスタムマネージャ（共通＋ユーザーカテゴリ管理）
+# ==========================================================
+class CategoryManager(models.Manager):
+    def for_user(self, user):
+        """共通カテゴリ＋ユーザー専用カテゴリを取得"""
+        return self.filter(Q(is_global=True) | Q(user=user))
+
+    def get_or_create_unclassified(self, user):
+        """未分類カテゴリを取得または作成"""
+        return self.get_or_create(
+            user=user,
+            category_name="未分類",
+            is_global=False
+        )
+
+
+# ==========================================================
+# カテゴリテーブル（クラスベースリファクタ版）
+# ==========================================================
 class Category(models.Model):
     category_name = models.CharField("カテゴリ名", max_length=100, db_index=True)
     is_global = models.BooleanField(default=False, verbose_name="共通カテゴリ")
@@ -31,6 +51,9 @@ class Category(models.Model):
     )
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
+
+    # ✅ カスタムマネージャ登録
+    objects = CategoryManager()
 
     class Meta:
         db_table = "categories"
@@ -48,22 +71,47 @@ class Category(models.Model):
                 name="uniq_user_category_name_per_user",
             ),
         ]
+        ordering = ["id"]
 
     def __str__(self):
         scope = "共通" if self.is_global else f"{self.user.username if self.user else '—'}"
         return f"[{scope}] {self.category_name}"
 
+    # ======================================================
+    # カテゴリ操作系メソッド
+    # ======================================================
+    def assign_to_unclassified(self):
+        """
+        このカテゴリに紐づく商品を「未分類」に移動する。
+        削除時の安全処理で使用。
+        """
+        from main.models import Product  # 循環参照防止のため遅延インポート
+        unclassified, _ = Category.objects.get_or_create_unclassified(
+            self.user)
+        Product.objects.filter(category=self).update(category=unclassified)
+
+
+# ==========================================================
+# ユーザー作成時に未分類カテゴリを自動生成
+# ==========================================================
+@receiver(post_save, sender=User)
+def create_default_category(sender, instance, created, **kwargs):
+    """新規ユーザー登録時、自動で未分類カテゴリを生成"""
+    if created:
+        Category.objects.get_or_create_unclassified(instance)
 
 # ========================================
 # 商品テーブル（修正版）
 # ========================================
+
+
 class Product(models.Model):
     PRIORITY_CHOICES = [
         ("普通", "普通"),
         ("高", "高"),
     ]
 
-    # ✅ 仕様変更：通知条件フラグ（買い時／割引率／最安値）
+    # ✅ 通知条件フラグ（買い時／割引率／最安値）
     FLAG_CHOICES = [
         ("buy_price", "買い時価格で通知"),
         ("percent_off", "割引率で通知"),
@@ -73,7 +121,7 @@ class Product(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="ユーザー")
 
-    # ✅ 仕様変更：カテゴリを複数選択可能に（ManyToMany）
+    # ✅ カテゴリを複数選択可能に
     categories = models.ManyToManyField(
         Category,
         blank=True,
@@ -86,27 +134,17 @@ class Product(models.Model):
     shop_name = models.CharField(
         "ショップ名", max_length=255, blank=True, null=True)
 
-    # ✅ 商品画像URL：APIで取得予定のため任意・フォーム上は非表示
+    # ✅ 商品画像URL（任意）
     image_url = models.URLField(
         "商品画像URL", max_length=255, null=True, blank=True, default=""
     )
 
     # --- 価格関連 ---
     regular_price = models.DecimalField(
-        "定価",
-        max_digits=10,
-        decimal_places=0,
-        null=True,
-        blank=True,
-        validators=[validate_positive],
+        "定価", max_digits=10, decimal_places=0, null=True, blank=True, validators=[validate_positive]
     )
     initial_price = models.DecimalField(
-        "登録時価格",
-        max_digits=10,
-        decimal_places=0,
-        null=True,
-        blank=True,
-        validators=[validate_positive],
+        "登録時価格", max_digits=10, decimal_places=0, null=True, blank=True, validators=[validate_positive]
     )
     threshold_price = models.DecimalField(
         "買い時価格",
@@ -119,8 +157,7 @@ class Product(models.Model):
     )
 
     priority = models.CharField(
-        "優先度", max_length=2, choices=PRIORITY_CHOICES, default="普通"
-    )
+        "優先度", max_length=2, choices=PRIORITY_CHOICES, default="普通")
 
     # --- 通知条件フラグ ---
     flag_type = models.CharField(
@@ -174,8 +211,7 @@ class Product(models.Model):
         db_table = "products"
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "product_url"], name="uq_user_producturl"
-            )
+                fields=["user", "product_url"], name="uq_user_producturl")
         ]
         verbose_name = "商品"
         verbose_name_plural = "商品"
@@ -183,10 +219,56 @@ class Product(models.Model):
     def __str__(self):
         return self.product_name
 
+    # =========================================================
+    # ✅ 在庫状態変化を検知して NotificationEvent を登録
+    # =========================================================
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        prev_in_stock = None
 
+        # 既存データの場合、前回の在庫状態を取得
+        if not is_new:
+            try:
+                prev_in_stock = Product.objects.get(pk=self.pk).is_in_stock
+            except Product.DoesNotExist:
+                pass
+
+        super().save(*args, **kwargs)
+
+
+@receiver(pre_save, sender=Product)
+def detect_restock(sender, instance, **kwargs):
+    """
+    ✅ 在庫復活検知（在庫なし → あり）
+    在庫が復活したタイミングで NotificationEvent を生成
+    """
+    if not instance.pk:
+        return  # 新規登録時はスキップ
+
+    try:
+        old = Product.objects.get(pk=instance.pk)
+        # 在庫が「なし → あり」に変わった場合のみ検知
+        if old.is_in_stock is False and instance.is_in_stock is True:
+            if instance.restock_notify_enabled:
+                # 循環参照防止のため遅延インポート
+                from main.models import NotificationEvent
+                from django.utils import timezone
+
+                NotificationEvent.objects.create(
+                    user=instance.user,
+                    product=instance,
+                    event_type=NotificationEvent.EventType.RESTOCK,
+                    message=f"『{instance.product_name}』が在庫復活しました！",
+                    occurred_at=timezone.now(),
+                    sent_flag=False
+                )
+    except Product.DoesNotExist:
+        pass
 # ========================================
 # 価格履歴テーブル（数量対応）
 # ========================================
+
+
 class PriceHistory(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, verbose_name="商品"
@@ -212,10 +294,11 @@ class PriceHistory(models.Model):
         stock_display = "不明" if self.stock_count is None else f"{self.stock_count}個"
         return f"{self.product.product_name} - ¥{self.price}（在庫:{stock_display}）[{self.checked_at:%Y-%m-%d}]"
 
-
 # ========================================
 # 通知ログ・設定・イベント・エラー類
 # ========================================
+
+
 class NotificationLog(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -235,9 +318,10 @@ class NotificationLog(models.Model):
 class NotificationEvent(models.Model):
     class EventType(models.TextChoices):
         THRESHOLD_HIT = "threshold_hit", "買い時価格ヒット"
-        LOWEST_PRICE = "LOWEST_PRICE", "過去最安値を更新"
-        DISCOUNT_OVER = "DISCOUNT_OVER", "割引率指定以上"
+        LOWEST_PRICE = "lowest_price", "過去最安値を更新"
+        DISCOUNT_OVER = "discount_over", "割引率指定以上"
         STOCK_LOW = "stock_low", "在庫少通知"
+        RESTOCK = "restock", "在庫復活通知"  # ✅ 追加
 
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="notification_events"
@@ -263,9 +347,11 @@ class NotificationEvent(models.Model):
                 name="uniq_event_same_second",
             )
         ]
+        verbose_name = "通知イベント"
+        verbose_name_plural = "通知イベント一覧"
 
     def __str__(self):
-        return f"{self.user.username}:{self.product.product_name}:{self.event_type}"
+        return f"{self.user.username}:{self.product.product_name}:{self.get_event_type_display()}"
 
 
 # ========================================
@@ -295,15 +381,15 @@ class ErrorLog(models.Model):
 # ========================================
 class UserNotificationSetting(models.Model):
     user = models.OneToOneField(
-        User, on_delete=models.CASCADE, verbose_name="ユーザー")
+        User, on_delete=models.CASCADE, verbose_name="ユーザー"
+    )
     enabled = models.BooleanField(default=True, verbose_name="メール通知を有効にする")
     notify_hour = models.PositiveIntegerField(
         default=9, verbose_name="メール通知時刻（時）")
     notify_minute = models.PositiveIntegerField(
         default=0, verbose_name="メール通知時刻（分）")
     timezone = models.CharField(
-        max_length=50, default="Asia/Tokyo", verbose_name="タイムゾーン"
-    )
+        max_length=50, default="Asia/Tokyo", verbose_name="タイムゾーン")
     email = models.EmailField(blank=True, null=True, verbose_name="通知メールアドレス")
 
     APP_NOTIFY_FREQUENCY_CHOICES = [

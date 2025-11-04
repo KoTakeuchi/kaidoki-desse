@@ -1,15 +1,25 @@
-# 実行ディレクトリ: I:\school\kaidoki-desse\kaidoki\urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.shortcuts import redirect
-from django.contrib.auth import views as auth_views
+from django.shortcuts import render
 from main import views
+from main.views_auth import role_based_login_view, custom_password_reset_view
+from django.contrib.auth import views as auth_views
+
+
+# --- トップページ ---
+def landing_page(request):
+    """トップのランディングページ"""
+    return render(request, "layout-landing.html")
+
 
 urlpatterns = [
-    # --- トップページ（mainのlanding_pageへリダイレクト） ---
-    path("", lambda request: redirect("main:landing_page"), name="root"),
+    # --- トップページ ---
+    path("", landing_page, name="landing_page"),
+
+    # --- 新規登録 ---
+    path("signup/", views.signup_view, name="signup"),
 
     # --- 管理画面 ---
     path("admin/", admin.site.urls),
@@ -17,19 +27,21 @@ urlpatterns = [
     # --- main配下（商品・カテゴリ・通知など） ---
     path("main/", include("main.urls")),
 
-    # --- トップ直下のログイン・サインアップ ---
-    path("login/", views.login_view, name="login"),
-    path("logout/", views.logout_view, name="logout"),
-    path("signup/", views.signup_view, name="signup"),
+    # --- REST APIルート（商品・カテゴリ・楽天API など） ---
+    path("api/", include("main.urls_api")),  # ✅ これを追加
 
-    # --- パスワードリセット ---
+    # --- ログイン ---
+    path("login/", role_based_login_view, name="login"),
+
+    # --- ログアウト ---
     path(
-        "password_reset/",
-        auth_views.PasswordResetView.as_view(
-            template_name="auth/password_reset.html"
-        ),
-        name="password_reset",
+        "logout/",
+        auth_views.LogoutView.as_view(next_page="landing_page"),
+        name="logout",
     ),
+
+    # --- パスワードリセット（関数ベース＋Django標準画面構成） ---
+    path("password_reset/", custom_password_reset_view, name="password_reset"),
     path(
         "password_reset/done/",
         auth_views.PasswordResetDoneView.as_view(

@@ -47,14 +47,14 @@ def notification_log_list(request):
         "start_date": start_date,
         "end_date": end_date,
     }
-    return render(request, "admin_notifications.html", context)
+    return render(request, "main/admin_notifications.html", context)
 
 
 @user_passes_test(is_admin)
 def notification_log_detail(request, log_id):
     """通知ログ詳細画面（管理者専用）"""
     log = get_object_or_404(NotificationLog, pk=log_id)
-    return render(request, "admin_notification_detail.html", {"log": log})
+    return render(request, "main/admin_notification_detail.html", {"log": log})
 
 
 # ============================================================

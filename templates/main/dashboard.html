@@ -1,0 +1,56 @@
+{% extends "layout-user.html" %}
+{% block page_content %}
+<div class="container py-4">
+  <h2 class="mb-4">{{ product.product_name }} の価格推移</h2>
+
+  <div class="mb-3">
+    <form method="get">
+      <label for="days">表示期間：</label>
+      <select name="days" id="days" onchange="this.form.submit()">
+        <option value="30" {% if period==30 %}selected{% endif %}>30日</option>
+        <option value="90" {% if period==90 %}selected{% endif %}>90日</option>
+        <option value="180" {% if period==180 %}selected{% endif %}>180日</option>
+      </select>
+    </form>
+  </div>
+
+  <canvas id="priceChart" height="120"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById("priceChart").getContext("2d");
+  const labels = {{ data.labels| safe }};
+  const prices = {{ data.prices| safe }};
+  const avgPrice = {{ data.avg_price|default: "null" }};
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "価格",
+          data: prices,
+          borderColor: "#C35656",
+          tension: 0.2,
+          fill: false,
+        },
+        {
+          label: "平均価格",
+          data: prices.map(_ => avgPrice),
+          borderColor: "#F7CB6E",
+          borderDash: [5, 5],
+          pointRadius: 0,
+          tension: 0,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: false },
+      },
+    },
+  });
+</script>
+{% endblock %}
