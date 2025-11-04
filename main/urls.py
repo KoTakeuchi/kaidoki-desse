@@ -12,7 +12,6 @@ from . import (
     views_product,
     views_category,
     views_dashboard,
-    views_admin,
 )
 from django.contrib.auth import views as auth_views
 from main.views_auth import custom_password_reset_view
@@ -29,7 +28,6 @@ urlpatterns = [
         auth_views.LogoutView.as_view(next_page="main:landing_page"),
         name="logout",
     ),
-
 
     # --- ユーザー関連 ---
     path("user/profile/", views_profile.profile_view, name="profile"),
@@ -92,21 +90,5 @@ urlpatterns = [
     # --- 通知ログ ---
     path("notifications/log/", views_dashboard.notification_log_list,
          name="notification_log"),
-
-
-
-
-    # --- 管理者用 ---
-    path("admin/dashboard/", views_admin.admin_dashboard, name="admin_dashboard"),
-    path("admin/users/", views_admin.admin_user_list, name="admin_user_list"),
-    path("admin/products/", views_admin.admin_product_list,
-         name="admin_product_list"),
-    path("admin/categories/", views_admin.admin_categories,
-         name="admin_categories"),  # ← これを追加
-    path("admin/notifications/", views_admin.admin_notification_list,
-         name="admin_notifications"),
-    path("admin/notifications/<int:log_id>/",
-         views_admin.admin_notification_detail, name="admin_notification_detail"),
-    path("admin/error_logs/", views_admin.admin_error_logs, name="admin_error_logs"),
 
 ]

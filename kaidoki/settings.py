@@ -42,6 +42,7 @@ else:
 
 # ===== アプリ =====
 INSTALLED_APPS = [
+    "django_extensions",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "main",
+    'admin_app',  # ← これを追加
 ]
 
 MIDDLEWARE = [
@@ -98,10 +100,11 @@ USE_TZ = True
 
 # ===== 静的ファイル =====
 STATIC_URL = "/static/"
-# STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    BASE_DIR / "main" / "static",
-]
+# 開発用の配置場所（直接参照する）
+STATICFILES_DIRS = [BASE_DIR / "static"]
+# collectstatic で集約する先（本番用）
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== 認証・遷移 =====
@@ -188,13 +191,13 @@ if ENV == "dev":
     USE_REAL_MAIL = os.getenv("USE_REAL_MAIL", "false").lower() == "true"
     if USE_REAL_MAIL:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-        print("[settings] 📧 実メール送信モード（Gmail）で起動")
+        print("[settings]  実メール送信モード（Gmail）で起動")
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-        print("[settings] 💬 コンソール出力モードで起動")
+        print("[settings]  コンソール出力モードで起動")
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    print("[settings] 📧 本番SMTPモードで起動")
+    print("[settings]  本番SMTPモードで起動")
 
 
 # =============================

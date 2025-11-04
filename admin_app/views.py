@@ -1,6 +1,8 @@
 # =============================
 #  Import
 # =============================
+from main.models import Category
+from django.db.models import Prefetch
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -44,7 +46,7 @@ def admin_dashboard(request):
         "latest_products": Product.objects.select_related("user").order_by("-created_at")[:5],
         "latest_notifications": NotificationLog.objects.select_related("user").order_by("-notified_at")[:5],
     }
-    return render(request, "admin/admin_dashboard.html", context)
+    return render(request, "admin_app/admin_dashboard.html", context)
 
 
 # =============================
@@ -55,26 +57,32 @@ def admin_dashboard(request):
 def admin_user_list(request):
     """全ユーザー一覧"""
     users = User.objects.annotate(product_count=Count("product"))
-    return render(request, "admin/admin_user_list.html", {"users": users})
+    return render(request, "admin_app/admin_user_list.html", {"users": users})
 
 
 # =============================
 #  商品管理
 # =============================
 
+
 @user_passes_test(is_admin)
 def admin_product_list(request):
     """全ユーザーの商品一覧"""
-    products = Product.objects.select_related(
-        "user", "category").order_by("-created_at")
-    return render(request, "admin/admin_product_list.html", {"products": products})
+    products = (
+        Product.objects
+        .select_related("user")                # 外部キー（user）はJOIN取得
+        .prefetch_related("categories")        # 多対多（categories）は別クエリでまとめ取得
+        .order_by("-created_at")
+    )
+    return render(request, "admin_app/admin_product_list.html", {"products": products})
+
 
 # =============================
 #  カテゴリ管理
 # =============================
 
 
-def admin_categories(request):
+def admin_category(request):
     """共通カテゴリ管理ページ"""
     from main.models import Category  # モデルが Category の場合
     common_categories = Category.objects.filter(is_global=True)
@@ -100,7 +108,7 @@ def admin_categories(request):
 
         return redirect("main:admin_categories")
 
-    return render(request, "admin/admin_categories.html", {"common_categories": common_categories})
+    return render(request, "admin_app/admin_categories.html", {"common_categories": common_categories})
 
 
 # =============================
@@ -126,7 +134,7 @@ def admin_notification_list(request):
     if end_date:
         logs = logs.filter(notified_at__lte=end_date)
 
-    return render(request, "admin/admin_notifications.html", {
+    return render(request, "admin_app/admin_notifications.html", {
         "logs": logs, "query": query, "start_date": start_date, "end_date": end_date,
     })
 
@@ -135,7 +143,7 @@ def admin_notification_list(request):
 def admin_notification_detail(request, log_id):
     """通知ログ詳細"""
     log = get_object_or_404(NotificationLog, pk=log_id)
-    return render(request, "admin/admin_notification_detail.html", {"log": log})
+    return render(request, "admin_app/admin_notification_detail.html", {"log": log})
 
 
 # =============================
@@ -146,4 +154,4 @@ def admin_notification_detail(request, log_id):
 def admin_error_logs(request):
     """管理者用エラーログ一覧"""
     logs = ErrorLog.objects.all().order_by("-created_at")
-    return render(request, "admin/admin_error_logs.html", {"logs": logs})
+    return render(request, "admin_app/admin_error_logs.html", {"logs": logs})

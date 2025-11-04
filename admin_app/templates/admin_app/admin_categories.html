@@ -1,4 +1,4 @@
-{% extends "layout-admin.html" %}
+{% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
 {% block title %}Kaidoki Desse 管理 | 共通カテゴリ管理{% endblock %}
@@ -54,7 +54,7 @@
   </div>
 
   <div class="mt-4">
-    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">← ダッシュボードへ戻る</a>
+    <a href="{% url 'admin_app:admin_dashboard' %}" class="btn btn-outline-secondary">← ダッシュボードへ戻る</a>
   </div>
 </div>
 {% endblock %}
