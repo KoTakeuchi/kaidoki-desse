@@ -64,6 +64,7 @@ urlpatterns = [
     # --- 楽天API ---
     path("api/fetch_rakuten_item/", views_api.fetch_rakuten_item,
          name="fetch_rakuten_item"),
+    path("api/proxy_image/", views_api.proxy_image, name="proxy_image"),
     path("api/categories/", views_category.api_category_list,
          name="api_category_list"),
     path("api/categories/create/", views_category.api_category_create,
@@ -100,9 +101,12 @@ urlpatterns = [
     path("admin/users/", views_admin.admin_user_list, name="admin_user_list"),
     path("admin/products/", views_admin.admin_product_list,
          name="admin_product_list"),
+    path("admin/categories/", views_admin.admin_categories,
+         name="admin_categories"),  # ← これを追加
     path("admin/notifications/", views_admin.admin_notification_list,
          name="admin_notifications"),
     path("admin/notifications/<int:log_id>/",
          views_admin.admin_notification_detail, name="admin_notification_detail"),
     path("admin/error_logs/", views_admin.admin_error_logs, name="admin_error_logs"),
+
 ]

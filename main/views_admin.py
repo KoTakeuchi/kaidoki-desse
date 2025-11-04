@@ -69,6 +69,39 @@ def admin_product_list(request):
         "user", "category").order_by("-created_at")
     return render(request, "admin/admin_product_list.html", {"products": products})
 
+# =============================
+#  カテゴリ管理
+# =============================
+
+
+def admin_categories(request):
+    """共通カテゴリ管理ページ"""
+    from main.models import Category  # モデルが Category の場合
+    common_categories = Category.objects.filter(is_global=True)
+
+    if request.method == "POST":
+        # 追加
+        if "add_name" in request.POST:
+            name = request.POST.get("add_name").strip()
+            if name:
+                Category.objects.create(category_name=name, is_common=True)
+
+        # 編集
+        elif "edit_id" in request.POST:
+            cat = Category.objects.filter(id=request.POST["edit_id"]).first()
+            if cat:
+                cat.category_name = request.POST.get(
+                    "new_name", cat.category_name)
+                cat.save()
+
+        # 削除
+        elif "delete_id" in request.POST:
+            Category.objects.filter(id=request.POST["delete_id"]).delete()
+
+        return redirect("main:admin_categories")
+
+    return render(request, "admin/admin_categories.html", {"common_categories": common_categories})
+
 
 # =============================
 #  通知ログ管理

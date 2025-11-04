@@ -1,4 +1,7 @@
 # 実行ディレクトリ: I:\school\kaidoki-desse\main\views_api.py
+from django.http import HttpResponse, JsonResponse
+from urllib.parse import urlparse, parse_qs
+import re
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_GET
@@ -239,14 +242,8 @@ class UserNotificationSettingView(APIView):
 # fetch_rakuten_item（楽天商品情報取得API）
 # ======================================================
 
-
 @require_GET
 def fetch_rakuten_item(request):
-    """
-    ✅ 楽天市場の商品URLから商品情報を取得して返す
-    例:
-      /api/fetch_rakuten_item/?url=https://item.rakuten.co.jp/xxxx/yyyy
-    """
     url = request.GET.get("url")
     if not url:
         return JsonResponse({"error": "URLが指定されていません。"}, status=400)
@@ -260,24 +257,52 @@ def fetch_rakuten_item(request):
         if not app_id:
             return JsonResponse({"error": "RAKUTEN_APP_ID が未設定です。"}, status=500)
 
-        # URLからショップコードとアイテムコードを推定
-        try:
-            path_parts = parsed.path.strip("/").split("/")
-            if len(path_parts) < 2:
-                return JsonResponse({"error": "URL形式が不正です。"}, status=400)
-            shop_code, item_code = path_parts[-2], path_parts[-1]
-        except Exception:
-            return JsonResponse({"error": "URL解析に失敗しました。"}, status=400)
+        # --- URL解析 ---
+        path = parsed.path.strip("/")
+        path = re.sub(r"/+", "/", path)
+        parts = path.split("/")
+        if len(parts) < 2:
+            return JsonResponse({"error": f"URL形式が不正です: {path}"}, status=400)
 
-        # 楽天API呼び出し
+        shop_code, item_code = parts[-2], parts[-1]
+        item_code = re.sub(r"[\?#/].*$", "", item_code).strip()
+
         endpoint = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
+
+        # --- 第一候補: itemCode検索 ---
         params = {
             "applicationId": app_id,
             "hits": 1,
-            "shopCode": shop_code,
             "itemCode": f"{shop_code}:{item_code}",
         }
-        res = requests.get(endpoint, params=params, timeout=5)
+        print(f"🟢 Try itemCode with shop prefix: {params}")
+
+        # --- リトライ制御付きリクエスト ---
+        for retry in range(3):
+            res = requests.get(endpoint, params=params, timeout=5)
+            if res.status_code == 429:
+                print(f"⚠️ 429 Too Many Requests → {retry+1}回目リトライ待機中")
+                time.sleep(1.5)
+                continue
+            break
+
+        # --- 第二候補: shopCode + keyword検索 ---
+        if res.status_code == 400 or not res.ok:
+            print("🔄 Fallback to keyword + shopCode search")
+            params = {
+                "applicationId": app_id,
+                "hits": 1,
+                "shopCode": shop_code,
+                "keyword": item_code,
+            }
+            for retry in range(3):
+                res = requests.get(endpoint, params=params, timeout=5)
+                if res.status_code == 429:
+                    print(f"⚠️ 429 Too Many Requests → {retry+1}回目リトライ待機中")
+                    time.sleep(1.5)
+                    continue
+                break
+
         res.raise_for_status()
         data = res.json()
 
@@ -286,12 +311,13 @@ def fetch_rakuten_item(request):
 
         item = data["Items"][0]["Item"]
 
+        # ✅ price → initial_price に統一し、確実に数値で返す
         result = {
-            "product_name": item.get("itemName"),
-            "image_url": item.get("mediumImageUrls", [{}])[0].get("imageUrl"),
-            "price": item.get("itemPrice"),
-            "shop_name": item.get("shopName"),
-            "url": item.get("itemUrl"),
+            "product_name": item.get("itemName") or "",
+            "shop_name": item.get("shopName") or "",
+            "initial_price": item.get("itemPrice") or item.get("ItemPrice") or 0,
+            "image_url": item.get("mediumImageUrls", [{}])[0].get("imageUrl") or "",
+            "product_url": item.get("itemUrl") or "",
         }
 
         return JsonResponse(result)
@@ -306,10 +332,41 @@ def fetch_rakuten_item(request):
         return JsonResponse({"error": f"API通信エラー: {e}"}, status=500)
 
     except Exception as e:
+        import traceback
+        print("🔥 fetch_rakuten_item エラー詳細:")
+        traceback.print_exc()
         log_error(
             user=request.user if request.user.is_authenticated else None,
             type_name=type(e).__name__,
             source="fetch_rakuten_item",
+            err=e,
+        )
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_GET
+def proxy_image(request):
+    """
+    楽天画像のCORS対策：サーバー経由で取得して返す
+    例）/main/api/proxy_image/?url=https://thumbnail.image.rakuten.co.jp/〜
+    """
+    img_url = request.GET.get("url")
+    if not img_url:
+        return JsonResponse({"error": "urlパラメータが必要です"}, status=400)
+
+    try:
+        res = requests.get(img_url, timeout=5)
+        res.raise_for_status()
+
+        # 画像のContent-Typeをそのまま返す
+        content_type = res.headers.get("Content-Type", "image/jpeg")
+        return HttpResponse(res.content, content_type=content_type)
+
+    except Exception as e:
+        log_error(
+            user=request.user if request.user.is_authenticated else None,
+            type_name=type(e).__name__,
+            source="proxy_image",
             err=e,
         )
         return JsonResponse({"error": str(e)}, status=500)
