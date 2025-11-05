@@ -1,4 +1,4 @@
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\views_product.py
+
 from django.http import HttpResponse, JsonResponse
 from main.forms import ProductForm
 from django.shortcuts import render, redirect
@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from main.models import Product, Category, PriceHistory
+from admin_app.models import CommonCategory
 from .forms import ProductForm
 from main.utils.error_logger import log_error
 from main.constants import SORT_OPTIONS as sort_options
@@ -21,62 +22,83 @@ from main.constants import SORT_OPTIONS as sort_options
 # =====================================================
 
 
-def _selected_category_ids(request):
-    """GETパラメータ 'cat' をリストで取得（絞り込み保持用）"""
-    return request.GET.getlist("cat")
-
-
-def _has_filter(keyword, selected_cats, stock, priority, sort):
-    """絞り込み中かどうかを判定（クリアボタン制御用）"""
-    return any([
-        keyword,
-        selected_cats,
-        stock != "all",
-        priority != "all",
-        sort in ("cheap", "expensive", "new", "old"),
-    ])
-
-
-def _build_filter_tags(keyword, selected_cats, stock, priority, sort, all_categories):
-    """画面上部に表示する条件タグを構築"""
-    tags = []
-    if keyword:
-        tags.append(("key   word", f"キーワード: {keyword}"))
-
-    if selected_cats:
-        id_to_name = {str(c.id): c.category_name for c in all_categories}
-        names = [id_to_name.get(cid, f"ID:{cid}") for cid in selected_cats]
-        if names:
-            tags.append(("cat", "カテゴリ: " + "・".join(names)))
-
-    if stock == "low":
-        tags.append(("stock", "在庫: わずか"))
-    elif stock == "none":
-        tags.append(("stock", "在庫: なし"))
-
-    if priority in ("高", "普通"):
-        tags.append(("priority", f"優先度: {priority}"))
-
-    if sort == "cheap":
-        tags.append(("sort", "並び順: 安い順"))
-    elif sort == "expensive":
-        tags.append(("sort", "並び順: 高い順"))
-    elif sort == "new":
-        tags.append(("sort", "並び順: 新しい順"))
-    elif sort == "old":
-        tags.append(("sort", "並び順: 古い順"))
-
-    return tags
-
-
 # =====================================================
 # ▼ 商品関連ビュー（最終整合版）
 # =====================================================
 
+# =====================================================
+# 共通ユーティリティ関数（helpers.py相当）
+# =====================================================
+def _selected_category_ids(request):
+    """GETパラメータからカテゴリIDリストを取得"""
+    return request.GET.getlist("cat")
+
+
+def _build_filter_tags(keyword, selected_cats, stock, priority, sort,
+                       global_categories, user_categories, buy_flag=None):
+    """画面上に表示するフィルタタグを組み立てる（共通カテゴリは100番台で管理）"""
+    tags = []
+
+    # --- キーワード ---
+    if keyword:
+        tags.append(("keyword", f"キーワード: {keyword}", "filter-tag-sort"))
+
+    # --- カテゴリ（共通 / 独自）---
+    id_to_name = {}
+    id_to_class = {}
+
+    # 共通カテゴリ → IDを100番台に変換して登録
+    for cat in global_categories:
+        cid = str(cat.id + 100)
+        id_to_name[cid] = cat.category_name
+        id_to_class[cid] = "filter-tag-common"
+
+    # 独自カテゴリ（通常）
+    for cat in user_categories:
+        cid = str(cat.id)
+        id_to_name[cid] = cat.category_name
+        id_to_class[cid] = "filter-tag-user"
+
+    for cid in selected_cats:
+        if cid in id_to_name:
+            tags.append(("cat", id_to_name[cid], id_to_class[cid]))
+
+    # --- 在庫 ---
+    if stock in ("low", "none"):
+        tags.append(
+            ("stock", "在庫わずか" if stock == "low" else "在庫なし", "filter-tag-stock")
+        )
+
+    # --- 優先度 ---
+    if priority in ("高", "普通"):
+        tags.append(("priority", f"優先度: {priority}", "filter-tag-priority"))
+
+    # --- 並び順 ---
+    if sort:
+        sort_map = {
+            "new": "新しい順",
+            "old": "古い順",
+            "cheap": "安い順",
+            "expensive": "高い順",
+        }
+        tags.append(("sort", sort_map.get(sort, "並び順"), "filter-tag-sort"))
+
+    # --- 買い時 ---
+    if buy_flag == "1":
+        tags.append(("buy_flag", "買い時のみ", "filter-tag-buytime"))
+
+    return tags
+
+
+def _has_filter(keyword, selected_cats, stock, priority, sort):
+    """フィルタが1つでも設定されているかを判定"""
+    return any([keyword, selected_cats, stock != "all", priority != "all", sort])
 
 # =====================================================
 # 商品一覧
 # =====================================================
+
+
 def product_list(request):
     """商品一覧ページ"""
     try:
@@ -93,95 +115,107 @@ def product_list(request):
 
         user = request.user if request.user.is_authenticated else None
 
-        # --- カテゴリ取得 ---
-        global_categories = Category.objects.filter(is_global=True)
-        user_categories = Category.objects.filter(is_global=False, user=user)
+        # --- カテゴリ取得（クエリセットのまま）---
+        global_categories = CommonCategory.objects.all().order_by("id")
+        user_categories = Category.objects.filter(
+            user=user, is_global=False).order_by("id")
+
+        # 表示や検索時には両方をまとめる（クエリセット結合はできないので一時リスト化）
         all_categories = list(global_categories) + list(user_categories)
 
-        # --- 検索・絞り込み条件 ---
-        keyword = request.GET.get("keyword", "").strip()
-        selected_cats = _selected_category_ids(request)
+        # --- 絞り込みパラメータ取得 ---
+        keyword = request.GET.get("keyword", "")
+        selected_cats = request.GET.getlist("cat")
         stock = request.GET.get("stock", "all")
         priority = request.GET.get("priority", "all")
-        sort = request.GET.get("sort", "")
-        buy_flag = request.GET.get("buy_flag")
+        sort = request.GET.get("sort", "new")
+        buy_flag = request.GET.get("buy_flag", "0")
 
-        # --- ソートオプション ---
-        sort_options = [
-            ("new", "新しい順"),
-            ("old", "古い順"),
-            ("cheap", "安い順"),
-            ("expensive", "高い順"),
-        ]
-
-        # --- 商品クエリ構築 ---
-        qs = Product.objects.filter(
-            user=user) if user else Product.objects.none()
-
+        # --- 商品抽出クエリ ---
+        qs = Product.objects.filter(user=user)
         if keyword:
-            qs = qs.filter(
-                Q(product_name__icontains=keyword) | Q(
-                    shop_name__icontains=keyword)
-            )
+            qs = qs.filter(Q(product_name__icontains=keyword)
+                           | Q(shop_name__icontains=keyword))
 
         if selected_cats:
-            qs = qs.filter(categories__id__in=selected_cats).distinct()
+            # ✅ 共通カテゴリ（100番台）と独自カテゴリを分ける
+            global_ids = [
+                int(cid) - 100 for cid in selected_cats if int(cid) >= 100]
+            user_ids = [int(cid) for cid in selected_cats if int(cid) < 100]
+            qs = qs.filter(
+                Q(categories__id__in=global_ids) | Q(
+                    categories__id__in=user_ids)
+            ).distinct()
 
         if stock == "low":
-            qs = qs.filter(is_in_stock=True, latest_stock_count__lte=3)
+            qs = qs.filter(latest_stock_count__lte=3, latest_stock_count__gt=0)
         elif stock == "none":
             qs = qs.filter(is_in_stock=False)
 
-        if priority in ("高", "普通"):
+        if priority in ["高", "普通"]:
             qs = qs.filter(priority=priority)
 
         if buy_flag == "1":
             qs = qs.filter(flag_reached=True)
 
-        # --- 並び替え ---
-        order_map = {
-            "cheap": "initial_price",
-            "expensive": "-initial_price",
-            "old": "created_at",
-            "new": "-created_at",
-        }
-        qs = qs.order_by(order_map.get(sort, "-created_at"))
+        # --- 並び順 ---
+        if sort == "cheap":
+            qs = qs.order_by("threshold_price")
+        elif sort == "expensive":
+            qs = qs.order_by("-threshold_price")
+        elif sort == "old":
+            qs = qs.order_by("created_at")
+        else:
+            qs = qs.order_by("-created_at")
 
         # --- ページネーション ---
-        paginator = Paginator(qs, 12)
-        page_obj = paginator.get_page(request.GET.get("page"))
+        paginator = Paginator(qs, 20)
+        page_number = request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        # --- タグ生成 ---
+        filter_tags = _build_filter_tags(
+            keyword, selected_cats, stock, priority, sort,
+            global_categories, user_categories, buy_flag
+        )
 
         # --- フィルタ状態 ---
-        filter_tags = _build_filter_tags(
-            keyword, selected_cats, stock, priority, sort, all_categories)
-        if buy_flag == "1":
-            filter_tags.append(("buy_flag", "買い時のみ"))
+        is_filtered = any([
+            keyword, selected_cats, stock != "all", priority != "all",
+            sort != "new", buy_flag == "1"
+        ])
 
-        is_filtered = _has_filter(
-            keyword, selected_cats, stock, priority, sort) or (buy_flag == "1")
-
-        # --- 出力 ---
+        # --- レンダリング ---
         return render(request, "main/product_list.html", {
             "products": page_obj.object_list,
             "page_obj": page_obj,
             "paginator": paginator,
             "global_categories": global_categories,
             "user_categories": user_categories,
-            "keyword": keyword,
             "selected_cats": selected_cats,
+            "keyword": keyword,
             "stock": stock,
             "priority": priority,
             "sort": sort,
-            "sort_options": sort_options,
+            "buy_flag": buy_flag,
             "filter_tags": filter_tags,
             "is_filtered": is_filtered,
-            "buy_flag": buy_flag,
+            "sort_options": [
+                ("new", "新しい順"),
+                ("old", "古い順"),
+                ("cheap", "安い順"),
+                ("expensive", "高い順"),
+            ],
         })
 
     except Exception as e:
-        log_error(user=request.user if request.user.is_authenticated else None,
-                  type_name=type(e).__name__, source="product_list", err=e)
-        return render(request, "main/error_generic.html", {"error": e})
+        log_error(
+            user=request.user if request.user.is_authenticated else None,
+            type_name=type(e).__name__,
+            source="product_list",
+            err=e
+        )
+        raise
 
 
 # =====================================================

@@ -1,3 +1,4 @@
+from admin_app.models import CommonCategory  # ← 追加
 from django.db import models
 from django.db.models.signals import pre_save, post_save
 from django.utils import timezone
@@ -101,7 +102,7 @@ def create_default_category(sender, instance, created, **kwargs):
         Category.objects.get_or_create_unclassified(instance)
 
 # ========================================
-# 商品テーブル（修正版）
+# 商品テーブル（修正版・共通カテゴリ対応）
 # ========================================
 
 
@@ -111,7 +112,6 @@ class Product(models.Model):
         ("高", "高"),
     ]
 
-    # ✅ 通知条件フラグ（買い時／割引率／最安値）
     FLAG_CHOICES = [
         ("buy_price", "買い時価格で通知"),
         ("percent_off", "割引率で通知"),
@@ -119,9 +119,20 @@ class Product(models.Model):
     ]
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="ユーザー")
+        User, on_delete=models.CASCADE, verbose_name="ユーザー"
+    )
 
-    # ✅ カテゴリを複数選択可能に
+    # ✅ 共通カテゴリ（1つのみ選択可能）
+    common_category = models.ForeignKey(
+        CommonCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products",
+        verbose_name="共通カテゴリ",
+    )
+
+    # ✅ カテゴリを複数選択可能に（独自カテゴリ）
     categories = models.ManyToManyField(
         Category,
         blank=True,
@@ -226,7 +237,6 @@ class Product(models.Model):
         is_new = self.pk is None
         prev_in_stock = None
 
-        # 既存データの場合、前回の在庫状態を取得
         if not is_new:
             try:
                 prev_in_stock = Product.objects.get(pk=self.pk).is_in_stock

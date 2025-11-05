@@ -7,31 +7,21 @@
     font-display: swap;
 }
 
+/* Google Fonts（英数字専用） */
 @import url('https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&display=swap');
 
-
-
-
-/* ==========================
-   カラースキーム変数
-========================== */
-:root {
-    --main: #3CA9A9;
-    --accent: #b4e4e4;
-    --text: #0d2626;
-    --bg: #f6f8f8;
-}
 
 /* ==========================
    基本設定
 ========================== */
 body {
-    font-family: 'MakinasFlat', 'Source Han Sans JP', 'Noto Sans JP', sans-serif;
+    font-family: 'MakinasFlat', sans-serif;
     background-color: var(--bg);
     color: var(--text);
     margin: 0;
     padding: 0;
 }
+
 
 /* ==========================
    英数字・記号専用フォント Quantico
@@ -44,10 +34,21 @@ h3,
 h4,
 .table thead th,
 .nav-link {
-    font-family: 'Quantico', 'Source Han Sans JP', 'Noto Sans JP', sans-serif;
+    font-family: 'Quantico', 'MakinasFlat', sans-serif;
     letter-spacing: 0.02em;
     font-weight: 700;
 }
+
+/* ==========================　
+    タイトルにフォント適応
+========================== */
+h1.fw-bold,
+h2.fw-bold,
+h3.fw-bold {
+    font-weight: 700;
+    font-family: 'Quantico', 'MakinasFlat', sans-serif !important;
+}
+
 
 /* ==========================
    サイドバー（固定表示）
@@ -164,12 +165,17 @@ h4,
 ========================== */
 .content {
     margin-left: 260px;
-    /* ← サイドバー分のオフセット */
-    background-color: #fff;
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+        /* ← 白を上に重ねて薄く */
+        url("../images/texture_admin_bg.png") repeat;
+    background-size: 400px 400px;
+    background-blend-mode: lighten;
+    /* または overlay / soft-light でも可 */
     min-height: 100vh;
     padding: 0;
-    /* ← デフォルトpaddingを削除 */
 }
+
 
 /* コンテンツ全体の余白調整 */
 .content .container-fluid {
@@ -224,4 +230,90 @@ h4 {
 .table,
 .modal-content {
     border-radius: 0 !important;
+}
+
+/* ==========================
+   共通カテゴリ管理テーブル（調整後）
+========================== */
+.admin-category-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+/* テーブル全体の余白・区切り */
+.admin-category-table th,
+.admin-category-table td {
+    vertical-align: middle;
+    text-align: center;
+    /* padding: 0.8rem 0.5rem; 行の高さ調整 */
+}
+
+.admin-category-table th {
+    background-color: #f5f7f7;
+    border-bottom: 2px solid #ccc;
+    font-weight: 700;
+}
+/* カラム幅最適化 */
+.admin-category-table th:nth-child(1) {
+    width: 5%;
+}
+/* No */
+.admin-category-table th:nth-child(2) {
+    width: 10%;
+}
+/* ステータス */
+.admin-category-table th:nth-child(3) {
+    width: 15%;
+}
+/* カテゴリ名 */
+.admin-category-table th:nth-child(4) {
+    width: 26%;
+}
+/* 操作 */
+.admin-category-table th:nth-child(5) {
+    width: 12%;
+}
+/* 登録ユーザー数 */
+.admin-category-table th:nth-child(6) {
+    width: 12%;
+}
+/* 登録商品数 */
+.admin-category-table th:nth-child(7) {
+    width: 15%;
+}
+/* 最終更新日 */
+
+/* 入力欄・ボタン配置改善 */
+.admin-category-input {
+    width: 200px;
+    min-width: 80px;
+    margin-right: 4px;
+}
+
+/* 操作欄全体を中央で整列 */
+.admin-category-table td .d-inline-flex {
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ボタン微調整 */
+.admin-category-edit {
+    background-color: #3CA9A9;
+    padding: 0.3rem 0.8rem;
+    font-weight: 600;
+}
+
+.admin-category-edit:hover {
+    background-color: #329090;
+}
+
+.admin-category-delete {
+    background-color: #0d2626;
+    padding: 0.3rem 0.8rem;
+}
+
+.admin-category-delete:hover {
+    background-color: #163434;
 }

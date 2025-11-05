@@ -28,8 +28,9 @@
                     <span class="category-inline">
                         {% for cat in global_categories %}
                             <label class="form-check-label me-3">
-                                <input class="form-check-input me-1" type="checkbox" name="cat" value="{{ cat.id }}"
-                                    {% if cat.id|stringformat:'s' in selected_cats %}checked{% endif %}>
+                                <!-- ✅ 共通カテゴリは100番台に変換 -->
+                                <input class="form-check-input me-1" type="checkbox" name="cat" value="{{ cat.id|add:100 }}"
+                                    {% if cat.id|add:100|stringformat:'s' in selected_cats %}checked{% endif %}>
                                 {{ cat.category_name }}
                             </label>
                         {% empty %}
@@ -45,7 +46,7 @@
                     <label class="filter-label me-2">カテゴリ(独自)</label>
                     <span class="category-inline">
                         {% for cat in user_categories %}
-                            {% if cat.category_name != "未分類" %}  <!-- 🟡 未分類除外 -->
+                            {% if cat.category_name != "未分類" %}
                                 <label class="form-check-label me-3">
                                     <input class="form-check-input me-1" type="checkbox" name="cat" value="{{ cat.id }}"
                                         {% if cat.id|stringformat:'s' in selected_cats %}checked{% endif %}>
@@ -104,15 +105,9 @@
         <!-- 絞り込みタグ -->
         {% if filter_tags %}
             <div class="filter-tags-floating">
-                {% for k, tag in filter_tags %}
-                    <span class="badge
-                        {% if k == 'cat' %}filter-tag-common
-                        {% elif k == 'stock' %}filter-tag-stock
-                        {% elif k == 'priority' %}filter-tag-priority
-                        {% elif k == 'sort' %}filter-tag-sort
-                        {% elif k == 'buy_flag' %}filter-tag-buytime
-                        {% else %}filter-tag-default{% endif %} me-2">
-                        {{ tag }}
+                {% for key, label, tag_class in filter_tags %}
+                    <span class="badge {{ tag_class }} me-2">
+                        {{ label }}
                     </span>
                 {% endfor %}
             </div>

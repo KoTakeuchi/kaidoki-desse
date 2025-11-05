@@ -101,7 +101,10 @@ USE_TZ = True
 # ===== 静的ファイル =====
 STATIC_URL = "/static/"
 # 開発用の配置場所（直接参照する）
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    BASE_DIR / "main" / "static"
+]
 # collectstatic で集約する先（本番用）
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
