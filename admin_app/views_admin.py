@@ -1,6 +1,8 @@
 # =============================
 #  Import
 # =============================
+from admin_app.models import CommonCategory
+from django.shortcuts import render, redirect, get_object_or_404
 from main.models import Category, Product, ErrorLog, User, NotificationLog
 from django.db.models import Prefetch, Count, Q
 from django.utils import timezone
@@ -75,6 +77,11 @@ def admin_product_list(request):
 #  カテゴリ管理
 # =============================
 
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+
 @user_passes_test(is_admin)
 def admin_category(request):
     """
@@ -88,27 +95,31 @@ def admin_category(request):
         new_name = request.POST.get("new_name", "").strip()
         delete_id = request.POST.get("delete_id")
 
-        # 新規追加
+        # ✅ 新規追加
         if add_name:
             if CommonCategory.objects.filter(category_name=add_name).exists():
                 messages.warning(request, "同名のカテゴリが既に存在します。")
             else:
-                CommonCategory.objects.create(category_name=add_name)
+                CommonCategory.objects.create(
+                    category_name=add_name,
+                    updated_by=request.user
+                )
                 messages.success(request, f"カテゴリ「{add_name}」を追加しました。")
             return redirect("admin_app:admin_category")
 
-        # 編集
+        # ✅ 編集
         elif edit_id and new_name:
             try:
                 cat = CommonCategory.objects.get(id=edit_id)
                 cat.category_name = new_name
+                cat.updated_by = request.user
                 cat.save()
                 messages.success(request, f"カテゴリ名を「{new_name}」に変更しました。")
             except CommonCategory.DoesNotExist:
                 messages.error(request, "指定されたカテゴリが見つかりません。")
             return redirect("admin_app:admin_category")
 
-        # 削除
+        # ✅ 削除
         elif delete_id:
             try:
                 cat = CommonCategory.objects.get(id=delete_id)

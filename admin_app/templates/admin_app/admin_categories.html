@@ -20,6 +20,7 @@
           <th>操作</th>
           <th>登録ユーザー数</th>
           <th>登録商品数</th>
+          <th>最終更新者</th> <!-- ✅ 追加 -->
           <th>最終更新日</th>
         </tr>
       </thead>
@@ -35,10 +36,8 @@
             {% endif %}
           </td>
 
-          <!-- ✅ 中央寄せに変更 -->
           <td class="text-center fw-semibold">{{ cat.category_name }}</td>
 
-          <!-- ✅ 操作欄：中央寄せ＋横並び -->
           <td class="text-center">
             <div class="d-inline-flex align-items-center justify-content-center gap-2">
               <form method="POST" class="d-inline-flex align-items-center gap-2">
@@ -55,6 +54,7 @@
 
           <td>{{ cat.user_count }}</td>
           <td>{{ cat.product_count }}</td>
+          <td>{{ cat.updated_by.username|default:"-" }}</td> <!-- ✅ 新列 -->
           <td>{{ cat.updated_at|date:"Y/m/d" }}</td>
         </tr>
 
@@ -103,6 +103,7 @@
   </div>
 </div>
 {% endblock %}
+
 
 
 
