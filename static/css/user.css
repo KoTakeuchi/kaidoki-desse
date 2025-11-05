@@ -656,12 +656,14 @@ body {
 
 /* --- カードデザイン（フォーム外枠） --- */
 .card {
-    border-radius: 16px;
-    /* 角を丸くして柔らかい印象に */
+
+    background-color: #fff !important;
+    /* border-radius: 16px;
+
     box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
-    /* ごく薄い影 */
-    border: 1px solid #eee;
-    /* 輪郭を淡く */
+
+    border: 1px solid #eee; */
+
 }
 
 /* --- テキスト入力フォーム共通 --- */
@@ -726,26 +728,27 @@ body {
     margin-left: 0.5rem;
 }
 
-/* --- 楽天API 通信状態メッセージエリア --- */
+/* --- 楽天API 通信状態メッセージエリア（背景付き旧デザイン） --- */
 #api-status-message {
     font-weight: 600;
-    padding: 8px;
+    padding: 8px 10px;
     border-radius: 8px;
+    margin-top: 6px;
     display: none;
     /* 初期非表示 */
 }
 
-/* 成功時の色（緑系） */
+/* 成功時（薄緑背景） */
 #api-status-message.success {
     color: #155724;
-    background: #d4edda;
+    background-color: #d4edda !important;
     border: 1px solid #c3e6cb;
 }
 
-/* エラー時の色（赤系） */
+/* エラー時（薄赤背景） */
 #api-status-message.error {
     color: #721c24;
-    background: #f8d7da;
+    background-color: #f8d7da !important;
     border: 1px solid #f5c6cb;
 }
 
@@ -766,19 +769,37 @@ body {
     margin-bottom: .35rem;
 }
 
-/* --- 円マーク付き入力欄グループ（価格入力など） --- */
+/* ============================================
+   ✅ 商品名・ショップ名・登録時価格（フォームUI調整）
+   ============================================ */
+
+/* 共通：横並びの円表記付き入力欄 */
 .yen-group {
     display: flex;
     align-items: center;
     gap: 4px;
-    /* 数字と円の間隔 */
 }
 
 .yen-group input {
     flex: 1;
     text-align: right;
-    /* 金額を右寄せ表示 */
 }
+
+/* ✅ 登録時価格（API専用・入力不可） */
+input[readonly] {
+    background-color: #f8f8f8 !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    border-color: #ddd !important;
+}
+
+/* ✅ 編集可の通常フィールド（商品名・ショップ名） */
+#id_product_name,
+#id_shop_name {
+    background-color: #fff !important;
+    color: #222 !important;
+}
+
 
 /* --- 商品フォームページでは hover アニメを無効化 --- */
 body.product-form-page .card:hover,
