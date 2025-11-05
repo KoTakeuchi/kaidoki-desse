@@ -1,0 +1,24 @@
+/* ================================
+   通知一覧ページ
+   ================================ */
+.list-group-item {
+  transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+  background-color: #fff3f3;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.btn-outline-primary {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  color: #fff;
+}

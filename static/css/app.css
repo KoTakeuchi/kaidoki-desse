@@ -1,155 +1,128 @@
-/* ======================== */
-/* === カラーパレット === */
-/* ======================== */
+/* =======================================
+   app.css（全ページ共通ベース）
+   ======================================= */
+
+/* ========================
+   カラーパレット
+   ======================== */
 :root {
   --primary: #C35656;
   --accent: #F7CB6E;
   --text: #333;
   --bg: #F8F8F8;
-  --header-bg: rgba(234, 144, 144, 0.9);
   --filter-bg: #FAE5E5;
+  --border: #ddd;
 
   /* Bootstrap再定義 */
   --bs-primary: #C35656;
   --bs-secondary: #6c757d;
-  --bs-danger: #dc3545;
   --bs-warning: #F7CB6E;
-  --bs-buytime: #E68A00;
   --bs-body-bg: #F8F8F8;
   --bs-body-color: #333;
-  --bs-btn-bg: #C35656;
-  --bs-btn-border-color: #C35656;
-  --bs-btn-hover-bg: #a94444;
-  --bs-btn-hover-border-color: #a94444;
 }
 
-/* ======================== */
-/* === 全体設定 === */
-/* ======================== */
+/* ========================
+   全体設定
+   ======================== */
 html,
 body {
-  height: 100%;
   margin: 0;
-  padding: 20;
+  padding: 0;
   font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', system-ui, sans-serif;
   color: var(--text);
-  background-color: #f7f8f9;
+  background-color: var(--bg);
   background-image: url("/static/images/paper-fibers_header-background-lightpink.png");
   background-repeat: repeat;
   background-size: cover;
   background-attachment: fixed;
+  padding-top: 70px;
 }
 
-/* ✅ 固定ヘッダー対策：すべての通常ページで余白を確保 */
-/* body {
-    padding-top: 80px;
-  }
- */
-
-/* メインラッパーの上詰まり防止 */
-.main-wrapper,
-.container,
-.content-wrapper {
-  margin-top: 1rem;
-}
-
-/* 共通フォント設定 */
-body,
-input,
-select,
-textarea,
-button {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--text);
-}
-
-/* =============================== */
-/* === 手描きマーカー付きタイトル === */
-/* =============================== */
-.page-title-container {
-  text-align: center;
-}
-
-.page-title {
-  position: relative;
-  display: inline-block;
-  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
-  color: var(--primary);
-  font-weight: 700;
-  font-size: 2.4rem;
-  letter-spacing: 0.05em;
-  text-align: center;
-  margin: 3rem auto 2rem;
-}
-
-.marker {
-  position: relative;
-  display: inline-block;
-  z-index: 0;
-}
-
-.marker::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -0.8em;
-  transform: translateX(-50%);
-  width: 125%;
-  height: 1.75em;
-  background-image: url("/static/images/marker_yellow.png");
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  background-position: center;
-  opacity: 0.95;
-  z-index: -1;
-}
-
-/* ======================== */
-/* === コンテナ共通 === */
-/* ======================== */
+/* ========================
+   共通コンテナ
+   ======================== */
 .container {
   max-width: 1100px;
   margin: 24px auto;
   padding: 0 16px;
 }
 
-/* ======================== */
-/* === 共通ボタン === */
-/* ======================== */
-.btn-primary,
-.auth-btn {
-  background-color: var(--primary);
-  border: none;
-  color: #fff;
-  transition: all 0.2s ease;
-  border-radius: 1.25rem;
-  padding: 5px;
-  padding-left: 12px;
-  padding-right: 10px;
+/* ========================
+   タイトル共通
+   ======================== */
+.page-title {
   text-align: center;
-}
-
-.btn-primary:hover,
-.auth-btn:hover {
-  background-color: #a94444;
-}
-
-.btn-outline-light:hover {
-  background-color: #fff;
+  font-weight: 800;
+  font-size: 2.2rem;
   color: var(--primary);
-  border-color: #fff;
+  margin: 2.5rem 0 1.5rem;
+  position: relative;
+  letter-spacing: 0.03em;
 }
 
-/* ======================== */
-/* === 共通フォーム === */
-/* ======================== */
+.page-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -0.4em;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 0.4em;
+  background: var(--accent);
+  border-radius: 4px;
+  opacity: 0.9;
+  z-index: -1;
+}
+
+/* ========================
+   ボタン共通
+   ======================== */
+.btn {
+  border-radius: 1rem !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover {
+  background-color: #a94444 !important;
+}
+
+.btn-outline-primary {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background-color: #fff !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.8rem !important;
+  font-size: 0.9rem !important;
+}
+
+.btn-lg {
+  padding: 0.7rem 1.6rem !important;
+  font-size: 1.05rem !important;
+}
+
+/* ========================
+   フォーム共通
+   ======================== */
 .form-control,
 input,
 textarea,
 select {
   border-radius: 0.6rem !important;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   transition: all 0.2s ease-in-out;
 }
 
@@ -162,47 +135,12 @@ select:focus {
   outline: none;
 }
 
-/* === ラベル共通 === */
 .form-label {
   margin-bottom: 0.4rem;
   font-weight: 700;
   color: #333;
 }
 
-/* === 入力ラッパー === */
-.input-wrapper {
-  position: relative;
-  margin-bottom: 1.2rem;
-}
-
-/* === パスワード表示切替ボタン === */
-.toggle-password {
-  position: absolute;
-  right: 0.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #aaa;
-  cursor: pointer;
-  padding: 0;
-  font-size: 1rem;
-  line-height: 1;
-  z-index: 2;
-}
-
-.toggle-password:hover {
-  color: var(--primary);
-}
-
-/* === メール補足文 === */
-.form-note {
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 0.2rem;
-}
-
-/* === エラーメッセージ === */
 .error-message {
   color: var(--primary);
   font-size: 0.85rem;
@@ -210,101 +148,47 @@ select:focus {
   margin-left: 0.2rem;
 }
 
-/* ======================== */
-/* === カードデザイン === */
-/* ======================== */
-.card {
-  border-radius: 12px;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+/* ========================
+   カード・モーダル共通
+   ======================== */
+.card,
+.modal-content {
+  border-radius: 1rem !important;
+  border: 1px solid #eee;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 2px solid #eee;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
 }
 
-/* ✅ 商品一覧ページのカードホバーはアニメ削除 */
-/* .page-products .card:hover {
-  transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-} */
-
-/* 通常カードのホバー */
-.product-list-wrapper .product-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* ======================== */
-/* === 絞り込みUI === */
-/* ======================== */
-.filter-card {
-  background-color: var(--filter-bg);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+/* ========================
+   テーブル共通
+   ======================== */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: #fff;
 }
 
-.filter-label {
-  font-weight: 700;
-  color: #333;
-  font-size: 1.1rem;
-}
-
-.category-inline {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-}
-
-/* ======================== */
-/* === フッター === */
-/* ======================== */
-.footer-brand {
-  background-image: url("/static/images/paper-fibers_header-footer.png");
-  background-size: cover;
-  background-repeat: repeat;
-  background-position: center;
-  color: #fff;
+th,
+td {
+  border: 1px solid #eee;
+  padding: 0.7rem;
   text-align: center;
-  font-size: 0.9rem;
-  font-family: 'Noto Sans JP', sans-serif;
-  padding: 0.4rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  margin-top: auto;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  vertical-align: middle;
 }
 
-.footer-brand a {
-  color: #fff;
-  text-decoration: none;
-  transition: opacity 0.3s ease;
+th {
+  background-color: #fafafa;
+  font-weight: 600;
 }
 
-.footer-brand a:hover {
-  opacity: 0.8;
-}
-
-.footer-icon-wrapper {
-  background-color: #fff;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s ease;
-}
-
-.footer-catchcopy {
-  font-size: 1.2rem !important;
-  font-weight: 600 !important;
-  color: #fff !important;
-}
-
-/* ======================== */
-/* === 上に戻るボタン === */
-/* ======================== */
+/* ========================
+   上に戻るボタン
+   ======================== */
 .scroll-top-btn {
   position: fixed;
   bottom: 40px;
@@ -326,89 +210,9 @@ select:focus {
 
 .scroll-top-btn.show {
   opacity: 1 !important;
-  visibility: visible !important;
   pointer-events: auto !important;
-  transform: translateY(0) !important;
 }
 
 .scroll-top-btn:hover {
-  transform: translateY(-5px) scale(1.15);
-}
-
-/* =============================== */
-/* === 角丸デザイン統一 === */
-/* =============================== */
-.rounded,
-.rounded-1,
-.rounded-2,
-.rounded-3,
-.rounded-4,
-.rounded-5,
-section,
-.card,
-.alert,
-.form-control,
-.input-group,
-.btn {
-  border-radius: 1rem !important;
-}
-
-.btn,
-.section {
-  border-radius: 1.25rem !important;
-}
-
-img,
-.card img {
-  border-radius: 0.75rem;
-}
-
-.modal-content {
-  border-radius: 1rem !important;
-}
-
-/* =============================== */
-/* === スマホ（〜490px）専用 === */
-/* =============================== */
-@media (max-width: 490px) {
-  body {
-    padding-top: 60px;
-  }
-
-  .page-title {
-    font-size: 1.9rem;
-    margin: 2rem 0 1.3rem;
-  }
-
-  .footer-brand {
-    padding: 0.6rem 0.5rem !important;
-    font-size: 0.85rem !important;
-  }
-
-  .footer-brand .footer-icon-wrapper {
-    width: 24px !important;
-    height: 24px !important;
-  }
-
-  .footer-brand .footer-catchcopy {
-    font-size: 1rem !important;
-  }
-
-  .footer-brand a {
-    font-size: 0.9rem !important;
-    margin: 0 0.2rem;
-  }
-
-  .scroll-top-btn {
-    width: 38px;
-    height: 38px;
-    bottom: 16px;
-    right: 12px;
-    font-size: 0.9rem;
-  }
-
-  .scroll-top-btn svg {
-    width: 18px;
-    height: 18px;
-  }
+  transform: translateY(-5px) scale(1.1);
 }

@@ -1,0 +1,84 @@
+/* =======================================
+   商品削除確認ページ専用スタイル
+   ======================================= */
+
+/* --- カード全体 --- */
+.delete-confirm-card {
+    border-radius: 12px;
+    background: #fff;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* --- タイトル --- */
+.delete-confirm-card h2 {
+    font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    font-weight: 700;
+    color: #C35656;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+/* --- 警告エリア --- */
+.alert-warning {
+    border: 1px solid #f1c40f;
+    background-color: #fff9e6;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    color: #856404;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* --- 削除ボタン --- */
+.btn-danger {
+    background-color: #C35656;
+    border: none;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    padding: 0.6rem 2rem;
+}
+
+.btn-danger:hover {
+    background-color: #a84545;
+}
+
+/* --- キャンセルボタン --- */
+.btn-secondary {
+    background-color: #ddd;
+    color: #333;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    padding: 0.6rem 2rem;
+}
+
+.btn-secondary:hover {
+    background-color: #bbb;
+}
+
+/* --- ボタン配置 --- */
+.button-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* --- モバイル対応 --- */
+@media (max-width: 768px) {
+    .delete-confirm-card {
+        padding: 1.5rem;
+    }
+
+    .button-wrapper {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button-wrapper .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+}

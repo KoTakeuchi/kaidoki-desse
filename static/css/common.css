@@ -1,0 +1,222 @@
+/* =======================================
+   common.css（共通補助スタイル）
+   ======================================= */
+
+/* --- 余白ユーティリティ --- */
+.mt-1 {
+    margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+    margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+    margin-top: 1rem !important;
+}
+
+.mt-4 {
+    margin-top: 1.5rem !important;
+}
+
+.mt-5 {
+    margin-top: 2rem !important;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+.mb-5 {
+    margin-bottom: 2rem !important;
+}
+
+.pt-1 {
+    padding-top: 0.25rem !important;
+}
+
+.pt-2 {
+    padding-top: 0.5rem !important;
+}
+
+.pt-3 {
+    padding-top: 1rem !important;
+}
+
+.pb-1 {
+    padding-bottom: 0.25rem !important;
+}
+
+.pb-2 {
+    padding-bottom: 0.5rem !important;
+}
+
+.pb-3 {
+    padding-bottom: 1rem !important;
+}
+
+/* --- テキスト配置 --- */
+.text-center {
+    text-align: center !important;
+}
+
+.text-right {
+    text-align: right !important;
+}
+
+.text-left {
+    text-align: left !important;
+}
+
+/* --- 表示制御 --- */
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    display: block !important;
+}
+
+.flex-center {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- セクション間余白 --- */
+.section {
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+/* --- カラー強調 --- */
+.text-primary {
+    color: var(--primary) !important;
+}
+
+.text-accent {
+    color: var(--accent) !important;
+}
+
+.text-muted {
+    color: #777 !important;
+}
+
+/* --- 枠線共通 --- */
+.border-light {
+    border: 1px solid #eee !important;
+}
+
+.border-primary {
+    border: 2px solid var(--primary) !important;
+}
+
+.border-accent {
+    border: 2px solid var(--accent) !important;
+}
+
+/* --- ボタン中間サイズ --- */
+.btn-mid {
+    padding: 0.45rem 1.2rem !important;
+    border-radius: 1rem !important;
+    font-size: 0.95rem !important;
+}
+
+/* --- アラート共通 --- */
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    border-radius: 0.6rem;
+    padding: 0.8rem 1rem;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    border-radius: 0.6rem;
+    padding: 0.8rem 1rem;
+}
+
+/* --- モバイルスクロール安定化 --- */
+* {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- フォーカスリング調整 --- */
+:focus {
+    outline: none;
+}
+
+/* --- モーダル共通 --- */
+.modal-content {
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* --- リンク統一 --- */
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+a:hover {
+    opacity: 0.75;
+}
+
+/* --- 画像の角丸 --- */
+img {
+    border-radius: 0.75rem;
+}
+
+/* --- Flexユーティリティ --- */
+.flex-between {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+.flex-column {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.gap-1 {
+    gap: 0.5rem !important;
+}
+
+.gap-2 {
+    gap: 1rem !important;
+}
+
+/* --- スマホ調整 --- */
+@media (max-width: 768px) {
+    .section {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-mid {
+        width: 100%;
+        text-align: center;
+    }
+}

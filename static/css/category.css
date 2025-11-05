@@ -1,0 +1,147 @@
+/* =======================================
+   カテゴリ管理ページ専用スタイル
+   ======================================= */
+
+/* --- ページタイトル領域 --- */
+.category-header {
+    margin-top: 25px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end !important;
+    width: 66%;
+    margin: 0 auto;
+}
+
+.category-header p {
+    margin-left: 1em;
+}
+
+/* --- テーブル全体 --- */
+.category-table-wrapper {
+    background-color: #fff !important;
+    border: 1px solid #f1dada;
+    border-radius: 12px;
+    width: 66%;
+    margin: 0 auto;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* --- テーブル構造 --- */
+.category-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff !important;
+    text-align: center;
+}
+
+/* --- ヘッダー行 --- */
+.table-header-row th {
+    background-color: #fff !important;
+    font-weight: 600;
+    border-bottom: 2px solid #f1dada;
+    padding: 10px 0;
+}
+
+/* --- データ行 --- */
+.category-table tbody tr {
+    background-color: #fff;
+    border-bottom: 1px solid #f1dada;
+    transition: background-color 0.2s ease;
+}
+
+.category-table tbody tr:hover {
+    background-color: #FFF5F5;
+}
+
+/* --- セル共通 --- */
+.category-table th,
+.category-table td {
+    padding: 10px 0;
+    border-right: none;
+}
+
+/* --- 列幅指定 --- */
+.category-table th:nth-child(1),
+.category-table td:nth-child(1),
+.category-table th:nth-child(3),
+.category-table td:nth-child(3) {
+    width: 12%;
+}
+
+.category-table th:nth-child(4),
+.category-table td:nth-child(4) {
+    width: 15%;
+}
+
+/* --- 登録数バッジ --- */
+.badge {
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85em;
+    padding: 4px 10px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+/* --- ボタン群 --- */
+.btn-outline-danger {
+    border-color: #C35656;
+    color: #C35656;
+    background-color: #fff;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-danger:hover {
+    background-color: #C35656;
+    color: #fff;
+    opacity: 1;
+    transform: scale(1.03);
+}
+
+.btn-outline-secondary {
+    border-color: #aaa;
+    color: #555;
+    background-color: #fff;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #bbbbbb;
+    color: #333;
+}
+
+/* --- 操作ボタン間隔 --- */
+.category-table td .btn {
+    margin: 0 3px;
+}
+
+/* --- 登録数ゼロ行を淡く --- */
+.category-table tbody tr[data-count="0"] {
+    opacity: 0.45;
+}
+
+/* --- 入力エラー --- */
+.is-invalid {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff5f5 !important;
+}
+
+/* --- モバイル調整 --- */
+@media (max-width: 768px) {
+
+    .category-header,
+    .category-table-wrapper {
+        width: 95%;
+    }
+
+    .category-table th,
+    .category-table td {
+        font-size: 0.9rem;
+        padding: 8px 0;
+    }
+
+    .category-table td .btn {
+        margin: 2px 0;
+    }
+}

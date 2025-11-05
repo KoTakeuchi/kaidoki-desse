@@ -1,0 +1,25 @@
+/* ================================
+   通知履歴ページ
+   ================================ */
+.list-group-item {
+  border-left: 4px solid transparent;
+}
+
+.list-group-item:hover {
+  border-left: 4px solid var(--primary);
+  background-color: #fff8f8;
+}
+
+.card {
+  border-radius: 12px;
+}
+
+.btn-outline-secondary {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--primary);
+  color: #fff;
+}

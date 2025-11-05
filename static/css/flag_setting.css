@@ -1,0 +1,41 @@
+/* ================================
+   通知設定ページ専用スタイル
+   ================================ */
+
+.card {
+  border-radius: 12px;
+  background-color: #fff;
+}
+
+h4, h5 {
+  font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+}
+
+.form-check-input {
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.form-select, input, select {
+  border-radius: 0.6rem !important;
+  border: 1px solid #ddd;
+}
+
+.form-select:focus, input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.15rem rgba(195, 86, 86, 0.15);
+  outline: none;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #a84545;
+}
+
+.alert {
+  border-radius: 0.75rem;
+}
