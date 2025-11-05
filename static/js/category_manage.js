@@ -1,87 +1,110 @@
 // =============================
-// カテゴリ管理（追加・編集・削除統合版）
+// カテゴリ管理（追加・編集・削除 シンプル版）
 // =============================
+
 document.addEventListener("DOMContentLoaded", () => {
     const tableBody = document.querySelector(".category-table tbody");
-    if (!tableBody) return;
 
     const createBtn = document.getElementById("confirmCreateBtn");
     const createInput = document.getElementById("createCategoryInput");
+
     const editBtn = document.getElementById("confirmEditBtn");
     const editInput = document.getElementById("editCategoryInput");
+
+    const deleteModalEl = document.getElementById("deleteModal");
     const deleteBtn = document.getElementById("confirmDeleteBtn");
 
-    let targetId = null;
-    let editId = null;
-
-    // =============================
-    // 🟢 共通関数（CSRF + 番号再計算）
-    // =============================
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.startsWith(name + "=")) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function renumberCategoryRows() {
-        const rows = tableBody.querySelectorAll("tr");
-        rows.forEach((row, index) => {
-            const noCell = row.querySelector("td:first-child");
-            if (noCell) noCell.textContent = index + 1;
-        });
-    }
-
-    // =============================
-    // 🔁 ボタンイベント再登録（新行にも反映）
-    // =============================
-    function attachModalEvents() {
-        document.querySelectorAll("[data-bs-target='#editModal']").forEach((btn) => {
-            btn.onclick = () => {
-                editId = btn.getAttribute("data-id");
-                const currentName = btn.getAttribute("data-name");
-                if (editInput) editInput.value = currentName || "";
-            };
-        });
-
-        document.querySelectorAll("[data-bs-target='#deleteModal']").forEach((btn) => {
-            btn.onclick = () => {
-                targetId = btn.getAttribute("data-id");
-            };
-        });
-    }
-
-    // =============================
-    // 🧩 カテゴリ上限制御（最大5件）
-    // =============================
     const addButton = document.querySelector("[data-bs-target='#createModal']");
 
-    function updateAddButtonState() {
-        const rowCount = tableBody.querySelectorAll("tr").length;
-        if (addButton) {
-            const disabled = rowCount >= 5;
-            addButton.disabled = disabled;
-            addButton.classList.toggle("disabled", disabled);
-            addButton.style.opacity = disabled ? "0.6" : "1";
-            addButton.style.pointerEvents = disabled ? "none" : "auto";
-        }
+    let editId = null;
+    let deleteId = null;
+
+    // ---- CSRF ----
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return "";
     }
 
-    updateAddButtonState();
-    const observer = new MutationObserver(updateAddButtonState);
-    observer.observe(tableBody, { childList: true });
+    // ---- 行番号振り直し ----
+    function renumberCategoryRows() {
+        tableBody.querySelectorAll("tr").forEach((tr, idx) => {
+            const cell = tr.querySelector("td:first-child");
+            if (cell) cell.textContent = idx + 1;
+        });
+    }
 
-    // =============================
-    // 🟥 カテゴリ追加
-    // =============================
+    // ---- 追加ボタン制御（最大5件） ----
+    function updateAddButtonState() {
+        if (!addButton) return;
+        const rowCount = tableBody.querySelectorAll("tr").length;
+        const disabled = rowCount >= 5;
+        addButton.disabled = disabled;
+        addButton.classList.toggle("disabled", disabled);
+        addButton.style.opacity = disabled ? "0.6" : "1";
+        addButton.style.pointerEvents = disabled ? "none" : "auto";
+    }
+    updateAddButtonState();
+    new MutationObserver(updateAddButtonState).observe(tableBody, { childList: true });
+
+    // ---- 未分類は編集・削除不可 ----
+    function disableUncategorizedButtons() {
+        document.querySelectorAll(".category-table tbody tr").forEach(row => {
+            const nameCell = row.querySelector("td:nth-child(2)");
+            if (nameCell && nameCell.textContent.trim() === "未分類") {
+                row.querySelectorAll("button").forEach(btn => {
+                    btn.disabled = true;
+                    btn.classList.add("disabled");
+                    btn.style.opacity = "0.6";
+                    btn.style.pointerEvents = "none";
+                });
+            }
+        });
+    }
+    disableUncategorizedButtons();
+
+    // ---- 入力バリデーション（追加/編集） ----
+    function setupLiveValidation(input, button) {
+        if (!input || !button) return;
+        input.addEventListener("input", () => {
+            const v = input.value.trim();
+            const len = [...v].length;
+            if (len === 0 || len > 10) {
+                input.classList.add("is-invalid");
+                button.disabled = true;
+            } else {
+                input.classList.remove("is-invalid");
+                button.disabled = false;
+            }
+        });
+    }
+    setupLiveValidation(createInput, createBtn);
+    setupLiveValidation(editInput, editBtn);
+
+    // ---- 編集モーダル開いたとき ----
+    function attachEditEvents() {
+        document.querySelectorAll("[data-bs-target='#editModal']").forEach(btn => {
+            btn.addEventListener("click", () => {
+                editId = btn.getAttribute("data-id");
+                const name = btn.getAttribute("data-name") || "";
+                if (editInput) editInput.value = name;
+            });
+        });
+    }
+    attachEditEvents();
+
+    // ---- 削除モーダル開いたとき（idだけ保持） ----
+    function attachDeleteEvents() {
+        document.querySelectorAll("[data-bs-target='#deleteModal']").forEach(btn => {
+            btn.addEventListener("click", () => {
+                deleteId = btn.getAttribute("data-id");
+            });
+        });
+    }
+    attachDeleteEvents();
+
+    // ---- カテゴリ追加 ----
     if (createBtn && createInput) {
         createBtn.addEventListener("click", async () => {
             const name = createInput.value.trim();
@@ -99,57 +122,59 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 const data = await res.json();
+                if (!data.success) return alert(data.error || "登録に失敗しました。");
 
-                if (data.success) {
-                    const newRow = document.createElement("tr");
-                    const currentRows = tableBody.querySelectorAll("tr").length + 1;
+                const newRow = document.createElement("tr");
+                const currentRows = tableBody.querySelectorAll("tr").length + 1;
 
-                    newRow.innerHTML = `
-                        <td>${currentRows}</td>
-                        <td>${data.category_name}</td>
-                        <td><span class="badge bg-light text-dark border border-secondary-subtle">0</span></td>
-                        <td>
-                            <button class="btn btn-outline-secondary btn-sm me-1 rounded-pill"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editModal"
-                                data-id="${data.id}"
-                                data-name="${data.category_name}">
-                                編集
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm rounded-pill"
-                                data-bs-toggle="modal"
-                                data-bs-target="#deleteModal"
-                                data-id="${data.id}">
-                                削除
-                            </button>
-                        </td>
-                    `;
-                    tableBody.appendChild(newRow);
-                    renumberCategoryRows();
-                    attachModalEvents(); // 新規行にもイベント再登録
-                    disableUncategorizedButtons(); // ← 🟢 追加：未分類対策の即時適用
+                newRow.setAttribute("data-id", data.id);
+                newRow.innerHTML = `
+                    <td>${currentRows}</td>
+                    <td>${data.category_name}</td>
+                    <td>
+                      <span class="badge bg-light text-dark border border-secondary-subtle">0</span>
+                    </td>
+                    <td>
+                      <button class="btn btn-outline-secondary btn-sm me-1 rounded-pill"
+                          data-bs-toggle="modal"
+                          data-bs-target="#editModal"
+                          data-id="${data.id}"
+                          data-name="${data.category_name}">
+                          編集
+                      </button>
+                      <button class="btn btn-outline-danger btn-sm rounded-pill"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteModal"
+                          data-id="${data.id}"
+                          data-name="${data.category_name}">
+                          削除
+                      </button>
+                    </td>
+                `;
+                tableBody.appendChild(newRow);
 
-                    bootstrap.Modal.getInstance(document.getElementById("createModal")).hide();
-                    createInput.value = "";
-                } else {
-                    alert(data.error || "登録に失敗しました。");
-                }
-            } catch {
+                renumberCategoryRows();
+                attachEditEvents();
+                attachDeleteEvents();
+                disableUncategorizedButtons();
+
+                const createModalEl = document.getElementById("createModal");
+                if (createModalEl) bootstrap.Modal.getInstance(createModalEl)?.hide();
+                createInput.value = "";
+            } catch (e) {
+                console.error(e);
                 alert("通信エラーが発生しました。");
             }
         });
     }
 
-    // =============================
-    // 🟦 カテゴリ編集
-    // =============================
-    attachModalEvents();
-
-    if (editBtn) {
+    // ---- カテゴリ編集 ----
+    if (editBtn && editInput) {
         editBtn.addEventListener("click", async () => {
-            const newName = editInput?.value.trim();
+            const newName = editInput.value.trim();
             if (!newName) return alert("カテゴリ名を入力してください。");
             if ([...newName].length > 10) return alert("カテゴリ名は全角10文字以内で入力してください。");
+            if (!editId) return;
 
             try {
                 const res = await fetch(`/main/api/categories/update/${editId}/`, {
@@ -162,116 +187,59 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 const data = await res.json();
+                if (!data.success) return alert(data.error || "更新に失敗しました。");
 
-                if (data.success) {
-                    const row = document.querySelector(`[data-id='${editId}']`)?.closest("tr");
-                    if (row) {
-                        row.querySelector("td:nth-child(2)").textContent = data.category_name;
-                        const editButton = row.querySelector("[data-bs-target='#editModal']");
-                        if (editButton) editButton.setAttribute("data-name", data.category_name);
-                    }
-                    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-                } else {
-                    alert(data.error || "更新に失敗しました。");
+                const row = document.querySelector(`tr[data-id='${editId}']`);
+                if (row) {
+                    row.querySelector("td:nth-child(2)").textContent = data.category_name;
+                    const editButton = row.querySelector("[data-bs-target='#editModal']");
+                    const deleteButton = row.querySelector("[data-bs-target='#deleteModal']");
+                    if (editButton) editButton.setAttribute("data-name", data.category_name);
+                    if (deleteButton) deleteButton.setAttribute("data-name", data.category_name);
                 }
-            } catch {
+
+                const editModalEl = document.getElementById("editModal");
+                if (editModalEl) bootstrap.Modal.getInstance(editModalEl)?.hide();
+            } catch (e) {
+                console.error(e);
                 alert("通信エラーが発生しました。");
             }
         });
     }
 
-    // =============================
-    // 🟥 カテゴリ削除
-    // =============================
-    if (deleteBtn) {
+    // ---- カテゴリ削除（入力確認なし） ----
+    if (deleteBtn && deleteModalEl) {
         deleteBtn.addEventListener("click", async () => {
-            if (!targetId) return;
+            if (!deleteId) return;
 
             try {
-                const res = await fetch(`/main/api/categories/delete/${targetId}/`, {
+                const res = await fetch(`/main/api/categories/delete/${deleteId}/`, {
                     method: "POST",
                     headers: { "X-CSRFToken": getCookie("csrftoken") },
                 });
 
-                const data = await res.json();
-
-                if (data.success) {
-                    const row = document.querySelector(`[data-id='${targetId}']`)?.closest("tr");
-                    if (row) row.remove();
-                    renumberCategoryRows();
-                    bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
-                } else {
-                    alert(data.error || "削除に失敗しました。");
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    const text = await res.text();
+                    console.error("サーバーレスポンス(JSONでない):", text);
+                    alert("サーバー側でエラーが発生しました。");
+                    return;
                 }
-            } catch {
+
+                if (!data.success) return alert(data.error || "削除に失敗しました。");
+
+                const row = document.querySelector(`tr[data-id='${deleteId}']`);
+                if (row) row.remove();
+                renumberCategoryRows();
+
+                bootstrap.Modal.getInstance(deleteModalEl)?.hide();
+                deleteId = null;
+            } catch (e) {
+                console.error(e);
                 alert("通信エラーが発生しました。");
             }
         });
     }
-    // =============================
-    // 🟥 カテゴリ削除（確認強化版）
-    // =============================
-    const deleteInput = document.getElementById("deleteConfirmInput");
-
-    document.querySelectorAll("[data-bs-target='#deleteModal']").forEach((btn) => {
-        btn.addEventListener("click", () => {
-            targetId = btn.getAttribute("data-id");
-            const nameCell = btn.closest("tr")?.querySelector("td:nth-child(2)");
-            const catName = nameCell ? nameCell.textContent.trim() : "";
-
-            if (deleteInput) {
-                deleteInput.value = "";
-                deleteInput.placeholder = `「${catName}」と入力`;
-                deleteBtn.disabled = true;
-
-                // 入力監視（正しいカテゴリ名でのみ削除可能）
-                deleteInput.oninput = () => {
-                    deleteBtn.disabled = deleteInput.value.trim() !== catName;
-                };
-            }
-        });
-    });
-    // =============================
-    // ✨ 入力バリデーション（リアルタイム）
-    // =============================
-    function setupLiveValidation(inputElement, confirmButton) {
-        if (!inputElement || !confirmButton) return;
-
-        inputElement.addEventListener("input", () => {
-            const value = inputElement.value.trim();
-            const length = [...value].length;
-
-            // 入力なし or 10文字超 → 警告
-            if (length === 0 || length > 10) {
-                inputElement.classList.add("is-invalid");
-                confirmButton.disabled = true;
-            } else {
-                inputElement.classList.remove("is-invalid");
-                confirmButton.disabled = false;
-            }
-        });
-    }
-
-    // 🟢 適用対象：追加・編集モーダル
-    setupLiveValidation(createInput, createBtn);
-    setupLiveValidation(editInput, editBtn);
-
-    // =============================
-    // 🧩 未分類カテゴリの編集・削除ボタンを無効化
-    // =============================
-    function disableUncategorizedButtons() {
-        document.querySelectorAll(".category-table tbody tr").forEach(row => {
-            const nameCell = row.querySelector("td:nth-child(2)");
-            if (nameCell && nameCell.textContent.trim() === "未分類") {
-                row.querySelectorAll("button").forEach(btn => {
-                    btn.disabled = true;
-                    btn.classList.add("disabled");
-                    btn.style.opacity = "0.6";
-                    btn.style.pointerEvents = "none";
-                });
-            }
-        });
-    }
-
-    disableUncategorizedButtons(); // 初期ロード時も実行
 });
