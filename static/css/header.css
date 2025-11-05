@@ -1,16 +1,19 @@
 /* =======================================
    共通ヘッダー：高さを全ページで固定化
    ======================================= */
-
-/* --- 固定ヘッダー本体 --- */
 .header-bar {
   position: fixed;
+  /* ← stickyからfixedに変更 */
+
   top: 0;
   left: 0;
   width: 100%;
+  /* 横幅指定を追加 */
   z-index: 1000;
   height: 56px !important;
+  /* ← 強制固定 */
   min-height: 56px !important;
+  /* ← Flexで潰れるのを防止 */
   background: url("/static/images/paper-fibers_header-footer.png") repeat;
   background-size: cover;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -18,42 +21,49 @@
   align-items: center;
 }
 
-/* --- 内部中央寄せ --- */
+/* 内部構造も中央揃えに */
 .header-inner {
   width: 100%;
   height: 100%;
+  /* ← 高さを継承させる */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
 }
 
-/* --- ブランドロゴ・タイトル --- */
+/* ▼ ブランドロゴとタイトル */
 .header-brand {
   display: flex;
   align-items: center;
   text-decoration: none;
 }
 
-/* --- 白丸アイコン背景 --- */
+/* === ブランドアイコン（白丸） === */
 .header-icon-wrapper {
   background-color: #fff;
+  /* 白丸の背景 */
   border-radius: 50%;
+  /* 円形にする */
   width: 28px;
+  /* 丸のサイズ（調整可） */
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* 立体感 */
+  /* margin-right: 2px; */
+  /* タイトルとの余白 */
 }
 
 .header-icon-wrapper img {
   width: 36px;
+  /* アイコン自体のサイズ */
   height: auto;
   object-fit: contain;
 }
 
-/* --- タイトル文字 --- */
 .header-title {
   font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
   color: #fff;
@@ -62,42 +72,53 @@
   margin-left: 8px;
   letter-spacing: 1px;
   text-shadow: 0 0 1px #4b1b1b, 0 0 1px #4b1b1b;
+  /* ← 白背景上でも締まって見える */
   display: flex;
   align-items: baseline;
+  /* center → baseline */
   position: relative;
   top: -3px;
+  /* 1〜2pxだけ上げる */
 }
 
-/* --- ナビゲーション --- */
+/* ナビゲーション */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  /* 間隔拡大 */
+}
+
 .header-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
+  gap: 0.4rem;
 }
 
-/* --- ナビゲーションリンク --- */
 .header-link {
   color: #fff;
   font-weight: 500;
   text-decoration: none;
   font-size: 18px;
-  transition: transform 0.25s ease, opacity 0.2s ease;
+  transition: transform 0.25s ease;
 }
 
 .header-link:hover {
   transform: scale(1.1);
-  opacity: 0.85;
 }
 
-/* --- 区切り線（視覚上の分離） --- */
+/* 区切り線（固定表示） */
 .divider {
   color: rgba(255, 255, 255, 0.6);
   font-weight: normal;
   pointer-events: none;
+  /* hover無効化 */
+  transform: none;
+  /* 親のtransform影響を受けない */
 }
 
-/* --- USERメニュー --- */
+/* userナビ（アイコン付き） */
 .nav-item .dropdown-toggle::after {
   display: none;
 }
@@ -107,7 +128,7 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* --- ナビアイコン統一サイズ --- */
+/* ナビアイコン統一サイズ */
 .nav-icon,
 .nav-icon-small {
   width: 20px;
@@ -116,7 +137,7 @@
   object-fit: contain;
 }
 
-/* --- ユーザー名ナビ --- */
+/* USERナビ：hover時のみ太字 */
 .navbar-nav .nav-link {
   font-weight: 500;
 }
@@ -125,7 +146,7 @@
   font-weight: 700;
 }
 
-/* --- スクロール時の影強調 --- */
+/* スクロール時：透過なし・画像維持 */
 .header-bar.scrolled {
   background: url("/static/images/paper-fibers_header-footer.png") repeat;
   background-size: cover;
@@ -133,28 +154,33 @@
   transition: box-shadow 0.3s ease;
 }
 
-/* --- タブレット調整 --- */
+/* タブレット（iPad縦横・狭めPC） */
 @media (max-width: 992px) {
   .header-nav {
-    gap: 0.4rem;
+    gap: 00rem;
+    /* 例: 元々2rem → 少し詰める */
   }
 
   .header-link {
     font-size: 15px;
-  }
-}
-
-/* --- スマホ表示時のヘッダー --- */
-@media (max-width: 768px) {
-  .header-inner {
-    padding: 0 12px;
+    /* 例: 元々15px → 少し小さく */
   }
 
-  .header-title {
-    font-size: 18px;
-  }
+  /* スマホ対応 */
+  @media (max-width: 768px) {
+    .header-inner {
+      .header-nav {
+        display: none !important;
+      }
 
-  .header-nav {
-    display: none !important;
+      padding: 0 12px;
+    }
+
+    .header-title {
+      font-size: 18px;
+    }
+
+    .header-link+.header-link::before {
+      display: none;
+    }
   }
-}

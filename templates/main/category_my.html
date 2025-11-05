@@ -50,7 +50,7 @@
               編集
             </button>
             <button class="btn btn-outline-danger btn-sm rounded-pill" data-bs-toggle="modal"
-              data-bs-target="#deleteModal" data-id="{{ cat.id }}">
+              data-bs-target="#deleteModal" data-id="{{ cat.id }}" data-name="{{ cat.category_name }}">
               削除
             </button>
           </td>
@@ -116,20 +116,22 @@
           このカテゴリを削除しますか？<br>
           商品は「未分類」に移動します。
         </p>
-        <p class="small text-muted mb-2">
-          確認のため、カテゴリ名を入力してください。
-        </p>
-        <input type="text" id="deleteConfirmInput" class="form-control rounded-pill text-center" placeholder="カテゴリ名を入力">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">キャンセル</button>
-        <button type="button" class="btn btn-danger rounded-pill" id="confirmDeleteBtn" disabled>削除</button>
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">
+          キャンセル
+        </button>
+        <!-- ✅ ここで id だけあればOK -->
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger rounded-pill">
+          削除
+        </button>
       </div>
     </div>
   </div>
 </div>
 
 
-<!-- ✅ JS読込（統合版のみ） -->
+
+<!-- ✅ JS読込 -->
 <script src="{% static 'js/category_manage.js' %}"></script>
 {% endblock %}
