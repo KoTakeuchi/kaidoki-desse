@@ -1,10 +1,15 @@
 {% extends "layout-user.html" %}
 {% block page_content %}
+
+<!-- ✅ AUTH準拠タイトル構造 -->
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">🗂 カテゴリ編集</span>
+  </h1>
+  <p class="text-muted small mt-1">（自分専用カテゴリの管理）</p>
+</div>
+
 <div class="container py-4" style="max-width:720px;">
-    <div class="d-flex align-items-center mb-4">
-        <h2 class="fw-bold mb-0 me-2">🗂 カテゴリ編集</h2>
-        <span class="text-muted small">（自分専用カテゴリの管理）</span>
-    </div>
 
     <!-- ✅ 登録済みカテゴリ -->
     <div class="card mb-4 shadow-sm border-0">
@@ -53,4 +58,5 @@
         <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary">← 商品一覧へ戻る</a>
     </div>
 </div>
+
 {% endblock %}

@@ -1,15 +1,32 @@
 {% extends "layout-user.html" %}
+{% block title %}商品削除確認{% endblock %}
+
 {% block page_content %}
+<!-- ✅ AUTH準拠タイトル構造 -->
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">商品削除確認</span>
+  </h1>
+</div>
+
 <div class="container py-4">
-    <h2 class="mb-4 text-danger">商品削除確認</h2>
-    <div class="alert alert-warning">
-        <p>「{{ product.product_name }}」の商品を本当に削除しますか？</p>
+  <div class="card shadow-sm p-4">
+    <h5 class="text-danger mb-3">⚠ 本当に削除してもよろしいですか？</h5>
+
+    <div class="alert alert-warning mb-4">
+      <p class="mb-0">
+        「<strong>{{ product.product_name }}</strong>」を削除すると、<br>
+        登録情報や価格履歴などもすべて失われます。
+      </p>
     </div>
 
-    <form method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">削除する</button>
-        <a href="{% url 'main:product_list' %}" class="btn btn-secondary ms-2">キャンセル</a>
+    <form method="POST" class="text-center">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger rounded-pill px-4">🗑 削除する</button>
+      <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4 ms-2">
+        キャンセル
+      </a>
     </form>
+  </div>
 </div>
 {% endblock %}

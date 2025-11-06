@@ -20,9 +20,9 @@ class ProductForm(forms.ModelForm):
         label="商品URL",
         required=True,
         widget=forms.URLInput(attrs={
-            "placeholder": "https://item.rakuten.co.jp/ショップ名/商品コード/",
             "class": "form-control",
             "id": "id_product_url",
+            "placeholder": "https://item.rakuten.co.jp/ショップ名/商品コード/",
         }),
         error_messages={
             "required": "商品URLを入力してください。",
@@ -30,38 +30,37 @@ class ProductForm(forms.ModelForm):
         },
     )
 
-    # ② 商品名（必須）
+    # ② 商品名（APIで自動入力 → 編集不可）
     product_name = forms.CharField(
         label="商品名",
         required=True,
         widget=forms.TextInput(attrs={
-            "placeholder": "例）Uネック裏起毛リブカットソー",
+            "class": "form-control",
+            "id": "id_product_name",
+            "readonly": "readonly",
         }),
-        error_messages={"required": "商品名を入力してください。"},
     )
 
-    # ③ 定価
-    regular_price = forms.DecimalField(
-        label="定価",
+    # ③ ショップ名（APIで自動入力 → 編集不可）
+    shop_name = forms.CharField(
+        label="ショップ名",
         required=False,
-        min_value=1,
-        error_messages={
-            "min_value": "定価は1円以上で入力してください。",
-            "invalid": "定価は数値で入力してください。",
-        },
-        widget=forms.NumberInput(attrs={"min": "1"}),
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "id": "id_shop_name",
+            "readonly": "readonly",
+        }),
     )
 
-    # ④ 登録時価格
+    # ④ 登録時価格（APIで自動入力 → 編集不可）
     initial_price = forms.DecimalField(
         label="登録時価格",
         required=False,
-        min_value=1,
-        error_messages={
-            "min_value": "登録時価格は1円以上で入力してください。",
-            "invalid": "登録時価格は数値で入力してください。",
-        },
-        widget=forms.NumberInput(attrs={"min": "1"}),
+        widget=forms.NumberInput(attrs={
+            "class": "form-control",
+            "id": "id_initial_price",
+            "readonly": "readonly",
+        }),
     )
 
     # ⑤ 買い時価格
@@ -73,7 +72,7 @@ class ProductForm(forms.ModelForm):
             "min_value": "買い時価格は1円以上で入力してください。",
             "invalid": "買い時価格は数値で入力してください。",
         },
-        widget=forms.NumberInput(attrs={"min": "1"}),
+        widget=forms.NumberInput(attrs={"min": "1", "class": "form-control"}),
     )
 
     # ⑥ カテゴリ（複数選択）
@@ -87,8 +86,8 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            "product_name",
             "product_url",
+            "product_name",
             "shop_name",
             "categories",
             "regular_price",
@@ -136,6 +135,7 @@ class ProductForm(forms.ModelForm):
     # ============================================================
     # URLバリデーション（楽天URL＋重複防止）
     # ============================================================
+
     def clean_product_url(self):
         product_url = self.cleaned_data.get("product_url")
 

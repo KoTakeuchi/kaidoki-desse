@@ -38,19 +38,17 @@ body {
   background-repeat: repeat;
   background-size: cover;
   background-attachment: fixed;
+  min-height: 90vh;
+  /* ✅ ページ全体の高さを9割確保 */
 }
 
-/* ✅ 固定ヘッダー対策：すべての通常ページで余白を確保 */
-/* body {
-    padding-top: 80px;
-  }
- */
 
 /* メインラッパーの上詰まり防止 */
 .main-wrapper,
 .container,
 .content-wrapper {
   margin-top: 1rem;
+
 }
 
 /* 共通フォント設定 */
@@ -411,4 +409,32 @@ img,
     width: 18px;
     height: 18px;
   }
+}
+
+/* ============================= */
+/* ✅ フッター位置と余白の最終補正 */
+/* ============================= */
+
+/* フレックス構造を再定義 */
+html,
+body {
+  height: 100% !important;
+}
+
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 90vh !important;
+}
+
+/* メインエリア（コンテンツ） */
+main {
+  flex: 1 !important;
+  padding-bottom: 3rem !important;
+  /* footerとの距離を確保 */
+}
+
+/* フッターとの距離保証（最終安全策） */
+.footer-brand {
+  margin-top: clamp(3rem, 8vh, 6rem) !important;
 }
