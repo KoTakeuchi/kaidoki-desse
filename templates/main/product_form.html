@@ -8,7 +8,9 @@
 <!-- ✅ AUTH準拠タイトル構造 -->
 <div class="page-header">
   <h1 class="page-title">
-    <span class="title-inner">{% if is_edit %}商品編集{% else %}新規商品登録{% endif %}</span>
+    <span class="title-inner">
+      {% if is_edit %}商品編集{% else %}新規商品登録{% endif %}
+    </span>
   </h1>
 </div>
 
@@ -19,6 +21,7 @@
     {% csrf_token %}
 
     <div class="card shadow-sm p-4">
+
       {% if not is_edit %}
       <!-- ✅ 商品URL -->
       <div class="mb-3">
@@ -28,8 +31,11 @@
           <div class="error-text">{{ form.product_url.errors.0 }}</div>
         {% endif %}
         <div class="form-text text-muted">
-          楽天市場 <a href="https://item.rakuten.co.jp/" target="_blank" class="text-decoration-underline text-primary">
-          https://item.rakuten.co.jp/</a> の商品URLを入力してください。
+          楽天市場
+          <a href="https://item.rakuten.co.jp/" target="_blank" class="text-decoration-underline text-primary">
+            https://item.rakuten.co.jp/
+          </a>
+          の商品URLを入力してください。
         </div>
       </div>
       {% endif %}
@@ -43,44 +49,56 @@
              src="{% if is_edit and product.image_url %}{{ product.image_url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
              alt="商品画像プレビュー">
       </div>
+
       <!-- ✅ 商品名・ショップ名・登録時価格 -->
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label section-title">商品名</label>
           {{ form.product_name }}
+          {% if form.product_name.errors %}
+            <div class="error-text">{{ form.product_name.errors.0 }}</div>
+          {% endif %}
         </div>
         <div class="col-md-3">
           <label class="form-label section-title">ショップ名</label>
           {{ form.shop_name }}
+          {% if form.shop_name.errors %}
+            <div class="error-text">{{ form.shop_name.errors.0 }}</div>
+          {% endif %}
         </div>
         <div class="col-md-3">
           <label class="form-label section-title">登録時価格</label>
           <div class="yen-group">
             {{ form.initial_price }}<span>円</span>
           </div>
+          {% if form.initial_price.errors %}
+            <div class="error-text">{{ form.initial_price.errors.0 }}</div>
+          {% endif %}
         </div>
       </div>
 
-
-      <!-- ✅ カテゴリ選択 -->
+      <!-- ✅ カテゴリ選択（共通＋独自 / 複数選択） -->
       <div class="mb-4">
         <label class="form-label section-title">カテゴリ（複数選択可）</label>
         <select name="categories" id="id_categories" class="form-select" multiple>
           {% for cat in global_categories %}
             {% if cat.category_name != "未分類" %}
-              <option value="{{ cat.id }}" {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
+              <option value="{{ cat.id }}"
+                      {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
                 [共通] {{ cat.category_name }}
               </option>
             {% endif %}
           {% endfor %}
           {% for cat in user_categories %}
             {% if cat.category_name != "未分類" %}
-              <option value="{{ cat.id }}" {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
+              <option value="{{ cat.id }}"
+                      {% if cat.id|stringformat:'s' in selected_category_ids %}selected{% endif %}>
                 {{ cat.category_name }}
               </option>
             {% endif %}
           {% endfor %}
         </select>
+        <div id="category-limit-info" class="text-danger small mt-1"></div>
       </div>
 
       <!-- ✅ 優先度 -->
@@ -97,71 +115,104 @@
           <div class="text-muted small" id="priorityDesc">
             24時間ごとに最新価格を取得。アプリ通知・メール通知なし。
           </div>
+          <!-- hidden フィールドで実値を送信 -->
           <input type="hidden" name="priority" id="id_priority" value="{{ form.priority.value }}">
         </div>
+        {% if form.priority.errors %}
+          <div class="error-text mt-1">{{ form.priority.errors.0 }}</div>
+        {% endif %}
       </div>
 
       <!-- ✅ 通知条件 -->
       <div class="mb-4">
         <div class="form-label section-title">通知条件</div>
+
         <div class="flag-buttons">
           <div class="flag-btn {% if form.flag_type.value == 'buy_price' %}active{% endif %}"
                data-type="buy_price"
-               data-desc="指定価格以下になったとき通知します。最も基本的な通知方法です。">買い時価格</div>
+               data-desc="指定価格以下になったとき通知します。最も基本的な通知方法です。">
+            買い時価格
+          </div>
 
           <div class="flag-btn {% if form.flag_type.value == 'percent_off' %}active{% endif %}"
                data-type="percent_off"
-               data-desc="定価から指定％OFFになったとき通知します。セールやイベント検知に便利です。">割引率</div>
+               data-desc="定価から指定％OFFになったとき通知します。セールやイベント検知に便利です。">
+            割引率
+          </div>
 
           <div class="flag-btn {% if form.flag_type.value == 'lowest_price' %}active{% endif %}"
                data-type="lowest_price"
-               data-desc="登録以来の最安値を更新したら通知します。価格履歴に基づいた通知です。">最安値</div>
+               data-desc="登録以来の最安値を更新したら通知します。価格履歴に基づいた通知です。">
+            最安値
+          </div>
 
-          <div class="flag-desc-box" id="flagDesc">ボタンにマウスを乗せると説明が表示されます。</div>
+          <div class="flag-desc-box" id="flagDesc">
+            ボタンにマウスを乗せると説明が表示されます。
+          </div>
         </div>
 
         {% if form.flag_type.errors %}
-          <div class="error-text">{{ form.flag_type.errors.0 }}</div>
+          <div class="error-text mt-1">{{ form.flag_type.errors.0 }}</div>
         {% endif %}
 
         <div class="row g-3 mt-3">
+          <!-- 定価 -->
           <div class="col-md-3" id="wrap_regular"
                {% if form.flag_type.value == 'percent_off' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
             <label class="form-label section-title">定価</label>
-            <div class="yen-group">{{ form.regular_price }}<span>円</span></div>
+            <div class="yen-group">
+              {{ form.regular_price }}<span>円</span>
+            </div>
+            {% if form.regular_price.errors %}
+              <div class="error-text mt-1">{{ form.regular_price.errors.0 }}</div>
+            {% endif %}
           </div>
 
+          <!-- 買い時価格 -->
           <div class="col-md-3" id="wrap_threshold"
                {% if form.flag_type.value == 'buy_price' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
             <label class="form-label section-title">買い時価格</label>
-            <div class="yen-group">{{ form.threshold_price }}<span>円</span></div>
+            <div class="yen-group">
+              {{ form.threshold_price }}<span>円</span>
+            </div>
+            {% if form.threshold_price.errors %}
+              <div class="error-text mt-1">{{ form.threshold_price.errors.0 }}</div>
+            {% endif %}
           </div>
 
+          <!-- 割引率 -->
           <div class="col-md-3" id="wrap_percent"
                {% if form.flag_type.value == 'percent_off' %}style="display:block;"{% else %}style="display:none;"{% endif %}>
             <label class="form-label section-title">割引率</label>
             {{ form.flag_value }}
+            {% if form.flag_value.errors %}
+              <div class="error-text mt-1">{{ form.flag_value.errors.0 }}</div>
+            {% endif %}
           </div>
         </div>
 
+        <!-- 実際に送信される flag_type -->
         <input type="hidden" name="flag_type" id="flagTypeHidden" value="{{ form.flag_type.value }}">
       </div>
-    </div>
-  </form>
-      <!-- ✅ 戻る／登録ボタン（統一配置） -->
-      <div class="form-footer d-flex justify-content-between align-items-center mt-4">
-        <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
-          ← 一覧へ戻る
-        </a>
-        <button type="submit" class="btn btn-danger rounded-pill px-5" style="background:#C35656;border:none;">
-          {% if is_edit %}更新する{% else %}登録する{% endif %}
-        </button>
-      </div>
 
+    </div>  <!-- /.card -->
+
+    <!-- ✅ 戻る／登録ボタン（フォーム内に配置し直し） -->
+    <div class="form-footer d-flex justify-content-between align-items-center mt-4">
+      <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+        ← 一覧へ戻る
+      </a>
+      <button type="submit" class="btn btn-danger rounded-pill px-5" style="background:#C35656;border:none;">
+        {% if is_edit %}更新する{% else %}登録する{% endif %}
+      </button>
+    </div>
+
+  </form>
 </div>
 
 <script>
   const FETCH_RAKUTEN_URL = "{% url 'main:fetch_rakuten_item' %}";
 </script>
 <script src="{% static 'js/product_form.js' %}"></script>
+<script src="{% static 'js/category_limit.js' %}"></script>
 {% endblock %}

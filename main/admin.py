@@ -4,17 +4,16 @@ from .models import (
     Category,
     Product,
     PriceHistory,
-    NotificationLog,
     NotificationEvent,
-    ErrorLog,
     UserNotificationSetting,
-    NotificationSetting,
-    Notification,
+    ErrorLog,
 )
 
 # =========================================================
 # 📁 カテゴリ管理
 # =========================================================
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("id", "category_name", "is_global", "user", "created_at")
@@ -35,21 +34,20 @@ class ProductAdmin(admin.ModelAdmin):
         "product_name",
         "user",
         "get_categories",
-        "flag_type",
-        "flag_value",
-        "flag_reached",
+        "priority",
+        "threshold_price",
         "is_in_stock",
-        "restock_notify_enabled",
+        "flag_reached",
         "created_at",
     )
-    list_filter = ("flag_type", "flag_reached", "is_in_stock", "categories")
+    list_filter = ("is_in_stock", "flag_reached", "priority")
     search_fields = ("product_name", "shop_name", "user__username")
     ordering = ("-created_at",)
     filter_horizontal = ("categories",)
 
     def get_categories(self, obj):
         """カテゴリをカンマ区切りで表示"""
-        return ", ".join([c.category_name for c in obj.categories.all()])
+        return ", ".join(c.category_name for c in obj.categories.all())
     get_categories.short_description = "カテゴリ"
 
 
@@ -65,46 +63,19 @@ class PriceHistoryAdmin(admin.ModelAdmin):
 
 
 # =========================================================
-# 🔔 通知関連モデル群
+# 🔔 通知イベント管理
 # =========================================================
 @admin.register(NotificationEvent)
 class NotificationEventAdmin(admin.ModelAdmin):
-    """通知イベント（在庫変動・買い時ヒット等）"""
-    list_display = (
-        "id",
-        "user",
-        "product",
-        "event_type",
-        "message",
-        "occurred_at",
-        "sent_flag",
-        "sent_at",
-    )
-    list_filter = ("event_type", "sent_flag")
+    list_display = ("id", "user", "product", "event_type",
+                    "message", "occurred_at", "is_read")
+    list_filter = ("event_type", "is_read")
     search_fields = ("user__username", "product__product_name", "message")
     ordering = ("-occurred_at",)
 
 
-@admin.register(NotificationLog)
-class NotificationLogAdmin(admin.ModelAdmin):
-    """通知メール送信ログ"""
-    list_display = ("id", "user", "product", "message", "notified_at")
-    search_fields = ("user__username", "product__product_name", "message")
-    ordering = ("-notified_at",)
-    list_per_page = 30
-
-
-@admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
-    """旧式通知（アプリ内通知）"""
-    list_display = ("id", "user", "product", "type", "message", "created_at", "is_read")
-    list_filter = ("type", "is_read")
-    search_fields = ("user__username", "product__product_name", "message")
-    ordering = ("-created_at",)
-
-
 # =========================================================
-# ⚙️ 通知設定・エラーログ管理
+# ⚙️ 通知設定管理
 # =========================================================
 @admin.register(UserNotificationSetting)
 class UserNotificationSettingAdmin(admin.ModelAdmin):
@@ -115,25 +86,20 @@ class UserNotificationSettingAdmin(admin.ModelAdmin):
         "email",
         "notify_hour",
         "notify_minute",
-        "app_notify_frequency",
-        "stock_low_threshold",
         "updated_at",
     )
-    list_filter = ("enabled", "app_notify_frequency")
+    list_filter = ("enabled",)
     search_fields = ("user__username", "email")
     ordering = ("-updated_at",)
 
 
-@admin.register(NotificationSetting)
-class NotificationSettingAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "product", "threshold_price")
-    search_fields = ("user__username", "product__product_name")
-    ordering = ("user",)
-
-
+# =========================================================
+# 🧩 エラーログ管理
+# =========================================================
 @admin.register(ErrorLog)
 class ErrorLogAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "type_name", "source", "message", "created_at")
-    list_filter = ("type_name", "created_at")
+    list_display = ("id", "user", "type_name",
+                    "source", "message", "created_at")
+    list_filter = ("type_name",)
     search_fields = ("type_name", "source", "message", "user__username")
     ordering = ("-created_at",)

@@ -4,286 +4,304 @@
 
 {% block page_content %}
 <div class="container py-4">
-    <div class="filter-wrap">
-        <div class="page-header">
-            <h1 class="page-title">
-                <span class="title-inner">商品一覧</span>
-            </h1>
-        </div>
 
-        <!-- 絞り込みフォーム -->
-        <form method="get" class="filter-card mb-3 p-2">
-            <!-- キーワード -->
-            <div class="row g-2">
-                <div class="col-12">
-                    <input type="text" name="keyword" value="{{ keyword }}" placeholder="商品名・ショップ名で検索"
-                        class="form-control form-control-sm">
-                </div>
-            </div>
-
-            <!-- カテゴリ(共通) -->
-            <div class="row g-2 mt-2">
-                <div class="col-12">
-                    <label class="filter-label me-2">カテゴリ(共通)</label>
-                    <span class="category-inline">
-                        {% for cat in global_categories %}
-                            <label class="form-check-label me-3">
-                                <!-- ✅ 共通カテゴリは100番台に変換 -->
-                                <input class="form-check-input me-1" type="checkbox" name="cat" value="{{ cat.id|add:100 }}"
-                                    {% if cat.id|add:100|stringformat:'s' in selected_cats %}checked{% endif %}>
-                                {{ cat.category_name }}
-                            </label>
-                        {% empty %}
-                            <span class="text-muted">カテゴリなし</span>
-                        {% endfor %}
-                    </span>
-                </div>
-            </div>
-
-            <!-- カテゴリ(独自) -->
-            <div class="row g-2 mt-1 align-items-center">
-                <div class="col-12 col-md-10">
-                    <label class="filter-label me-2">カテゴリ(独自)</label>
-                    <span class="category-inline">
-                        {% for cat in user_categories %}
-                            {% if cat.category_name != "未分類" %}
-                                <label class="form-check-label me-3">
-                                    <input class="form-check-input me-1" type="checkbox" name="cat" value="{{ cat.id }}"
-                                        {% if cat.id|stringformat:'s' in selected_cats %}checked{% endif %}>
-                                    {{ cat.category_name }}
-                                </label>
-                            {% endif %}
-                        {% empty %}
-                            <span class="text-muted">カテゴリなし</span>
-                        {% endfor %}
-                    </span>
-                </div>
-            </div>
-
-            <!-- 買い時・優先度・在庫＋ボタン -->
-            <div class="row g-1 mt-2 align-items-center flex-nowrap">
-
-                <!-- 🟡 全商品⇄買い時 トグル -->
-                <div class="col-md-3 col-12 d-flex align-items-center flex-shrink-0">
-                    <span class="toggle-me-2">全商品</span>
-                    <label class="toggle-switch me-2">
-                        <input type="checkbox" name="buy_flag" value="1" {% if request.GET.buy_flag == '1' %}checked{% endif %}>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="fw-semibold">買い時のみ</span>
-                </div>
-
-                <!-- 🟢 優先度 -->
-                <div class="col-md-3 col-12 flex-shrink-0">
-                    <span class="filter-label me-2">優先度</span>
-                    <label class="me-2"><input type="radio" name="priority" value="all" {% if priority == "all" %}checked{% endif %}>すべて</label>
-                    <label class="me-2"><input type="radio" name="priority" value="高" {% if priority == "高" %}checked{% endif %}>高</label>
-                    <label class="me-2"><input type="radio" name="priority" value="普通" {% if priority == "普通" %}checked{% endif %}>普通</label>
-                </div>
-
-                <!-- 🔵 在庫 -->
-                <div class="col-auto ms-auto d-flex justify-content-end">
-                    <span class="filter-label me-2">在庫</span>
-                    <label class="me-2"><input type="radio" name="stock" value="all" {% if stock == "all" %}checked{% endif %}>すべて</label>
-                    <label class="me-2"><input type="radio" name="stock" value="low" {% if stock == "low" %}checked{% endif %}>わずか</label>
-                    <label class="me-2"><input type="radio" name="stock" value="none" {% if stock == "none" %}checked{% endif %}>なし</label>
-                </div>
-
-                <!-- 🔘 ボタンエリア -->
-                <div class="col-auto d-flex align-items-center ms-auto" style="white-space: nowrap;">
-                    <div class="d-flex align-items-center justify-content-end" style="gap: 0;">
-                        {% if is_filtered %}
-                            <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary btn-sm">クリア</a>
-                        {% endif %}
-                        <button type="submit" class="btn btn-primary btn-sm ms-1">絞り込み</button>
-                    </div>
-                </div>
-            </div>
-
-        </form>
-
-        <!-- 絞り込みタグ -->
-        {% if filter_tags %}
-            <div class="filter-tags-floating">
-                {% for key, label, tag_class in filter_tags %}
-                    <span class="badge {{ tag_class }} me-2">
-                        {{ label }}
-                    </span>
-                {% endfor %}
-            </div>
-        {% endif %}
+  <!-- ============================= -->
+  <!-- 絞り込みフォーム -->
+  <!-- ============================= -->
+  <div class="filter-wrap">
+    <div class="page-header">
+      <h1 class="page-title">
+        <span class="title-inner">商品一覧</span>
+      </h1>
     </div>
 
-    <!-- 並び順＋ページネーション＋登録／削除 -->
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <div class="dropdown">
-            <button class="btn sort-button btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                {% if sort == "cheap" %}安い順{% elif sort == "expensive" %}高い順{% elif sort == "old" %}古い順{% else %}新しい順{% endif %}
-            </button>
-            <ul class="dropdown-menu">
-                {% for option, label in sort_options %}
-                    <li>
-                        <a class="dropdown-item"
-                        href="?{% for key, value in request.GET.items %}{% if key != 'sort' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}sort={{ option }}">
-                            {{ label }}
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
+    <form method="get" class="filter-card mb-3 p-2">
+      <!-- 🔍 キーワード -->
+      <div class="row g-2">
+        <div class="col-12">
+          <input type="text" name="keyword" value="{{ keyword }}"
+                 placeholder="商品名・ショップ名で検索"
+                 class="form-control form-control-sm">
+        </div>
+      </div>
+
+      <!-- 🏷 共通カテゴリ -->
+      <div class="row g-2 mt-2">
+        <div class="col-12">
+          <label class="filter-label me-2">カテゴリ(共通)</label>
+          <span class="category-inline">
+            {% for cat in global_categories %}
+              <label class="form-check-label me-3">
+                <input class="form-check-input me-1" type="checkbox"
+                       name="cat" value="{{ cat.id|add:100 }}"
+                       {% if cat.id|add:100|stringformat:'s' in selected_cats %}checked{% endif %}>
+                {{ cat.category_name }}
+              </label>
+            {% empty %}
+              <span class="text-muted">カテゴリなし</span>
+            {% endfor %}
+          </span>
+        </div>
+      </div>
+
+      <!-- 💡 独自カテゴリ -->
+      <div class="row g-2 mt-1 align-items-center">
+        <div class="col-12 col-md-10">
+          <label class="filter-label me-2">カテゴリ(独自)</label>
+          <span class="category-inline">
+            {% for cat in user_categories %}
+              {% if cat.category_name != "未分類" %}
+                <label class="form-check-label me-3">
+                  <input class="form-check-input me-1" type="checkbox"
+                         name="cat" value="{{ cat.id }}"
+                         {% if cat.id|stringformat:'s' in selected_cats %}checked{% endif %}>
+                  {{ cat.category_name }}
+                </label>
+              {% endif %}
+            {% empty %}
+              <span class="text-muted">カテゴリなし</span>
+            {% endfor %}
+          </span>
+        </div>
+      </div>
+
+      <!-- 🟢 買い時・優先度・在庫 -->
+      <div class="row g-1 mt-2 align-items-center flex-nowrap">
+        <!-- 買い時トグル -->
+        <div class="col-md-3 col-12 d-flex align-items-center flex-shrink-0">
+          <span class="toggle-me-2">全商品</span>
+          <label class="toggle-switch me-2">
+            <input type="checkbox" name="buy_flag" value="1" {% if request.GET.buy_flag == '1' %}checked{% endif %}>
+            <span class="slider"></span>
+          </label>
+          <span class="fw-semibold">買い時のみ</span>
         </div>
 
-        <nav class="d-flex justify-content-center">
-            <ul class="pagination pagination-sm mb-0">
-                {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>
-                {% endif %}
-                {% for num in paginator.page_range %}
-                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                {% endfor %}
-                {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">&raquo;</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-
-        <div class="d-flex gap-2">
-            <a href="{% url 'main:product_create' %}" class="btn btn-outline-danger btn-sm">＋ 商品登録</a>
-            <button type="button" class="btn btn-outline-danger btn-sm" id="bulkDeleteBtn" style="display:none;"
-                data-bs-toggle="modal" data-bs-target="#deleteModal">一括削除</button>
+        <!-- 優先度 -->
+        <div class="col-md-3 col-12 flex-shrink-0">
+          <span class="filter-label me-2">優先度</span>
+          <label class="me-2"><input type="radio" name="priority" value="all" {% if priority == "all" %}checked{% endif %}>すべて</label>
+          <label class="me-2"><input type="radio" name="priority" value="高" {% if priority == "高" %}checked{% endif %}>高</label>
+          <label class="me-2"><input type="radio" name="priority" value="普通" {% if priority == "普通" %}checked{% endif %}>普通</label>
         </div>
-    </div>
 
-    {% if products %}
-        <form method="post" id="bulk-delete-form">
-            {% csrf_token %}
-            <input type="hidden" name="bulk_action" value="delete">
+        <!-- 在庫 -->
+        <div class="col-auto ms-auto d-flex justify-content-end">
+          <span class="filter-label me-2">在庫</span>
+          <label class="me-2"><input type="radio" name="stock" value="all" {% if stock == "all" %}checked{% endif %}>すべて</label>
+          <label class="me-2"><input type="radio" name="stock" value="low" {% if stock == "low" %}checked{% endif %}>わずか</label>
+          <label class="me-2"><input type="radio" name="stock" value="none" {% if stock == "none" %}checked{% endif %}>なし</label>
+        </div>
 
-            <div class="product-list-wrapper p-3 mt-2">
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
-                    {% for p in products %}
-                        <div class="col">
-                            <div class="card product-card h-100 shadow-sm
-                                {% if p.flag_reached %}
-                                    border-buytime
-                                {% elif not p.is_in_stock %}
-                                    border-secondary
-                                {% elif p.latest_stock_count and p.latest_stock_count <= 3 %}
-                                    border-warning
-                                {% else %}
-                                    border-0
-                                {% endif %}
-                                rounded position-relative {% if not p.is_in_stock %}out-of-stock{% endif %}"
-                                data-url="{% url 'main:product_detail' p.id %}">
+        <!-- ボタン -->
+        <div class="col-auto d-flex align-items-center ms-auto" style="white-space: nowrap;">
+          <div class="d-flex align-items-center justify-content-end" style="gap: 0;">
+            {% if is_filtered %}
+              <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary btn-sm">クリア</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-sm ms-1">絞り込み</button>
+          </div>
+        </div>
+      </div>
+    </form>
 
-                                <div class="position-absolute top-0 start-0 m-2">
-                                    <input class="form-check-input bulk-check" type="checkbox" name="selected" value="{{ p.id }}">
-                                </div>
-
-                                <div class="position-absolute top-0 end-0 m-2">
-                                    {% if p.flag_reached %}
-                                        <span class="badge bg-buytime border border-3 me-1">買い時</span>
-                                    {% endif %}
-                                    {% if not p.is_in_stock %}
-                                        <span class="badge bg-secondary border border-3 me-1">在庫なし</span>
-                                    {% elif p.latest_stock_count and p.latest_stock_count <= 3 %}
-                                        <span class="badge bg-warning border border-3 me-1">在庫わずか</span>
-                                    {% endif %}
-                                </div>
-
-                                <div class="card-img-top-wrapper">
-                                    {% if p.image_url %}
-                                        <img src="{{ p.image_url }}" class="card-img-top product-thumb" alt="商品画像">
-                                    {% else %}
-                                        <img src="{% static 'images/no_image.png' %}" class="card-img-top product-thumb" alt="商品画像">
-                                    {% endif %}
-                                </div>
-
-                                <div class="card-body">
-                                    <h6 class="fw-bold mb-1">{{ p.product_name }}</h6>
-                                    <p class="text-muted small mb-1">カテゴリ：
-                                        <span class="badge {% if p.category.is_global %}bg-success{% else %}bg-info{% endif %}">
-                                            {{ p.category.category_name }}
-                                        </span>
-                                    </p>
-                                    <p class="small text-muted mb-1">最新価格：¥{{ p.initial_price|default:"-" }}</p>
-                                    <p class="small text-muted mb-1">買い時価格：¥{{ p.threshold_price|default:"未設定" }}</p>
-                                    <p class="small text-muted mb-0">優先度：
-                                        <span class="badge {% if p.priority == '高' %}badge-priority-high{% else %}badge-priority-normal{% endif %}">
-                                            {{ p.priority }}
-                                        </span>
-                                    </p>
-                                </div>
-
-                                <div class="card-footer bg-white border-top-0 text-center">
-                                    <a href="{% url 'main:product_detail' p.id %}" class="btn btn-outline-primary btn-sm px-2 py-1">編集</a>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </form>
-
-        <nav class="mt-4">
-            <ul class="pagination pagination-sm justify-content-center">
-                {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>
-                {% endif %}
-                {% for num in paginator.page_range %}
-                    <li class="page-item {% if num == page_obj.number %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                {% endfor %}
-                {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">&raquo;</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% else %}
-        <p class="text-muted">登録された商品はありません。</p>
+    <!-- 🏷 適用中フィルタタグ -->
+    {% if filter_tags %}
+      <div class="filter-tags-floating">
+        {% for key, label, tag_class in filter_tags %}
+          <span class="badge {{ tag_class }} me-2">{{ label }}</span>
+        {% endfor %}
+      </div>
     {% endif %}
-</div>
+  </div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">確認</h5>
-            </div>
-            <div class="modal-body">選択した商品を削除しますか？</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                <button type="submit" class="btn btn-danger" form="bulk-delete-form">削除</button>
-            </div>
-        </div>
+  <!-- ============================= -->
+  <!-- 並び順・ページネーション・登録/削除 -->
+  <!-- ============================= -->
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+    <div class="dropdown">
+      <button class="btn sort-button btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        {% if sort == "cheap" %}安い順{% elif sort == "expensive" %}高い順{% elif sort == "old" %}古い順{% else %}新しい順{% endif %}
+      </button>
+      <ul class="dropdown-menu">
+        {% for option, label in sort_options %}
+          <li>
+            <a class="dropdown-item" href="?{% for key, value in request.GET.items %}{% if key != 'sort' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}sort={{ option }}">
+              {{ label }}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
     </div>
+
+    <nav class="d-flex justify-content-center">
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>
+        {% endif %}
+        {% for num in paginator.page_range %}
+          <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">&raquo;</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+
+    <div class="d-flex gap-2">
+      <a href="{% url 'main:product_create' %}" class="btn btn-outline-danger btn-sm">＋ 商品登録</a>
+      <button type="button" class="btn btn-outline-danger btn-sm" id="bulkDeleteBtn" style="display:none;" data-bs-toggle="modal" data-bs-target="#deleteModal">
+        一括削除
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================= -->
+  <!-- 商品カード一覧 -->
+  <!-- ============================= -->
+  {% if products %}
+    <form method="post" id="bulk-delete-form">
+      {% csrf_token %}
+      <input type="hidden" name="bulk_action" value="delete">
+
+      <div class="product-list-wrapper p-3 mt-2">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+          {% for p in products %}
+            <div class="col">
+              <div class="card product-card h-100 shadow-sm
+                          {% if p.flag_reached %}border-buytime{% elif not p.is_in_stock %}border-secondary{% elif p.latest_stock_count and p.latest_stock_count <= 3 %}border-warning{% endif %}
+                          rounded position-relative {% if not p.is_in_stock %}out-of-stock{% endif %}"
+                   data-url="{% url 'main:product_detail' p.id %}">
+                <!-- チェックボックス -->
+                <div class="position-absolute top-0 start-0 m-2">
+                  <input class="form-check-input bulk-check" type="checkbox" name="selected" value="{{ p.id }}">
+                </div>
+
+                <!-- バッジ -->
+                <div class="position-absolute top-0 end-0 m-2">
+                  {% if p.flag_reached %}
+                    <span class="badge bg-buytime border border-3 me-1">買い時</span>
+                  {% endif %}
+                  {% if not p.is_in_stock %}
+                    <span class="badge bg-secondary border border-3 me-1">在庫なし</span>
+                  {% elif p.latest_stock_count and p.latest_stock_count <= 3 %}
+                    <span class="badge bg-warning border border-3 me-1">在庫わずか</span>
+                  {% endif %}
+                </div>
+
+                <!-- 商品画像 -->
+                <div class="card-img-top-wrapper">
+                  {% if p.image_url %}
+                    <img src="{{ p.image_url }}" class="card-img-top product-thumb" alt="商品画像">
+                  {% else %}
+                    <img src="{% static 'images/no_image.png' %}" class="card-img-top product-thumb" alt="商品画像">
+                  {% endif %}
+                </div>
+
+                <!-- 商品情報 -->
+                <div class="card-body text-center">
+                  <h6 class="fw-bold mb-1" title="{{ p.product_name }}">{{ p.product_name|truncatechars:25 }}</h6>
+
+                  <!-- カテゴリ表示 -->
+                  <div class="product-category mb-1">
+                    {% if p.all_cats|length == 0 %}
+                      <span class="badge filter-tag-sort">未分類</span>
+                    {% else %}
+                      {% for cat in p.all_cats|slice:":2" %}
+                        {% if cat.category_name != "未分類" %}
+                          {% if cat.id == p.common_category.id %}
+                            <span class="badge filter-tag-common me-1">{{ cat.category_name }}</span>
+                          {% else %}
+                            <span class="badge filter-tag-user me-1">{{ cat.category_name }}</span>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+
+                  <div class="price-info mb-1">
+                    <small class="text-muted">最新価格：</small>
+                    <span class="fw-semibold text-dark">
+                      {% if p.latest_price %}
+                        {{ p.latest_price|floatformat:0 }}円
+                      {% else %}
+                        {{ p.initial_price|floatformat:0 }}円
+                      {% endif %}
+                    </span><br>
+                    <small class="text-muted">買い時価格：</small>
+                    {% if p.threshold_price %}
+                      <span class="fw-semibold text-danger">{{ p.threshold_price|floatformat:0 }}円</span>
+                    {% else %}
+                      <span class="text-secondary">-</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- 優先度 -->
+                  <div class="priority-badge mb-2">
+                    {% if p.priority == "高" %}
+                      <span class="badge badge-priority-high">優先度：高</span>
+                    {% else %}
+                      <span class="badge badge-priority-normal">優先度：普通</span>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- 編集ボタン -->
+                <div class="card-footer bg-white border-top-0 text-center">
+                  <a href="{% url 'main:product_detail' p.id %}" class="btn btn-outline-primary btn-sm px-2 py-1">編集</a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </form>
+
+    <!-- ページネーション -->
+    <nav class="mt-4">
+      <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page=1">&laquo;</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">‹</a></li>
+        {% endif %}
+        {% for num in paginator.page_range %}
+          <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+          </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">›</a></li>
+          <li class="page-item"><a class="page-link" href="?page={{ paginator.num_pages }}">&raquo;</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+
+  {% else %}
+    <p class="text-muted">登録された商品はありません。</p>
+  {% endif %}
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const checkboxes = document.querySelectorAll(".bulk-check");
-        const bulkBtn = document.getElementById("bulkDeleteBtn");
+<!-- ============================= -->
+<!-- 一括削除モーダル -->
+<!-- ============================= -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">確認</h5>
+      </div>
+      <div class="modal-body">選択した商品を削除しますか？</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="submit" class="btn btn-danger" form="bulk-delete-form">削除</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function updateButtonVisibility() {
-            const anyChecked = Array.from(checkboxes).some(chk => chk.checked);
-            bulkBtn.style.display = anyChecked ? "inline-block" : "none";
-        }
-
-        checkboxes.forEach(chk => chk.addEventListener("change", updateButtonVisibility));
-
-        document.querySelectorAll(".product-card").forEach(card => {
-            card.addEventListener("click", e => {
-                if (e.target.closest(".form-check-input") || e.target.closest(".btn")) return;
-                const url = card.getAttribute("data-url");
-                if (url) window.location.href = url;
-            });
-        });
-    });
-</script>
+<script src="{% static 'js/product_list.js' %}"></script>
 {% endblock %}

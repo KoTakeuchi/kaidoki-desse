@@ -1,26 +1,85 @@
-// ============================================
-// 機能概要: 商品一覧ページの動作用スクリプト
-// ・チェックボックス選択による一括削除ボタン表示制御
-// ・商品カードクリックで詳細ページ遷移
-// 対応テンプレート: product_list.html
-// ============================================
 
+// =============================================================
+// 商品一覧ページ：一括削除・クリック遷移制御（最終整合版）
+// =============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    const checkboxes = document.querySelectorAll(".bulk-check");
-    const bulkBtn = document.getElementById("bulkDeleteBtn");
+    console.log("✅ product_list.js 読み込み完了");
 
-    function updateButtonVisibility() {
-        const anyChecked = Array.from(checkboxes).some(chk => chk.checked);
-        if (bulkBtn) bulkBtn.style.display = anyChecked ? "inline-block" : "none";
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
+    const bulkDeleteForm = document.getElementById("bulk-delete-form");
+    const deleteModal = document.getElementById("deleteModal");
+    const checkboxes = document.querySelectorAll(".bulk-check");
+    const cards = document.querySelectorAll(".product-card");
+
+    // =========================================================
+    // 商品カードクリック → 詳細ページ遷移
+    // =========================================================
+    cards.forEach((card) => {
+        const url = card.dataset.url;
+        if (!url) return;
+
+        card.addEventListener("click", (e) => {
+            // ✅ チェックボックス・リンク・ボタンはクリック無効化
+            if (
+                e.target.classList.contains("bulk-check") ||
+                e.target.closest("a") ||
+                e.target.tagName === "BUTTON"
+            ) {
+                return;
+            }
+            window.location.href = url;
+        });
+    });
+
+    // =========================================================
+    // 一括削除ボタンの表示制御
+    // =========================================================
+    const updateDeleteButton = () => {
+        const checkedCount = document.querySelectorAll(".bulk-check:checked").length;
+        if (checkedCount > 0) {
+            bulkDeleteBtn.style.display = "inline-block";
+            bulkDeleteBtn.textContent = `一括削除 (${checkedCount})`;
+        } else {
+            bulkDeleteBtn.style.display = "none";
+        }
+    };
+
+    checkboxes.forEach((cb) => {
+        cb.addEventListener("change", updateDeleteButton);
+    });
+
+    // =========================================================
+    // モーダル表示時：選択件数を反映
+    // =========================================================
+    if (deleteModal) {
+        deleteModal.addEventListener("show.bs.modal", () => {
+            const checkedCount = document.querySelectorAll(".bulk-check:checked").length;
+            const msg = deleteModal.querySelector(".modal-body");
+            if (msg) msg.textContent = `選択した商品を削除しますか？（${checkedCount}件）`;
+        });
     }
 
-    checkboxes.forEach(chk => chk.addEventListener("change", updateButtonVisibility));
-
-    document.querySelectorAll(".product-card").forEach(card => {
-        card.addEventListener("click", e => {
-            if (e.target.closest(".form-check-input") || e.target.closest(".btn")) return;
-            const url = card.getAttribute("data-url");
-            if (url) window.location.href = url;
+    // =========================================================
+    // モーダル内「削除」ボタン押下 → 選択なし防止
+    // =========================================================
+    if (bulkDeleteForm) {
+        bulkDeleteForm.addEventListener("submit", (e) => {
+            const checked = document.querySelectorAll(".bulk-check:checked");
+            if (checked.length === 0) {
+                e.preventDefault();
+                alert("削除する商品を選択してください。");
+            }
         });
+    }
+
+    // =========================================================
+    // ページ離脱前の確認（チェック残り警告）
+    // =========================================================
+    window.addEventListener("beforeunload", (e) => {
+        const checkedCount = document.querySelectorAll(".bulk-check:checked").length;
+        if (checkedCount > 0) {
+            e.preventDefault();
+            e.returnValue = "チェック済みの商品があります。ページを離れますか？";
+        }
     });
 });

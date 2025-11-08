@@ -1,7 +1,8 @@
-# 実行ディレクトリ: I:\school\kaidoki-desse\main\urls.py
+# --- START: main/urls.py ---
 from django.urls import path
+from django.contrib.auth import views as auth_views
+from main.views_auth import custom_password_reset_view
 
-from main import views_api
 from . import (
     views,
     views_flag,
@@ -12,78 +13,106 @@ from . import (
     views_product,
     views_category,
     views_dashboard,
+    views_notification,
 )
-from django.contrib.auth import views as auth_views
-from main.views_auth import custom_password_reset_view
-
 
 app_name = "main"
 
 urlpatterns = [
-    # --- ランディング ---
+    # ============================================================
+    # ランディング・ログアウト
+    # ============================================================
     path("", views.landing_page, name="landing_page"),
-    # ▼ログアウト追加
     path(
         "logout/",
         auth_views.LogoutView.as_view(next_page="main:landing_page"),
         name="logout",
     ),
 
-    # --- ユーザー関連 ---
+    # ============================================================
+    # ユーザー関連
+    # ============================================================
     path("user/profile/", views_profile.profile_view, name="profile"),
     path("user/edit/", views_user.user_edit, name="user_edit"),
     path("user/delete/", views_profile.account_delete_view, name="account_delete"),
 
-
-    # ...パスワード関連...
-    # パスワード再設定フォーム（カスタムフォームを使う）
+    # ============================================================
+    # 認証・パスワード関連
+    # ============================================================
     path("password_reset/", custom_password_reset_view, name="password_reset"),
-    # 標準のビューを利用する（テンプレートを用意済みと仮定）
-    path("password_reset/done/", auth_views.PasswordResetDoneView.as_view(
-        template_name="auth/password_reset_done.html"
-    ), name="password_reset_done"),
-    path("reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
-        template_name="auth/password_reset_confirm.html"
-    ), name="password_reset_confirm"),
-    path("reset/done/", auth_views.PasswordResetCompleteView.as_view(
-        template_name="auth/password_reset_complete.html"
-    ), name="password_reset_complete"),
-    path("after_login_redirect/", views_auth.after_login_redirect,
-         name="after_login_redirect"),
+    path(
+        "password_reset/done/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="auth/password_reset_done.html"
+        ),
+        name="password_reset_done",
+    ),
+    path(
+        "reset/<uidb64>/<token>/",
+        auth_views.PasswordResetConfirmView.as_view(
+            template_name="auth/password_reset_confirm.html"
+        ),
+        name="password_reset_confirm",
+    ),
+    path(
+        "reset/done/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="auth/password_reset_complete.html"
+        ),
+        name="password_reset_complete",
+    ),
+    path(
+        "after_login_redirect/",
+        views_auth.after_login_redirect,
+        name="after_login_redirect",
+    ),
 
-    # --- 商品 ---
-    path("index/", views_product.product_list, name="product_list"),
-    path("product/<int:pk>/", views_product.product_detail, name="product_detail"),
+    # ============================================================
+    # 商品関連
+    # ============================================================
+    path("product/list/", views_product.product_list, name="product_list"),
+    path("product/detail/<int:pk>/",
+         views_product.product_detail, name="product_detail"),
     path("product/create/", views_product.product_create, name="product_create"),
     path("product/edit/<int:pk>/", views_product.product_edit, name="product_edit"),
     path("product/delete/<int:pk>/",
          views_product.product_delete, name="product_delete"),
 
-    # --- 楽天API ---
+    # ============================================================
+    # 楽天API関連
+    # ============================================================
     path("api/fetch_rakuten_item/", views_api.fetch_rakuten_item,
          name="fetch_rakuten_item"),
     path("api/proxy_image/", views_api.proxy_image, name="proxy_image"),
+
+    # ============================================================
+    # カテゴリAPI関連
+    # ============================================================
     path("api/categories/", views_category.api_category_list,
          name="api_category_list"),
     path("api/categories/create/", views_category.api_category_create,
          name="api_category_create"),
-    # カテゴリ削除API
     path("api/categories/delete/<int:category_id>/",
          views_category.api_category_delete, name="api_category_delete"),
-    # カテゴリ編集API
     path("api/categories/update/<int:category_id>/",
          views_category.api_category_update, name="api_category_update"),
 
-    # --- カテゴリ ---
+    # ============================================================
+    # カテゴリ管理画面
+    # ============================================================
     path("categories/my/", views_category.category_my, name="category_my"),
 
-    # --- 通知設定 ---
+    # ============================================================
+    # 通知設定・通知関連
+    # ============================================================
     path("flag_setting/", views_flag.flag_setting, name="flag_setting"),
 
     # --- 通知（一般ユーザー） ---
     path("notifications/", views_dashboard.notification_list, name="notifications"),
-    path("notifications/<str:pk>/read/",
-         views_dashboard.mark_notification_read, name="mark_notification_read"),
+    path("notifications/read/<int:pk>/",
+         views_notification.notification_read, name="notification_read"),
+    path("notifications/read_all/", views_notification.notification_read_all,
+         name="notification_read_all"),
     path("unread_count_api/", views_dashboard.unread_count_api,
          name="unread_count_api"),
 
@@ -91,4 +120,9 @@ urlpatterns = [
     path("notifications/log/", views_dashboard.notification_log_list,
          name="notification_log"),
 
+    # --- 通知設定・プロフィール編集 ---
+    path("notifications/settings/", views.user_notification_settings,
+         name="user_notification_settings"),
+    path("profile/edit/", views.profile_edit, name="profile_edit"),
 ]
+# --- END: main/urls.py ---

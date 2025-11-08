@@ -1,7 +1,10 @@
-// 実行ディレクトリ: I:\school\kaidoki-desse\main\static\js\product_form.js
 
+// =============================================================
+// 商品登録・編集フォーム：楽天API連携＋画像プレビュー更新
+// 対応テンプレート：product_form.html
+// =============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("✅ JS読み込みOK: DOMContentLoaded発火");
+    console.log("✅ product_form.js 読み込み完了");
 
     const urlInput = document.querySelector("#id_product_url");
     const nameInput = document.querySelector("#id_product_name");
@@ -18,25 +21,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiUrl = "/main/api/fetch_rakuten_item/";
     const proxyUrlBase = "/main/api/proxy_image/?url=";
 
-    // ✅ メッセージ表示（背景付きで復活）
+    // ---------------------------------------------------------
+    // ステータスメッセージ表示
+    // ---------------------------------------------------------
     const setStatus = (text, type = "info") => {
         if (!statusBox) return;
 
         statusBox.textContent = text;
         statusBox.style.display = "block";
+        statusBox.className = ""; // 既存クラス全消去
+        statusBox.classList.add("mt-2", "small", "text-center");
 
-        statusBox.classList.remove("success", "error", "info");
-
-        if (type === "success") {
-            statusBox.classList.add("success");
-        } else if (type === "error") {
-            statusBox.classList.add("error");
-        } else {
-            statusBox.classList.add("info");
+        switch (type) {
+            case "success":
+                statusBox.classList.add("text-success", "fw-bold");
+                break;
+            case "error":
+                statusBox.classList.add("text-danger", "fw-bold");
+                break;
+            default:
+                statusBox.classList.add("text-muted");
         }
     };
 
-    // ✅ 画像更新
+    // ---------------------------------------------------------
+    // 画像更新
+    // ---------------------------------------------------------
     const updateImage = (url) => {
         if (!previewImg) return;
 
@@ -60,8 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     };
 
-    // ✅ API取得後に編集可能にする
-    const applyEditableFields = () => {
+    // ---------------------------------------------------------
+    // API取得後にフィールドを編集可に変更
+    // ---------------------------------------------------------
+    const makeEditable = () => {
         [nameInput, shopInput].forEach((input) => {
             if (!input) return;
             input.removeAttribute("readonly");
@@ -69,7 +81,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // ✅ API呼び出し
+    // ---------------------------------------------------------
+    // 楽天API呼び出し
+    // ---------------------------------------------------------
     const fetchItemInfo = async () => {
         const rawUrl = urlInput.value.trim();
 
@@ -88,36 +102,30 @@ document.addEventListener("DOMContentLoaded", () => {
         updateImage("/static/images/no_image.png");
 
         try {
-            const apiUrlWithParam = `${apiUrl}?url=${encodeURI(rawUrl)}`;
-            console.log("📡 APIリクエスト:", apiUrlWithParam);
-
-            const response = await fetch(apiUrlWithParam);
-
+            const response = await fetch(`${apiUrl}?url=${encodeURIComponent(rawUrl)}`);
             if (!response.ok) {
                 setStatus(`❌ 通信エラー（${response.status}）`, "error");
                 return;
             }
 
             const data = await response.json();
-            console.log("受信データ:", data);
+            console.log("📦 取得データ:", data);
 
             if (data.error) {
                 setStatus(`⚠️ ${data.error}`, "error");
                 return;
             }
 
-            // ✅ 値セット
+            // 値反映
             if (nameInput) nameInput.value = data.product_name || data.itemName || "";
             if (shopInput) shopInput.value = data.shop_name || data.shopName || "";
-            if (priceInput) priceInput.value = data.initial_price || data.price || data.itemPrice || "";
+            if (priceInput)
+                priceInput.value = data.initial_price || data.price || data.itemPrice || "";
 
             updateImage(data.image_url || data.mediumImageUrls?.[0]?.imageUrl || "");
+            makeEditable();
 
-            // ✅ 編集可能化
-            applyEditableFields();
-
-            // ✅ 成功メッセージ
-            setStatus("✅ 楽天API連係成功（商品情報を取得しました）", "success");
+            setStatus("✅ 楽天API連携成功（商品情報を取得しました）", "success");
         } catch (err) {
             console.error("fetch_rakuten_item error:", err);
             setStatus("❌ 通信エラー（サーバー応答なし）", "error");
@@ -125,7 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // blur／Enterイベント登録
+    // ---------------------------------------------------------
+    // イベント登録（blur・Enter）
+    // ---------------------------------------------------------
     urlInput.addEventListener("blur", fetchItemInfo);
     urlInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
@@ -134,3 +144,4 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+
