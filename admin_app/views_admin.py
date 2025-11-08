@@ -3,16 +3,13 @@
 # =============================
 from admin_app.models import CommonCategory
 from django.shortcuts import render, redirect, get_object_or_404
-from main.models import Category, Product, ErrorLog, User, NotificationLog
+from main.models import Category, Product, ErrorLog, User, NotificationEvent
 from django.db.models import Prefetch, Count, Q
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib import messages
 from datetime import timedelta
-
-from .models import CommonCategory  # ← ★追加：共通カテゴリモデルをインポート
 
 
 # =============================
@@ -33,15 +30,15 @@ def admin_dashboard(request):
     stats = {
         "user_count": User.objects.count(),
         "product_count": Product.objects.count(),
-        "notification_week": NotificationLog.objects.filter(
-            notified_at__gte=week_ago
+        "notification_week": NotificationEvent.objects.filter(
+            occurred_at__gte=week_ago
         ).count(),
         "error_count": ErrorLog.objects.count(),
     }
     context = {
         "stats": stats,
         "latest_products": Product.objects.select_related("user").order_by("-created_at")[:5],
-        "latest_notifications": NotificationLog.objects.select_related("user").order_by("-notified_at")[:5],
+        "latest_notifications": NotificationEvent.objects.select_related("user").order_by("-occurred_at")[:5],
     }
     return render(request, "admin_app/admin_dashboard.html", context)
 
@@ -53,7 +50,7 @@ def admin_dashboard(request):
 @user_passes_test(is_admin)
 def admin_user_list(request):
     """全ユーザー一覧"""
-    users = User.objects.annotate(product_count=Count("product"))
+    users = User.objects.annotate(product_count=Count("products"))
     return render(request, "admin_app/admin_user_list.html", {"users": users})
 
 
@@ -76,7 +73,6 @@ def admin_product_list(request):
 # =============================
 #  カテゴリ管理
 # =============================
-
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
@@ -145,7 +141,8 @@ def admin_notification_list(request):
     start_date = request.GET.get("start_date", "")
     end_date = request.GET.get("end_date", "")
 
-    logs = NotificationLog.objects.all().order_by("-notified_at")
+    logs = NotificationEvent.objects.select_related(
+        "user", "product").order_by("-occurred_at")
 
     if query:
         logs = logs.filter(
@@ -154,9 +151,9 @@ def admin_notification_list(request):
             | Q(message__icontains=query)
         )
     if start_date:
-        logs = logs.filter(notified_at__gte=start_date)
+        logs = logs.filter(occurred_at__gte=start_date)
     if end_date:
-        logs = logs.filter(notified_at__lte=end_date)
+        logs = logs.filter(occurred_at__lte=end_date)
 
     return render(request, "admin_app/admin_notifications.html", {
         "logs": logs,
@@ -169,7 +166,7 @@ def admin_notification_list(request):
 @user_passes_test(is_admin)
 def admin_notification_detail(request, log_id):
     """通知ログ詳細"""
-    log = get_object_or_404(NotificationLog, pk=log_id)
+    log = get_object_or_404(NotificationEvent, pk=log_id)
     return render(request, "admin_app/admin_notification_detail.html", {"log": log})
 
 

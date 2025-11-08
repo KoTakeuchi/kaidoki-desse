@@ -1,12 +1,10 @@
-# --- START(1/2): main/views_product.py ---
+# --- START: main/views_product.py ---
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-import json
-
 from main.forms import ProductForm, ThresholdPriceForm
 from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
@@ -40,25 +38,27 @@ def product_list(request: HttpRequest) -> HttpResponse:
     try:
         user = request.user
 
-        # 一括削除処理
+        # --- 一括削除処理 ---
         if request.method == "POST" and request.POST.get("bulk_action") == "delete":
             ids = request.POST.getlist("selected")
             if ids:
                 Product.objects.filter(id__in=ids, user=user).delete()
+                messages.success(request, f"{len(ids)}件の商品を削除しました。")
             return redirect("main:product_list")
 
-        # 絞り込みパラメータ取得
+        # --- 絞り込みパラメータ取得 ---
         keyword = request.GET.get("keyword", "").strip()
         selected_cats = request.GET.getlist("cat")
         stock = request.GET.get("stock", "all")
         priority = request.GET.get("priority", "all")
         sort = request.GET.get("sort", "new")
 
-        # ベースクエリ
+        # --- ベースクエリ ---
         qs = Product.objects.filter(user=user).prefetch_related(
             Prefetch("categories", queryset=Category.objects.all().order_by("id"))
         )
 
+        # --- 絞り込み ---
         if keyword:
             qs = qs.filter(Q(product_name__icontains=keyword)
                            | Q(shop_name__icontains=keyword))
@@ -78,6 +78,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
         if priority in ["高", "普通"]:
             qs = qs.filter(priority=priority)
 
+        # --- 並び替え ---
         if sort == "cheap":
             qs = qs.order_by("threshold_price")
         elif sort == "expensive":
@@ -87,14 +88,17 @@ def product_list(request: HttpRequest) -> HttpResponse:
         else:
             qs = qs.order_by("-created_at")
 
+        # --- ページネーション ---
         paginator = Paginator(qs, 20)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
+        # --- カテゴリ情報 ---
         global_categories = Category.objects.filter(
             is_global=True, user__isnull=True)
         user_categories = Category.objects.filter(user=user, is_global=False)
 
+        # --- 表示 ---
         return render(
             request,
             "main/product_list.html",
@@ -112,8 +116,127 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 "is_filtered": _has_filter(keyword, selected_cats, stock, priority, sort),
             },
         )
+
     except Exception as e:
         log_error(user=request.user, type_name=type(
             e).__name__, source="product_list", err=e)
-        raise
-# --- END(1/2): main/views_product.py ---
+        messages.error(request, "商品一覧の表示中にエラーが発生しました。")
+        return redirect("main:landing_page")
+
+
+# ======================================================
+# 商品詳細
+# ======================================================
+@login_required
+def product_detail(request, pk):
+    """商品詳細ページ"""
+    product = get_object_or_404(Product, pk=pk, user=request.user)
+    price_history = PriceHistory.objects.filter(
+        product=product).order_by("created_at")
+
+    return render(request, "main/product_detail.html", {
+        "product": product,
+        "price_history": price_history,
+    })
+# --- START: product_create / product_edit 追加 ---
+
+
+@login_required
+def product_create(request):
+    """新規商品登録"""
+    try:
+        if request.method == "POST":
+            form = ProductForm(request.POST, user=request.user)
+            if form.is_valid():
+                product = form.save(commit=False)
+                product.user = request.user
+                product.save()
+                form.save_m2m()
+                messages.success(request, "商品を登録しました。")
+                return redirect("main:product_list")
+            else:
+                messages.error(request, "入力内容に誤りがあります。")
+        else:
+            form = ProductForm(user=request.user)
+
+        global_categories = Category.objects.filter(
+            is_global=True, user__isnull=True)
+        user_categories = Category.objects.filter(
+            user=request.user, is_global=False)
+
+        return render(request, "main/product_form.html", {
+            "form": form,
+            "is_edit": False,
+            "global_categories": global_categories,
+            "user_categories": user_categories,
+            "selected_category_ids": [],
+        })
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_create", err=e)
+        messages.error(request, "商品登録中にエラーが発生しました。")
+        return redirect("main:product_list")
+
+
+@login_required
+def product_edit(request, pk):
+    """商品編集"""
+    try:
+        product = get_object_or_404(Product, pk=pk, user=request.user)
+
+        if request.method == "POST":
+            form = ProductForm(
+                request.POST, instance=product, user=request.user)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "商品情報を更新しました。")
+                return redirect("main:product_list")
+            else:
+                messages.error(request, "入力内容に誤りがあります。")
+        else:
+            form = ProductForm(instance=product, user=request.user)
+
+        global_categories = Category.objects.filter(
+            is_global=True, user__isnull=True)
+        user_categories = Category.objects.filter(
+            user=request.user, is_global=False)
+        selected_category_ids = list(
+            product.categories.values_list("id", flat=True))
+
+        return render(request, "main/product_form.html", {
+            "form": form,
+            "is_edit": True,
+            "product": product,
+            "global_categories": global_categories,
+            "user_categories": user_categories,
+            "selected_category_ids": selected_category_ids,
+        })
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_edit", err=e)
+        messages.error(request, "商品編集中にエラーが発生しました。")
+        return redirect("main:product_list")
+# --- END: product_create / product_edit 追加 ---
+# --- START: product_delete 追加 ---
+
+
+@login_required
+def product_delete(request, pk):
+    """商品削除"""
+    try:
+        product = get_object_or_404(Product, pk=pk, user=request.user)
+
+        if request.method == "POST":
+            product.delete()
+            messages.success(request, "商品を削除しました。")
+            return redirect("main:product_list")
+
+        return render(request, "main/product_confirm_delete.html", {
+            "product": product
+        })
+    except Exception as e:
+        log_error(user=request.user, type_name=type(
+            e).__name__, source="product_delete", err=e)
+        messages.error(request, "商品削除中にエラーが発生しました。")
+        return redirect("main:product_list")
+# --- END: product_delete 追加 ---

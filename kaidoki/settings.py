@@ -84,7 +84,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "main.context_processors.unread_count",
+                # "main.context_processors.unread_count",
             ],
         },
     },
@@ -115,9 +115,9 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # ===== 認証・遷移 =====
-LOGIN_URL = "login"
-LOGOUT_REDIRECT_URL = "/main/"
-LOGIN_REDIRECT_URL = "main:index"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/main/product/list/"
+LOGOUT_REDIRECT_URL = "/"
 
 # ===== メール =====
 if ENV == "dev":

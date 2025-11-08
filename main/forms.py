@@ -1,11 +1,12 @@
 # --- START(1/2): main/forms.py ---
+from django.contrib.auth.forms import PasswordChangeForm
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
-from main.models import Product, Category, UserNotificationSetting
-
+from main.models import Product, Category, UserNotificationSetting  # ✅ Profile削除
+from django.contrib.auth.forms import PasswordChangeForm
 User = get_user_model()
 
 
@@ -105,8 +106,76 @@ class ThresholdPriceForm(forms.ModelForm):
                 }
             ),
         }
-# --- END(1/2): main/forms.py ---
-# --- START(2/2): main/forms.py ---
+
+# ======================================================
+# ユーザー情報編集フォーム
+# ======================================================
+
+
+class ProfileForm(forms.ModelForm):
+    """ユーザー情報編集フォーム（ユーザー名・メール・パスワード）"""
+
+    current_password = forms.CharField(
+        label="現在のパスワード",
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "autocomplete": "current-password"}),
+        required=True,
+    )
+    new_password1 = forms.CharField(
+        label="新しいパスワード",
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "autocomplete": "new-password"}),
+        required=False,
+        help_text="変更しない場合は空欄のままでOKです。",
+    )
+    new_password2 = forms.CharField(
+        label="新しいパスワード（確認用）",
+        widget=forms.PasswordInput(
+            attrs={"class": "form-control", "autocomplete": "new-password"}),
+        required=False,
+    )
+
+    class Meta:
+        model = User
+        fields = ["username", "email"]
+        labels = {"username": "ユーザー名", "email": "メールアドレス"}
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.get("instance")
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        password = self.cleaned_data.get("current_password")
+        if not self.user.check_password(password):
+            raise forms.ValidationError("現在のパスワードが正しくありません。")
+        return password
+
+    def clean(self):
+        cleaned = super().clean()
+        pw1 = cleaned.get("new_password1")
+        pw2 = cleaned.get("new_password2")
+
+        # どちらか入力されていれば一致チェック
+        if pw1 or pw2:
+            if pw1 != pw2:
+                raise forms.ValidationError("新しいパスワードが一致しません。")
+        return cleaned
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        pw1 = self.cleaned_data.get("new_password1")
+
+        if pw1:
+            user.set_password(pw1)
+
+        if commit:
+            user.save()
+        return user
+
 # ======================================================
 # ユーザー通知設定フォーム
 # ======================================================

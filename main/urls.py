@@ -13,7 +13,6 @@ from . import (
     views_product,
     views_category,
     views_dashboard,
-    views_notification,
 )
 
 app_name = "main"
@@ -103,26 +102,20 @@ urlpatterns = [
     path("categories/my/", views_category.category_my, name="category_my"),
 
     # ============================================================
-    # 通知設定・通知関連
+    # 通知設定・通知関連（Dashboard統合版）
     # ============================================================
     path("flag_setting/", views_flag.flag_setting, name="flag_setting"),
 
     # --- 通知（一般ユーザー） ---
-    path("notifications/", views_dashboard.notification_list, name="notifications"),
+    path("notifications/", views_dashboard.notification_history, name="notifications"),
     path("notifications/read/<int:pk>/",
-         views_notification.notification_read, name="notification_read"),
-    path("notifications/read_all/", views_notification.notification_read_all,
-         name="notification_read_all"),
-    path("unread_count_api/", views_dashboard.unread_count_api,
-         name="unread_count_api"),
+         views_dashboard.mark_notification_read, name="notification_read"),
 
     # --- 通知ログ ---
-    path("notifications/log/", views_dashboard.notification_log_list,
+    path("notifications/log/", views_dashboard.notification_history,
          name="notification_log"),
 
-    # --- 通知設定・プロフィール編集 ---
-    path("notifications/settings/", views.user_notification_settings,
-         name="user_notification_settings"),
-    path("profile/edit/", views.profile_edit, name="profile_edit"),
+    # --- ダッシュボード ---
+    path("dashboard/", views_dashboard.dashboard_view, name="dashboard"),
 ]
 # --- END: main/urls.py ---
