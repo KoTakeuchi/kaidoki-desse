@@ -1,4 +1,5 @@
 # --- START: main/views_dashboard.py ---
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -23,23 +24,23 @@ def dashboard_view(request):
     # --- 通知イベント（最新5件） ---
     notifications = (
         NotificationEvent.objects.filter(user=user)
-        .order_by("-created_at")[:5]
+        .order_by("-occurred_at")[:5]
     )
 
     # --- 通知未送信・送信済み数 ---
     unread_count = NotificationEvent.objects.filter(
-        user=user, is_sent=False
+        user=user, is_read=False
     ).count()
 
     sent_count = NotificationEvent.objects.filter(
-        user=user, is_sent=True
+        user=user, is_read=True
     ).count()
 
     # --- 最近1週間の価格履歴更新件数 ---
     one_week_ago = timezone.now() - timedelta(days=7)
     price_updates = (
         PriceHistory.objects.filter(
-            product__user=user, created_at__gte=one_week_ago
+            product__user=user, checked_at__gte=one_week_ago
         )
         .values("product__product_name")
         .annotate(update_count=Count("id"))
@@ -72,9 +73,9 @@ def dashboard_view(request):
 def notification_history(request):
     """通知履歴ページ"""
     user = request.user
-    logs = NotificationEvent.objects.filter(user=user).order_by("-created_at")
+    logs = NotificationEvent.objects.filter(user=user).order_by("-occurred_at")
 
-    return render(request, "user/notification_history.html", {"logs": logs})
+    return render(request, "main/notifications.html", {"logs": logs})
 
 
 # ======================================================
@@ -85,11 +86,21 @@ def mark_notification_read(request, pk):
     """通知を既読にする"""
     try:
         notif = NotificationEvent.objects.get(pk=pk, user=request.user)
-        notif.is_sent = True
+        notif.is_read = True
         notif.save()
         messages.success(request, "通知を既読にしました。")
     except NotificationEvent.DoesNotExist:
         messages.error(request, "指定された通知が存在しません。")
 
     return redirect("main:notification_history")
+
+
+@login_required
+def unread_notification_count(request):
+    """未読通知件数を返すAPI"""
+    count = NotificationEvent.objects.filter(
+        user=request.user, is_read=False).count()
+    return JsonResponse({"unread_count": count})
+
+
 # --- END: main/views_dashboard.py ---

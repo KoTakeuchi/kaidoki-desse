@@ -5,9 +5,10 @@ from django.db.models import Q, Prefetch
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
-from main.forms import ProductForm, ThresholdPriceForm
+from main.forms import ProductForm
 from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
+from admin_app.models import CommonCategory
 
 
 # ======================================================
@@ -25,7 +26,7 @@ def _has_filter(keyword, selected_cats, stock, priority, sort):
         selected_cats,
         stock != "all",
         priority != "all",
-        sort != "new",
+        sort != "newest",
     ])
 
 
@@ -51,7 +52,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
         selected_cats = request.GET.getlist("cat")
         stock = request.GET.get("stock", "all")
         priority = request.GET.get("priority", "all")
-        sort = request.GET.get("sort", "new")
+        sort = request.GET.get("sort", "newest")
 
         # --- ベースクエリ ---
         qs = Product.objects.filter(user=user).prefetch_related(
@@ -79,14 +80,68 @@ def product_list(request: HttpRequest) -> HttpResponse:
             qs = qs.filter(priority=priority)
 
         # --- 並び替え ---
-        if sort == "cheap":
-            qs = qs.order_by("threshold_price")
-        elif sort == "expensive":
-            qs = qs.order_by("-threshold_price")
-        elif sort == "old":
+        if sort == "newest":
+            qs = qs.order_by("-created_at")
+        elif sort == "oldest":
             qs = qs.order_by("created_at")
+        elif sort == "price_asc":
+            qs = qs.order_by("latest_price", "initial_price")
+        elif sort == "price_desc":
+            qs = qs.order_by("-latest_price", "-initial_price")
         else:
             qs = qs.order_by("-created_at")
+
+        # ✅ ここで定義（テンプレート用）
+        sort_options = [
+            ("newest", "新しい順"),
+            ("oldest", "古い順"),
+            ("price_asc", "価格が安い順"),
+            ("price_desc", "価格が高い順"),
+        ]
+
+        # --- フィルタタグ生成 ---
+        filter_tags = []
+        if keyword:
+            filter_tags.append(
+                ("keyword", f"キーワード：{keyword}", "filter-tag-sort"))
+
+        if selected_cats:
+            try:
+                ids = [int(c) for c in selected_cats]
+                global_ids = [i - 100 for i in ids if i >= 100]
+                user_ids = [i for i in ids if i < 100]
+
+                common_cats = CommonCategory.objects.filter(id__in=global_ids)
+                for c in common_cats:
+                    filter_tags.append(
+                        ("cat", f"{c.category_name}", "filter-tag-common"))
+
+                user_cats = Category.objects.filter(id__in=user_ids, user=user)
+                for c in user_cats:
+                    filter_tags.append(
+                        ("cat", f"{c.category_name}", "filter-tag-user"))
+            except ValueError:
+                pass
+
+        if stock in ["low", "none"]:
+            label = "わずか" if stock == "low" else "なし"
+            filter_tags.append(("stock", f"在庫：{label}", "filter-tag-stock"))
+
+        if priority in ["高", "普通"]:
+            filter_tags.append(
+                ("priority", f"優先度：{priority}", "filter-tag-priority"))
+
+        # ✅ 並び替えラベル（ここで定義してから使う）
+        sort_labels = {
+            "newest": "新しい順",
+            "oldest": "古い順",
+            "price_asc": "価格が安い順",
+            "price_desc": "価格が高い順",
+        }
+
+        if sort in sort_labels:
+            filter_tags.append(
+                ("sort", f"並び順：{sort_labels[sort]}", "filter-tag-sort"))
 
         # --- ページネーション ---
         paginator = Paginator(qs, 20)
@@ -94,8 +149,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
         page_obj = paginator.get_page(page_number)
 
         # --- カテゴリ情報 ---
-        global_categories = Category.objects.filter(
-            is_global=True, user__isnull=True)
+        global_categories = CommonCategory.objects.all().order_by("id")
         user_categories = Category.objects.filter(user=user, is_global=False)
 
         # --- 表示 ---
@@ -113,7 +167,9 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 "stock": stock,
                 "priority": priority,
                 "sort": sort,
+                "filter_tags": filter_tags,
                 "is_filtered": _has_filter(keyword, selected_cats, stock, priority, sort),
+                "sort_options": sort_options,
             },
         )
 
@@ -138,9 +194,11 @@ def product_detail(request, pk):
         "product": product,
         "price_history": price_history,
     })
-# --- START: product_create / product_edit 追加 ---
 
 
+# ======================================================
+# 商品登録・編集・削除
+# ======================================================
 @login_required
 def product_create(request):
     """新規商品登録"""
@@ -216,8 +274,6 @@ def product_edit(request, pk):
             e).__name__, source="product_edit", err=e)
         messages.error(request, "商品編集中にエラーが発生しました。")
         return redirect("main:product_list")
-# --- END: product_create / product_edit 追加 ---
-# --- START: product_delete 追加 ---
 
 
 @login_required
@@ -239,4 +295,4 @@ def product_delete(request, pk):
             e).__name__, source="product_delete", err=e)
         messages.error(request, "商品削除中にエラーが発生しました。")
         return redirect("main:product_list")
-# --- END: product_delete 追加 ---
+# --- END: main/views_product.py ---

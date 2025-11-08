@@ -83,3 +83,61 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 });
+// =========================================================
+// 並び替えドロップダウンをクリックで切り替え
+// =========================================================
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.querySelector(".sort-button");
+    const menu = toggle?.nextElementSibling;
+    if (toggle && menu) {
+        toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            menu.classList.toggle("show");
+        });
+        document.addEventListener("click", (e) => {
+            if (!toggle.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.remove("show");
+            }
+        });
+    }
+});
+
+// =========================================================
+// 並び替えドロップダウンをBootstrap標準で制御
+// =========================================================
+document.addEventListener("DOMContentLoaded", () => {
+    const sortDropdown = document.querySelector(".sort-dropdown");
+    if (!sortDropdown) return;
+
+    // BootstrapのDropdownインスタンスを自動初期化
+    const dropdownTriggerList = [].slice.call(sortDropdown.querySelectorAll('[data-bs-toggle="dropdown"]'));
+    dropdownTriggerList.map(function (dropdownTriggerEl) {
+        return new bootstrap.Dropdown(dropdownTriggerEl);
+    });
+});
+
+// =========================================================
+// 絞り込み条件リセット回避
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+    const sortOptions = document.querySelectorAll(".sort-option");
+    const filterForm = document.querySelector(".filter-card");
+
+    sortOptions.forEach(option => {
+        option.addEventListener("click", () => {
+            const sortValue = option.dataset.value;
+            const hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.name = "sort";
+            hiddenInput.value = sortValue;
+
+            // 既にsortがあれば削除してから追加
+            const existing = filterForm.querySelector("input[name='sort']");
+            if (existing) existing.remove();
+            filterForm.appendChild(hiddenInput);
+
+            filterForm.submit();
+        });
+    });
+});

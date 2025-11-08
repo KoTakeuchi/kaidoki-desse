@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function updateUnreadCount() {
         try {
-            const res = await fetch("/main/unread_count_api/");
+            const res = await fetch("/main/api/unread_count/");
             if (!res.ok) throw new Error("HTTPエラー: " + res.status);
             const data = await res.json();
 

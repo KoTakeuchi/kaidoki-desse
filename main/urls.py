@@ -117,5 +117,10 @@ urlpatterns = [
 
     # --- ダッシュボード ---
     path("dashboard/", views_dashboard.dashboard_view, name="dashboard"),
+    # --- 未読通知件 ---
+    path("api/unread_count/", views_dashboard.unread_notification_count,
+         name="unread_count"),
+
+
 ]
 # --- END: main/urls.py ---

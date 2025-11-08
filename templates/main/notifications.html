@@ -31,22 +31,22 @@
     </div>
 
     <!-- ✅ 通知一覧 -->
-    {% if notifications %}
+    {% if logs %}
       <ul class="list-group">
-        {% for n in notifications %}
+        {% for n in logs %}
           <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap
                      {% if not n.is_read %}bg-light border-start border-4 border-danger{% endif %}">
             <div>
-              <strong>{{ n.product_name }}</strong>
-              {% if n.type == "在庫復活通知" %}
+              <strong>{{ n.product.product_name }}</strong>
+              {% if n.event_type == "在庫復活通知" %}
                 <span class="badge bg-success ms-2">📦 在庫復活</span>
-              {% elif n.type == "在庫少通知" %}
+              {% elif n.event_type == "在庫少通知" %}
                 <span class="badge bg-warning text-dark ms-2">⚠ 在庫少</span>
-              {% elif n.type == "買い時価格ヒット" %}
+              {% elif n.event_type == "買い時価格ヒット" %}
                 <span class="badge bg-primary ms-2">💰 買い時</span>
-              {% elif n.type == "過去最安値を更新" %}
+              {% elif n.event_type == "過去最安値を更新" %}
                 <span class="badge bg-info text-dark ms-2">📉 最安値</span>
-              {% elif n.type == "割引率指定以上" %}
+              {% elif n.event_type == "割引率指定以上" %}
                 <span class="badge bg-secondary ms-2">🎯 割引</span>
               {% endif %}
               {% if not n.is_read %}
@@ -57,8 +57,8 @@
             </div>
 
             <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
-              <small class="text-secondary me-2">{{ n.created_at|date:"Y-m-d H:i" }}</small>
-              <a href="{% url 'main:mark_notification_read' n.id %}" class="btn btn-sm btn-outline-primary">
+              <small class="text-secondary me-2">{{ n.occurred_at|date:"Y-m-d H:i" }}</small>
+              <a href="{% url 'main:notification_read' n.id %}" class="btn btn-sm btn-outline-primary mark-read-btn">
                 ✅ 既読
               </a>
             </div>
