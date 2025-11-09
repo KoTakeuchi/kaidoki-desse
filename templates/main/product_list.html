@@ -282,10 +282,20 @@
                   </div>
                 </div>
 
-                <!-- 編集ボタン -->
-                <div class="card-footer bg-white border-top-0 text-center">
-                  <a href="{% url 'main:product_detail' p.id %}" class="btn btn-outline-primary btn-sm px-2 py-1">編集</a>
-                </div>
+                  <!-- ✅ 編集ボタン -->
+                  <div class="text-center mt-2">
+                    {% if p.pk %}
+                      <a href="{% url 'main:product_edit' pk=p.pk %}"
+                        class="btn btn-outline-primary btn-sm rounded-pill px-4 edit-btn">
+                        編集
+                      </a>
+                    {% else %}
+                      <button class="btn btn-outline-primary btn-sm rounded-pill px-4 edit-btn" disabled>
+                        編集不可
+                      </button>
+                    {% endif %}
+                  </div>
+
               </div>
             </div>
           {% endfor %}

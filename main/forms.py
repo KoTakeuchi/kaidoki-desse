@@ -11,10 +11,10 @@ from django.contrib.auth.forms import PasswordChangeForm
 User = get_user_model()
 
 
+# --- START: main/forms.py ---
 # ======================================================
 # 商品登録・編集フォーム
 # ======================================================
-
 class ProductForm(forms.ModelForm):
     """商品登録・編集フォーム（カテゴリ最大2件）"""
 
@@ -22,8 +22,7 @@ class ProductForm(forms.ModelForm):
         queryset=Category.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple(
-            attrs={"class": "category-checkbox"}
-        ),
+            attrs={"class": "category-checkbox"}),
         label="カテゴリ（最大2件まで選択可）",
     )
 
@@ -45,22 +44,22 @@ class ProductForm(forms.ModelForm):
             "priority",
             "categories",
             "flag_type",
-            "flag_value",  # ✅ 追加
+            "flag_value",
         ]
         widgets = {
-            # ✅ 最初は編集不可（API成功後 JS で editable クラスを付けて解除）
+            # 商品名・ショップ名は初期状態ではAPIからの自動入力用
             "product_name": forms.TextInput(
                 attrs={"class": "form-control", "readonly": "readonly"}
             ),
             "shop_name": forms.TextInput(
                 attrs={"class": "form-control", "readonly": "readonly"}
             ),
-
-            # 商品URL
             "product_url": forms.URLInput(
-                attrs={"class": "form-control", "placeholder": "楽天市場の商品URL"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "楽天市場の商品URL",
+                }
             ),
-
             "initial_price": forms.NumberInput(
                 attrs={"class": "form-control",
                        "readonly": "readonly", "min": "1"}
@@ -72,6 +71,9 @@ class ProductForm(forms.ModelForm):
                 choices=[("高", "高"), ("普通", "普通")],
                 attrs={"class": "form-select"},
             ),
+            "flag_value": forms.NumberInput(
+                attrs={"class": "form-control", "min": "0"}
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -81,8 +83,8 @@ class ProductForm(forms.ModelForm):
         # --- カテゴリ選択肢設定 ---
         if self.user and self.user.is_authenticated:
             self.fields["categories"].queryset = Category.objects.filter(
-                Q(is_global=True, user__isnull=True) | Q(
-                    user=self.user, is_global=False)
+                Q(is_global=True, user__isnull=True)
+                | Q(user=self.user, is_global=False)
             ).order_by("id")
         else:
             self.fields["categories"].queryset = Category.objects.filter(
@@ -91,7 +93,21 @@ class ProductForm(forms.ModelForm):
         # --- 編集時カテゴリ初期値 ---
         if self.instance and self.instance.pk:
             self.initial["categories"] = self.instance.categories.values_list(
-                "id", flat=True)
+                "id", flat=True
+            )
+
+            # 編集時は flag_type を固定
+            self.fields["flag_type"].widget = forms.HiddenInput()
+
+        # --- flag_type に応じた flag_value のプレースホルダを設定 ---
+        if self.instance.flag_type == "buy_price":
+            self.fields["flag_value"].widget.attrs.update(
+                {"placeholder": "例：15000（円）"}
+            )
+        elif self.instance.flag_type == "percent_off":
+            self.fields["flag_value"].widget.attrs.update(
+                {"placeholder": "例：10（％）"}
+            )
 
     def clean_product_url(self):
         """楽天URL＋重複防止"""
@@ -135,13 +151,22 @@ class ProductForm(forms.ModelForm):
         flag_type = cleaned_data.get("flag_type")
         initial_price = cleaned_data.get("initial_price")
         threshold_price = cleaned_data.get("threshold_price")
+        flag_value = cleaned_data.get("flag_value")
 
-        # 買い時価格が登録時価格より高い場合はエラー
-        if flag_type == "buy_price" and threshold_price and initial_price:
-            if threshold_price > initial_price:
-                self.add_error("threshold_price", "登録時価格より低い金額を入力してください。")
+        # --- 買い時価格 ---
+        if flag_type == "buy_price":
+            if threshold_price and initial_price and threshold_price > initial_price:
+                self.add_error(
+                    "threshold_price", "登録時価格より低い金額を入力してください。"
+                )
+
+        # --- 割引率 ---
+        if flag_type == "percent_off" and flag_value is not None:
+            if flag_value > 100:
+                self.add_error("flag_value", "割引率は100%以下で入力してください。")
 
         return cleaned_data
+# --- END: main/forms.py ---
 
 
 # ======================================================

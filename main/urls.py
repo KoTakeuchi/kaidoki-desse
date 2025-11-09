@@ -73,7 +73,10 @@ urlpatterns = [
     path("product/detail/<int:pk>/",
          views_product.product_detail, name="product_detail"),
     path("product/create/", views_product.product_create, name="product_create"),
-    path("product/edit/<int:pk>/", views_product.product_edit, name="product_edit"),
+
+    # ✅ 編集URL構造を統一（/product/edit/<pk>/ → /product/<pk>/edit/）
+    path("product/<int:pk>/edit/", views_product.product_edit, name="product_edit"),
+
     path("product/delete/<int:pk>/",
          views_product.product_delete, name="product_delete"),
 
@@ -117,10 +120,9 @@ urlpatterns = [
 
     # --- ダッシュボード ---
     path("dashboard/", views_dashboard.dashboard_view, name="dashboard"),
+
     # --- 未読通知件 ---
     path("api/unread_count/", views_dashboard.unread_notification_count,
          name="unread_count"),
-
-
 ]
 # --- END: main/urls.py ---

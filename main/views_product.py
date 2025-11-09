@@ -9,6 +9,7 @@ from main.forms import ProductForm
 from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
 from admin_app.models import CommonCategory
+from main.utils.flag_checker import update_flag_status
 
 
 # ======================================================
@@ -322,7 +323,7 @@ def product_create(request):
 
 @login_required
 def product_edit(request, pk):
-    """商品編集"""
+    """商品編集ページ（商品情報＋通知条件）"""
     try:
         product = get_object_or_404(Product, pk=pk, user=request.user)
 
@@ -332,35 +333,39 @@ def product_edit(request, pk):
             if form.is_valid():
                 product = form.save(commit=False)
 
-                # --- 割引率更新処理 ---
-                flag_type = form.cleaned_data.get("flag_type")
+                # --- 通知条件の値を更新 ---
+                flag_type = product.flag_type  # 通知条件は固定（登録時の値を維持）
                 flag_value = request.POST.get("flag_value")
-
-                product.flag_type = flag_type  # ← この行を追加
 
                 if flag_type == "percent_off" and flag_value:
                     try:
                         product.flag_value = float(flag_value)
                     except ValueError:
-                        product.flag_value = None
+                        form.add_error("flag_value", "割引率は数値で入力してください。")
+                elif flag_type == "threshold_price" and flag_value:
+                    try:
+                        price_val = int(flag_value)
+                        if product.initial_price and price_val > product.initial_price:
+                            form.add_error(
+                                "flag_value", "登録時価格より大きい値は設定できません。")
+                        else:
+                            product.flag_value = price_val
+                    except ValueError:
+                        form.add_error("flag_value", "価格は数値で入力してください。")
+
+                # --- 保存処理 ---
+                if not form.errors:
+                    product.save()
+                    update_flag_status(product)
+                    form.save_m2m()
+                    messages.success(request, "商品情報を更新しました。")
+                    return redirect("main:product_detail", pk=product.pk)
                 else:
-                    product.flag_value = None
-
-                product.save()
-
-                # --- 買い時フラグ更新 ---
-                from main.utils.flag_checker import update_flag_status
-                update_flag_status(product)
-
-                form.save_m2m()
-
-                messages.success(request, "商品情報を更新しました。")
-                return redirect("main:product_list")
-            else:
-                messages.error(request, "入力内容に誤りがあります。")
+                    messages.error(request, "入力内容に誤りがあります。")
         else:
             form = ProductForm(instance=product, user=request.user)
 
+        # --- カテゴリ関連（商品登録と同じ構成） ---
         global_categories = Category.objects.filter(
             is_global=True, user__isnull=True)
         user_categories = Category.objects.filter(
@@ -370,7 +375,7 @@ def product_edit(request, pk):
 
         return render(
             request,
-            "main/product_form.html",
+            "main/product_edit.html",  # ← 編集用テンプレートを指定
             {
                 "form": form,
                 "is_edit": True,
@@ -380,6 +385,7 @@ def product_edit(request, pk):
                 "selected_category_ids": selected_category_ids,
             },
         )
+
     except Exception as e:
         log_error(user=request.user, type_name=type(
             e).__name__, source="product_edit", err=e)
