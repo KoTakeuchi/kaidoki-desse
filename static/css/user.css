@@ -575,6 +575,41 @@ main .card.product-card {
 }
 
 /* ============================== ============================== ============================== ==============================
+  　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品編集(product_edit.html)
+   ==============================  ============================== ============================== ==============================*/
+/* ==========================================================
+   商品編集：画像サイズ調整（親枠の75%で中央配置）
+   ========================================================== */
+.col-md-5.text-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 360px;
+    /* ← 高さを明示的に確保 */
+    background-color: transparent;
+}
+
+.product-edit-image {
+    width: 75%;
+    /* ← 固定幅（maxではなくwidthに変更） */
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* ==========================================================
+   商品編集：商品名・ショップ名を編集可能化
+   ========================================================== */
+body.product-edit-page input[id="id_product_name"],
+body.product-edit-page input[id="id_shop_name"] {
+    cursor: text !important;
+    background-color: #fff !important;
+    color: #333 !important;
+    border-color: #ccc !important;
+}
+
+/* ============================== ============================== ============================== ==============================
   　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　カテゴリ管理（category_my.html）
    ==============================  ============================== ============================== ==============================*/
 .category-header {
@@ -1403,4 +1438,25 @@ select.form-select option {
 main>.container.py-4 {
     margin-top: 0 !important;
     padding-top: 0 !important;
+}
+
+
+/* カテゴリタグをクリック可能にする */
+.category-section {
+    position: relative;
+    z-index: 10 !important;
+}
+
+.cat-tag {
+    display: inline-block;
+    cursor: pointer;
+    pointer-events: auto !important;
+    user-select: none;
+    z-index: 11 !important;
+}
+
+.cat-tag.common.active,
+.cat-tag.user.active {
+    background-color: var(--primary);
+    color: #fff;
 }

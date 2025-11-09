@@ -122,8 +122,8 @@ class Product(models.Model):
     # Product モデル内に追加
     flag_value = models.DecimalField(
         "通知条件値",
-        max_digits=5,
-        decimal_places=2,
+        max_digits=10,       # ← 最大10桁（価格にも対応）
+        decimal_places=0,    # ← 小数なし（整数として保存）
         null=True,
         blank=True,
         help_text="買い時価格・割引率・最安値の基準値（flag_typeに応じて解釈）",

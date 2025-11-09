@@ -8,13 +8,14 @@ from django.http import HttpRequest, HttpResponse
 from main.forms import ProductForm
 from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
-from admin_app.models import CommonCategory
 from main.utils.flag_checker import update_flag_status
-
+import decimal
 
 # ======================================================
 # 内部共通関数
 # ======================================================
+
+
 def _selected_category_ids(request: HttpRequest):
     """GETパラメータからカテゴリIDリストを取得"""
     return request.GET.getlist("cat")
@@ -179,9 +180,17 @@ def product_list(request: HttpRequest) -> HttpResponse:
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
 
-        # --- カテゴリ情報 ---
-        global_categories = CommonCategory.objects.all().order_by("id")
-        user_categories = Category.objects.filter(user=user, is_global=False)
+        # --- カテゴリ情報（商品登録と同じ構成に統一） ---
+        global_categories = Category.objects.filter(
+            is_global=True, user__isnull=True
+        ).order_by("id")
+
+        user_categories = Category.objects.filter(
+            user=request.user, is_global=False
+        )
+
+        # 一覧画面では特定の商品は選択されていないため空でOK
+        selected_category_ids = []
 
         # --- 表示 ---
         return render(
@@ -239,6 +248,7 @@ def product_create(request):
             form = ProductForm(request.POST, user=request.user)
 
             # --- デバッグ出力 ---
+            print("DEBUG FULL POST:", request.POST)
             print("DEBUG POST[selected_cats]:",
                   request.POST.get("selected_cats"))
             print("DEBUG POST[categories]:",
@@ -256,7 +266,7 @@ def product_create(request):
                     product.image_url = image_url
 
                 # --- 割引率(flag_value)保存 ---
-                flag_type = form.cleaned_data.get("flag_type")
+                flag_type = request.POST.get("flag_type")
                 flag_value = request.POST.get("flag_value")
 
                 product.flag_type = flag_type  # ← この行を追加
@@ -264,6 +274,11 @@ def product_create(request):
                 if flag_type == "percent_off" and flag_value:
                     try:
                         product.flag_value = float(flag_value)
+                    except ValueError:
+                        product.flag_value = None
+                elif flag_type == "buy_price" and flag_value:  # ← 追加
+                    try:
+                        product.flag_value = int(flag_value)
                     except ValueError:
                         product.flag_value = None
                 else:
@@ -324,6 +339,9 @@ def product_create(request):
 @login_required
 def product_edit(request, pk):
     """商品編集ページ（商品情報＋通知条件）"""
+    import decimal
+    from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+
     try:
         product = get_object_or_404(Product, pk=pk, user=request.user)
 
@@ -333,49 +351,88 @@ def product_edit(request, pk):
             if form.is_valid():
                 product = form.save(commit=False)
 
-                # --- 通知条件の値を更新 ---
-                flag_type = product.flag_type  # 通知条件は固定（登録時の値を維持）
-                flag_value = request.POST.get("flag_value")
+                flag_type = product.flag_type
+                flag_value_raw = request.POST.get("flag_value", "").strip()
+                threshold_raw = request.POST.get("threshold_price", "").strip()
 
-                if flag_type == "percent_off" and flag_value:
+                # --- 通知条件ごとのflag_value設定 ---
+                new_flag_value = None  # ←安全な代入前変数
+
+                if flag_type == "percent_off" and flag_value_raw:
                     try:
-                        product.flag_value = float(flag_value)
-                    except ValueError:
+                        new_flag_value = Decimal(flag_value_raw).quantize(
+                            Decimal("0.01"), rounding=ROUND_HALF_UP)
+                    except (InvalidOperation, ValueError):
                         form.add_error("flag_value", "割引率は数値で入力してください。")
-                elif flag_type == "threshold_price" and flag_value:
+
+                elif flag_type == "buy_price" and threshold_raw:
                     try:
-                        price_val = int(flag_value)
-                        if product.initial_price and price_val > product.initial_price:
-                            form.add_error(
-                                "flag_value", "登録時価格より大きい値は設定できません。")
+                        val = Decimal(threshold_raw).quantize(
+                            Decimal("1"), rounding=ROUND_HALF_UP)
+                        if product.initial_price and val > product.initial_price:
+                            form.add_error("threshold_price",
+                                           "登録時価格より大きい値は設定できません。")
                         else:
-                            product.flag_value = price_val
-                    except ValueError:
-                        form.add_error("flag_value", "価格は数値で入力してください。")
+                            new_flag_value = val
+                            product.threshold_price = val
+                    except (InvalidOperation, ValueError):
+                        form.add_error("threshold_price", "価格は数値で入力してください。")
+
+                # --- 正常値のみ反映 ---
+                if new_flag_value is not None:
+                    product.flag_value = new_flag_value
+
+                # --- 型保証：不正なDecimalを除外 ---
+                if not isinstance(product.flag_value, Decimal):
+                    product.flag_value = Decimal("0")
 
                 # --- 保存処理 ---
                 if not form.errors:
                     product.save()
+
+                    # ✅ カテゴリ更新
+                    selected_cats_raw = request.POST.get("selected_cats", "")
+                    if selected_cats_raw:
+                        try:
+                            cat_ids = [int(x) for x in selected_cats_raw.split(
+                                ",") if x.strip().isdigit()]
+                            categories = Category.objects.filter(
+                                Q(id__in=cat_ids),
+                                Q(is_global=True, user__isnull=True) | Q(
+                                    is_global=False, user=request.user)
+                            ).distinct()
+                            product.categories.set(categories)
+                        except Exception as e:
+                            print("product_edit category linkage error:", e)
+                    else:
+                        product.categories.clear()
+
                     update_flag_status(product)
-                    form.save_m2m()
                     messages.success(request, "商品情報を更新しました。")
-                    return redirect("main:product_detail", pk=product.pk)
+                    return redirect("main:product_list")
                 else:
                     messages.error(request, "入力内容に誤りがあります。")
+
+            else:
+                messages.error(request, "入力内容に誤りがあります。")
+
         else:
             form = ProductForm(instance=product, user=request.user)
 
-        # --- カテゴリ関連（商品登録と同じ構成） ---
         global_categories = Category.objects.filter(
-            is_global=True, user__isnull=True)
+            is_global=True, user__isnull=True
+        ).exclude(category_name="未分類").order_by("id")
+
         user_categories = Category.objects.filter(
-            user=request.user, is_global=False)
+            user=request.user, is_global=False
+        ).exclude(category_name="未分類")
+
         selected_category_ids = list(
             product.categories.values_list("id", flat=True))
 
         return render(
             request,
-            "main/product_edit.html",  # ← 編集用テンプレートを指定
+            "main/product_edit.html",
             {
                 "form": form,
                 "is_edit": True,
@@ -387,9 +444,12 @@ def product_edit(request, pk):
         )
 
     except Exception as e:
-        log_error(user=request.user, type_name=type(
-            e).__name__, source="product_edit", err=e)
-        messages.error(request, "商品編集中にエラーが発生しました。")
+        log_error(
+            user=request.user,
+            type_name=type(e).__name__,
+            source="product_edit",
+            err=e,
+        )
         return redirect("main:product_list")
 
 

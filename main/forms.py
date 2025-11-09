@@ -22,11 +22,11 @@ class ProductForm(forms.ModelForm):
         queryset=Category.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple(
-            attrs={"class": "category-checkbox"}),
+            attrs={"class": "category-checkbox"}
+        ),
         label="カテゴリ（最大2件まで選択可）",
     )
 
-    # ✅ ChoiceField → CharField に置き換え（Djangoの自動バリデーション回避）
     flag_type = forms.CharField(
         required=False,
         widget=forms.HiddenInput(),
@@ -47,7 +47,6 @@ class ProductForm(forms.ModelForm):
             "flag_value",
         ]
         widgets = {
-            # 商品名・ショップ名は初期状態ではAPIからの自動入力用
             "product_name": forms.TextInput(
                 attrs={"class": "form-control", "readonly": "readonly"}
             ),
@@ -93,25 +92,38 @@ class ProductForm(forms.ModelForm):
         # --- 編集時カテゴリ初期値 ---
         if self.instance and self.instance.pk:
             self.initial["categories"] = self.instance.categories.values_list(
-                "id", flat=True
-            )
+                "id", flat=True)
 
-            # 編集時は flag_type を固定
+            # ✅ 編集画面時は商品名・ショップ名を編集可
+            self.fields["product_name"].widget.attrs.pop("readonly", None)
+            self.fields["shop_name"].widget.attrs.pop("readonly", None)
+
+            # ✅ 編集時は product_url を必須から除外（変更不要なため）
+            self.fields["product_url"].required = False
+
+            # flag_type は固定表示
             self.fields["flag_type"].widget = forms.HiddenInput()
+        else:
+            # ✅ 新規登録時は編集不可（API入力用）
+            self.fields["product_name"].widget.attrs["readonly"] = "readonly"
+            self.fields["shop_name"].widget.attrs["readonly"] = "readonly"
 
         # --- flag_type に応じた flag_value のプレースホルダを設定 ---
         if self.instance.flag_type == "buy_price":
             self.fields["flag_value"].widget.attrs.update(
-                {"placeholder": "例：15000（円）"}
-            )
+                {"placeholder": "例：15000（円）"})
         elif self.instance.flag_type == "percent_off":
             self.fields["flag_value"].widget.attrs.update(
-                {"placeholder": "例：10（％）"}
-            )
+                {"placeholder": "例：10（％）"})
 
     def clean_product_url(self):
         """楽天URL＋重複防止"""
         url = self.cleaned_data.get("product_url", "")
+
+        # ✅ 編集時（既存インスタンスあり）でURL未入力ならスキップ
+        if not url and self.instance and self.instance.pk:
+            return self.instance.product_url
+
         if not url.startswith("https://item.rakuten.co.jp/"):
             raise ValidationError("楽天市場の商品URLを入力してください。")
 
@@ -131,14 +143,15 @@ class ProductForm(forms.ModelForm):
         return cats
 
     def clean_flag_type(self):
-        """通知条件の選択必須チェック"""
+        """通知条件の選択必須チェック（編集時は既存値を維持）"""
         flag_type = self.cleaned_data.get("flag_type")
 
-        # ✅ Noneや空文字はすべてNG扱い
+        if not flag_type and self.instance and self.instance.pk:
+            return self.instance.flag_type
+
         if not flag_type or flag_type == "None":
             raise ValidationError("通知条件を選択してください。")
 
-        # ✅ 選択肢外（JS改変など）の場合も念のため弾く
         valid_choices = ["buy_price", "percent_off", "lowest_price"]
         if flag_type not in valid_choices:
             raise ValidationError("通知条件を選択してください。")
@@ -153,14 +166,10 @@ class ProductForm(forms.ModelForm):
         threshold_price = cleaned_data.get("threshold_price")
         flag_value = cleaned_data.get("flag_value")
 
-        # --- 買い時価格 ---
         if flag_type == "buy_price":
             if threshold_price and initial_price and threshold_price > initial_price:
-                self.add_error(
-                    "threshold_price", "登録時価格より低い金額を入力してください。"
-                )
+                self.add_error("threshold_price", "登録時価格より低い金額を入力してください。")
 
-        # --- 割引率 ---
         if flag_type == "percent_off" and flag_value is not None:
             if flag_value > 100:
                 self.add_error("flag_value", "割引率は100%以下で入力してください。")
