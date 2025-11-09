@@ -140,6 +140,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (priceInput)
                 priceInput.value = data.initial_price || data.price || data.itemPrice || "";
 
+
+            // ✅ 画像URLをhiddenフィールドに保存（★追加）
+            const hiddenImageField = document.getElementById("image_url");
+            if (hiddenImageField) {
+                hiddenImageField.value =
+                    data.image_url || data.mediumImageUrls?.[0]?.imageUrl || "";
+            }
+
             updateImage(data.image_url || data.mediumImageUrls?.[0]?.imageUrl || "");
             makeEditable();
 

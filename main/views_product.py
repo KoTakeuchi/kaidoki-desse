@@ -59,23 +59,54 @@ def product_list(request: HttpRequest) -> HttpResponse:
             Prefetch("categories", queryset=Category.objects.all().order_by("id"))
         )
 
-        # --- 絞り込み ---
+        # --- キーワード検索 ---
         if keyword:
-            qs = qs.filter(Q(product_name__icontains=keyword)
-                           | Q(shop_name__icontains=keyword))
+            qs = qs.filter(
+                Q(product_name__icontains=keyword) |
+                Q(shop_name__icontains=keyword)
+            )
 
+        # --- カテゴリ絞り込み ---
         if selected_cats:
             try:
                 ids = [int(c) for c in selected_cats]
-                qs = qs.filter(categories__id__in=ids).distinct()
+                global_ids = [i - 100 for i in ids if i >= 100]  # 共通カテゴリ
+                user_ids = [i for i in ids if i < 100]           # 独自カテゴリ
+
+                q_filter = Q()
+
+                # 共通カテゴリを実際の Category に変換
+                if global_ids:
+                    common_cats = CommonCategory.objects.filter(
+                        id__in=global_ids)
+                    cat_names = [c.category_name for c in common_cats]
+                    q_filter |= Q(
+                        categories__category_name__in=cat_names,
+                        categories__is_global=True,
+                        categories__user__isnull=True
+                    )
+
+                # 独自カテゴリ（ユーザー紐づき）
+                if user_ids:
+                    q_filter |= Q(
+                        categories__id__in=user_ids,
+                        categories__user=user,
+                        categories__is_global=False
+                    )
+
+                if q_filter:
+                    qs = qs.filter(q_filter).distinct()
+
             except ValueError:
                 pass
 
+        # --- 在庫フィルタ ---
         if stock == "low":
             qs = qs.filter(latest_stock_count__lte=3, latest_stock_count__gt=0)
         elif stock == "none":
             qs = qs.filter(is_in_stock=False)
 
+        # --- 優先度フィルタ ---
         if priority in ["高", "普通"]:
             qs = qs.filter(priority=priority)
 
@@ -91,7 +122,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
         else:
             qs = qs.order_by("-created_at")
 
-        # ✅ ここで定義（テンプレート用）
+        # --- 並び順オプション ---
         sort_options = [
             ("newest", "新しい順"),
             ("oldest", "古い順"),
@@ -131,7 +162,6 @@ def product_list(request: HttpRequest) -> HttpResponse:
             filter_tags.append(
                 ("priority", f"優先度：{priority}", "filter-tag-priority"))
 
-        # ✅ 並び替えラベル（ここで定義してから使う）
         sort_labels = {
             "newest": "新しい順",
             "oldest": "古い順",
@@ -174,8 +204,12 @@ def product_list(request: HttpRequest) -> HttpResponse:
         )
 
     except Exception as e:
-        log_error(user=request.user, type_name=type(
-            e).__name__, source="product_list", err=e)
+        log_error(
+            user=request.user,
+            type_name=type(e).__name__,
+            source="product_list",
+            err=e
+        )
         messages.error(request, "商品一覧の表示中にエラーが発生しました。")
         return redirect("main:landing_page")
 
@@ -188,7 +222,7 @@ def product_detail(request, pk):
     """商品詳細ページ"""
     product = get_object_or_404(Product, pk=pk, user=request.user)
     price_history = PriceHistory.objects.filter(
-        product=product).order_by("created_at")
+        product=product).order_by("checked_at")
 
     return render(request, "main/product_detail.html", {
         "product": product,
@@ -196,20 +230,66 @@ def product_detail(request, pk):
     })
 
 
-# ======================================================
-# 商品登録・編集・削除
-# ======================================================
 @login_required
 def product_create(request):
     """新規商品登録"""
     try:
         if request.method == "POST":
             form = ProductForm(request.POST, user=request.user)
+
+            # --- デバッグ出力 ---
+            print("DEBUG POST[selected_cats]:",
+                  request.POST.get("selected_cats"))
+            print("DEBUG POST[categories]:",
+                  request.POST.getlist("categories"))
+            print("DEBUG POST[flag_type]:", request.POST.get("flag_type"))
+            print("DEBUG POST[flag_value]:", request.POST.get("flag_value"))
+
             if form.is_valid():
                 product = form.save(commit=False)
                 product.user = request.user
+
+                # --- 画像URL設定 ---
+                image_url = request.POST.get("image_url")
+                if image_url:
+                    product.image_url = image_url
+
+                # --- 割引率(flag_value)保存 ---
+                flag_type = form.cleaned_data.get("flag_type")
+                flag_value = request.POST.get("flag_value")
+
+                product.flag_type = flag_type  # ← この行を追加
+
+                if flag_type == "percent_off" and flag_value:
+                    try:
+                        product.flag_value = float(flag_value)
+                    except ValueError:
+                        product.flag_value = None
+                else:
+                    product.flag_value = None
+
                 product.save()
-                form.save_m2m()
+
+                # --- 買い時フラグ更新 ---
+                from main.utils.flag_checker import update_flag_status
+                update_flag_status(product)
+
+                # --- カテゴリ紐づけ処理（selected_cats → M2M） ---
+                selected_cats_raw = request.POST.get("selected_cats", "")
+                if selected_cats_raw:
+                    try:
+                        cat_ids = [int(x) for x in selected_cats_raw.split(
+                            ",") if x.strip().isdigit()]
+                        if cat_ids:
+                            categories = Category.objects.filter(
+                                Q(id__in=cat_ids),
+                                Q(is_global=True, user__isnull=True)
+                                | Q(is_global=False, user=request.user)
+                            ).distinct()
+                            product.categories.set(categories)
+                    except Exception as e:
+                        print("DEBUG category linkage error:", e)
+
                 messages.success(request, "商品を登録しました。")
                 return redirect("main:product_list")
             else:
@@ -222,13 +302,17 @@ def product_create(request):
         user_categories = Category.objects.filter(
             user=request.user, is_global=False)
 
-        return render(request, "main/product_form.html", {
-            "form": form,
-            "is_edit": False,
-            "global_categories": global_categories,
-            "user_categories": user_categories,
-            "selected_category_ids": [],
-        })
+        return render(
+            request,
+            "main/product_form.html",
+            {
+                "form": form,
+                "is_edit": False,
+                "global_categories": global_categories,
+                "user_categories": user_categories,
+                "selected_category_ids": [],
+            },
+        )
     except Exception as e:
         log_error(user=request.user, type_name=type(
             e).__name__, source="product_create", err=e)
@@ -246,7 +330,30 @@ def product_edit(request, pk):
             form = ProductForm(
                 request.POST, instance=product, user=request.user)
             if form.is_valid():
-                form.save()
+                product = form.save(commit=False)
+
+                # --- 割引率更新処理 ---
+                flag_type = form.cleaned_data.get("flag_type")
+                flag_value = request.POST.get("flag_value")
+
+                product.flag_type = flag_type  # ← この行を追加
+
+                if flag_type == "percent_off" and flag_value:
+                    try:
+                        product.flag_value = float(flag_value)
+                    except ValueError:
+                        product.flag_value = None
+                else:
+                    product.flag_value = None
+
+                product.save()
+
+                # --- 買い時フラグ更新 ---
+                from main.utils.flag_checker import update_flag_status
+                update_flag_status(product)
+
+                form.save_m2m()
+
                 messages.success(request, "商品情報を更新しました。")
                 return redirect("main:product_list")
             else:
@@ -261,14 +368,18 @@ def product_edit(request, pk):
         selected_category_ids = list(
             product.categories.values_list("id", flat=True))
 
-        return render(request, "main/product_form.html", {
-            "form": form,
-            "is_edit": True,
-            "product": product,
-            "global_categories": global_categories,
-            "user_categories": user_categories,
-            "selected_category_ids": selected_category_ids,
-        })
+        return render(
+            request,
+            "main/product_form.html",
+            {
+                "form": form,
+                "is_edit": True,
+                "product": product,
+                "global_categories": global_categories,
+                "user_categories": user_categories,
+                "selected_category_ids": selected_category_ids,
+            },
+        )
     except Exception as e:
         log_error(user=request.user, type_name=type(
             e).__name__, source="product_edit", err=e)

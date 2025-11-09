@@ -45,6 +45,7 @@ class ProductForm(forms.ModelForm):
             "priority",
             "categories",
             "flag_type",
+            "flag_value",  # ✅ 追加
         ]
         widgets = {
             # ✅ 最初は編集不可（API成功後 JS で editable クラスを付けて解除）

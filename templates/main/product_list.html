@@ -1,5 +1,6 @@
 {% extends "layout-user.html" %}
 {% load static %}
+{% load math_filters %}
 {% block title %}商品一覧{% endblock %}
 
 {% block page_content %}
@@ -202,38 +203,71 @@
 
                 <!-- 商品情報 -->
                 <div class="card-body text-center">
-                  <h6 class="fw-bold mb-1" title="{{ p.product_name }}">{{ p.product_name|truncatechars:25 }}</h6>
+                  <h6 class="fw-bold mb-1" title="{{ p.product_name }}">{{ p.product_name|truncatechars:35 }}</h6>
 
                   <!-- カテゴリ表示 -->
                   <div class="product-category mb-1">
-                    {% if p.all_cats|length == 0 %}
-                      <span class="badge filter-tag-sort">未分類</span>
-                    {% else %}
-                      {% for cat in p.all_cats|slice:":2" %}
-                        {% if cat.category_name != "未分類" %}
-                          {% if cat.id == p.common_category.id %}
-                            <span class="badge filter-tag-common me-1">{{ cat.category_name }}</span>
-                          {% else %}
-                            <span class="badge filter-tag-user me-1">{{ cat.category_name }}</span>
+                    {% with cats=p.categories.all %}
+                      {% if cats %}
+                        {# 最大2件まで表示 #}
+                        {% for cat in cats|slice:":2" %}
+                          {% if cat.category_name != "未分類" %}
+                            {# 共通カテゴリかどうかでバッジ色を変える #}
+                            {% if cat.is_global %}
+                              <span class="badge filter-tag-common me-1">
+                                {{ cat.category_name }}
+                              </span>
+                            {% else %}
+                              <span class="badge filter-tag-user me-1">
+                                {{ cat.category_name }}
+                              </span>
+                            {% endif %}
                           {% endif %}
-                        {% endif %}
-                      {% endfor %}
-                    {% endif %}
+                        {% endfor %}
+                      {% else %}
+                        <span class="badge filter-tag-sort">未分類</span>
+                      {% endif %}
+                    {% endwith %}
                   </div>
 
+                  <!-- ========================= -->
+                  <!-- 価格表示 -->
+                  <!-- ========================= -->
                   <div class="price-info mb-1">
+                    <!-- 最新価格 -->
                     <small class="text-muted">最新価格：</small>
-                    <span class="fw-semibold text-dark">
+                    <span class="fw-semibold {% if p.flag_reached %}text-danger{% else %}text-dark{% endif %}">
                       {% if p.latest_price %}
                         {{ p.latest_price|floatformat:0 }}円
                       {% else %}
                         {{ p.initial_price|floatformat:0 }}円
                       {% endif %}
                     </span><br>
-                    <small class="text-muted">買い時価格：</small>
-                    {% if p.threshold_price is not None and p.threshold_price != "" %}
-                      <span class="fw-semibold text-danger">{{ p.threshold_price|floatformat:0 }}円</span>
+
+                    <!-- 買い時条件 -->
+                    {% if p.flag_type == "buy_price" %}
+                      <small class="text-muted">買い時価格：</small>
+                      {% if p.threshold_price %}
+                        <span class="fw-semibold text-dark">{{ p.threshold_price|floatformat:0 }}円</span>
+                      {% else %}
+                        <span class="text-secondary">-</span>
+                      {% endif %}
+                    {% elif p.flag_type == "percent_off" %}
+                      <small class="text-muted">割引後価格：</small>
+                      {% if p.initial_price and p.flag_value %}
+                        <span class="fw-semibold text-dark">{{ p.initial_price|percent_off:p.flag_value }}円</span>
+                      {% else %}
+                        <span class="text-secondary">-</span>
+                      {% endif %}
+                    {% elif p.flag_type == "lowest_price" %}
+                      <small class="text-muted">最安値：</small>
+                      {% if p.threshold_price %}
+                        <span class="fw-semibold text-dark">{{ p.threshold_price|floatformat:0 }}円</span>
+                      {% else %}
+                        <span class="text-secondary">-</span>
+                      {% endif %}
                     {% else %}
+                      <small class="text-muted">買い時条件：</small>
                       <span class="text-secondary">-</span>
                     {% endif %}
                   </div>
