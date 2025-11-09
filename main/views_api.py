@@ -163,14 +163,35 @@ class NotificationEventViewSet(viewsets.ViewSet):
 
 
 class ProductPriceHistoryView(APIView):
-    """価格履歴API（仮）"""
+    """価格履歴API（本実装）"""
 
     def get(self, request, product_id):
-        history = PriceHistory.objects.filter(
-            product_id=product_id).order_by("created_at")
-        data = [{"price": h.price, "created_at": h.created_at}
-                for h in history]
-        return Response(data)
+        try:
+            # 指定商品の価格履歴を昇順で取得
+            history_qs = PriceHistory.objects.filter(
+                product_id=product_id
+            ).order_by("checked_at")
+
+            data = [
+                {
+                    "date": h.checked_at.strftime("%Y-%m-%d"),
+                    "price": float(h.price) if h.price is not None else None,
+                    "stock_count": min(int(h.stock_count or 0), 10)
+                    if h.stock_count is not None else None,
+                }
+                for h in history_qs
+            ]
+
+            return Response(data)
+
+        except Exception as e:
+            log_error(
+                user=request.user if request.user.is_authenticated else None,
+                type_name=type(e).__name__,
+                source="ProductPriceHistoryView",
+                err=e,
+            )
+            return Response({"error": str(e)}, status=500)
 
 
 class UserNotificationSettingView(APIView):

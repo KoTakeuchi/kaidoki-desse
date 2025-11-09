@@ -1,4 +1,10 @@
 # --- START: main/views_product.py ---
+from django.utils import timezone
+from django.http import JsonResponse
+from main.models import Product, PriceHistory
+from datetime import timedelta, datetime
+from django.db.models import Min, Max, F
+from django.shortcuts import render, get_object_or_404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch
@@ -10,6 +16,9 @@ from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
 from main.utils.flag_checker import update_flag_status
 import decimal
+import json
+from django.http import JsonResponse
+from main.models import Product, PriceHistory
 
 # ======================================================
 # 内部共通関数
@@ -224,20 +233,85 @@ def product_list(request: HttpRequest) -> HttpResponse:
         return redirect("main:landing_page")
 
 
-# ======================================================
-# 商品詳細
-# ======================================================
+# --- START: main/views_product.py (抜粋・product_detail 関数全体差し替え) ---
+
 @login_required
 def product_detail(request, pk):
     """商品詳細ページ"""
     product = get_object_or_404(Product, pk=pk, user=request.user)
-    price_history = PriceHistory.objects.filter(
-        product=product).order_by("checked_at")
 
-    return render(request, "main/product_detail.html", {
+    # ======================================================
+    # 価格履歴データ取得（過去180日分・昇順）
+    # ======================================================
+    histories = (
+        PriceHistory.objects.filter(product=product)
+        .order_by("checked_at")[:180]
+    )
+
+    price_data = []
+    for h in histories:
+        price_data.append({
+            "date": h.checked_at.strftime("%Y-%m-%d"),
+            "price": float(h.price),
+            "stock": None if h.stock_count is None else int(h.stock_count),
+        })
+
+    # ======================================================
+    # デバッグ：price_dataの確認
+    # ======================================================
+    print("=== DEBUG: price_data ===")
+    print(price_data[:5])  # 先頭5件だけ出力
+
+    # ======================================================
+    # 価格データのJSON化
+    # ======================================================
+    price_data_json = json.dumps(price_data, ensure_ascii=False)
+    print("=== DEBUG: price_data_json ===")
+    print(price_data_json[:200])  # 先頭200文字だけ出力
+
+    # ======================================================
+    # 閾値ライン計算（通知条件に応じて）
+    # ======================================================
+    threshold_value = None
+    if product.flag_type == "buy_price" and product.threshold_price:
+        threshold_value = float(product.threshold_price)
+
+    elif product.flag_type == "percent_off" and product.threshold_price:
+        if product.initial_price:
+            threshold_value = float(product.initial_price) * \
+                (1 - float(product.threshold_price) / 100)
+
+    # 最安値通知は閾値ラインなし
+    elif product.flag_type == "lowest_price":
+        threshold_value = None
+
+    # ======================================================
+    # データが存在しない場合（登録直後）
+    # ======================================================
+    if not price_data:
+        price_data.append({
+            "date": timezone.now().strftime("%Y-%m-%d"),
+            "price": float(product.latest_price or product.initial_price or 0),
+            "stock": int(product.is_in_stock) if product.is_in_stock is not None else None,
+        })
+
+    # ======================================================
+    # JSON化してテンプレートに渡す
+    # ======================================================
+    price_data_json = json.dumps(price_data, ensure_ascii=False)
+    threshold_value_json = json.dumps(threshold_value, ensure_ascii=False)
+
+    context = {
         "product": product,
-        "price_history": price_history,
-    })
+        "price_data_json": price_data_json,
+        "threshold_value_json": threshold_value_json,
+    }
+    return render(request, "main/product_detail.html", context)
+
+
+# ======================================================
+# 商品登録
+# ======================================================
 
 
 @login_required

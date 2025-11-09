@@ -1,4 +1,3 @@
-# --- START: main/urls.py ---
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from main.views_auth import custom_password_reset_view
@@ -73,10 +72,7 @@ urlpatterns = [
     path("product/detail/<int:pk>/",
          views_product.product_detail, name="product_detail"),
     path("product/create/", views_product.product_create, name="product_create"),
-
-    # ✅ 編集URL構造を統一（/product/edit/<pk>/ → /product/<pk>/edit/）
     path("product/<int:pk>/edit/", views_product.product_edit, name="product_edit"),
-
     path("product/delete/<int:pk>/",
          views_product.product_delete, name="product_delete"),
 
@@ -86,6 +82,14 @@ urlpatterns = [
     path("api/fetch_rakuten_item/", views_api.fetch_rakuten_item,
          name="fetch_rakuten_item"),
     path("api/proxy_image/", views_api.proxy_image, name="proxy_image"),
+
+
+    # ============================================================
+    # 商品価格履歴API（新規）
+    # ============================================================
+    path("api/price_history/<int:product_id>/",
+         views_api.ProductPriceHistoryView.as_view(),
+         name="api_price_history"),
 
     # ============================================================
     # カテゴリAPI関連
@@ -121,8 +125,8 @@ urlpatterns = [
     # --- ダッシュボード ---
     path("dashboard/", views_dashboard.dashboard_view, name="dashboard"),
 
-    # --- 未読通知件 ---
+    # --- 未読通知件数 ---
     path("api/unread_count/", views_dashboard.unread_notification_count,
          name="unread_count"),
+
 ]
-# --- END: main/urls.py ---

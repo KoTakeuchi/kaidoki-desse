@@ -165,7 +165,7 @@ class PriceHistory(models.Model):
     price = models.DecimalField(
         "価格", max_digits=10, decimal_places=0, validators=[validate_positive])
     stock_count = models.IntegerField("在庫数", null=True, blank=True)
-    checked_at = models.DateTimeField("取得日時", auto_now_add=True)
+    checked_at = models.DateTimeField("取得日時")
 
     class Meta:
         verbose_name = "価格履歴"
