@@ -247,15 +247,6 @@ def product_create(request):
         if request.method == "POST":
             form = ProductForm(request.POST, user=request.user)
 
-            # --- デバッグ出力 ---
-            print("DEBUG FULL POST:", request.POST)
-            print("DEBUG POST[selected_cats]:",
-                  request.POST.get("selected_cats"))
-            print("DEBUG POST[categories]:",
-                  request.POST.getlist("categories"))
-            print("DEBUG POST[flag_type]:", request.POST.get("flag_type"))
-            print("DEBUG POST[flag_value]:", request.POST.get("flag_value"))
-
             if form.is_valid():
                 product = form.save(commit=False)
                 product.user = request.user
@@ -265,37 +256,48 @@ def product_create(request):
                 if image_url:
                     product.image_url = image_url
 
-                # --- 割引率(flag_value)保存 ---
+                # --- 通知条件設定 ---
                 flag_type = request.POST.get("flag_type")
                 flag_value = request.POST.get("flag_value")
-
-                product.flag_type = flag_type  # ← この行を追加
+                product.flag_type = flag_type
 
                 if flag_type == "percent_off" and flag_value:
                     try:
                         product.flag_value = float(flag_value)
+                        # ✅ 割引後価格を初期計算してthreshold_priceに保存
+                        if product.initial_price:
+                            discounted_price = int(
+                                product.initial_price *
+                                (100 - product.flag_value) / 100
+                            )
+                            product.threshold_price = discounted_price
                     except ValueError:
                         product.flag_value = None
-                elif flag_type == "buy_price" and flag_value:  # ← 追加
+
+                elif flag_type == "buy_price" and flag_value:
                     try:
                         product.flag_value = int(flag_value)
+                        product.threshold_price = int(flag_value)
                     except ValueError:
                         product.flag_value = None
+
                 else:
                     product.flag_value = None
 
+                # --- 保存 ---
                 product.save()
 
                 # --- 買い時フラグ更新 ---
                 from main.utils.flag_checker import update_flag_status
                 update_flag_status(product)
 
-                # --- カテゴリ紐づけ処理（selected_cats → M2M） ---
+                # --- カテゴリ紐づけ処理 ---
                 selected_cats_raw = request.POST.get("selected_cats", "")
                 if selected_cats_raw:
                     try:
-                        cat_ids = [int(x) for x in selected_cats_raw.split(
-                            ",") if x.strip().isdigit()]
+                        cat_ids = [
+                            int(x) for x in selected_cats_raw.split(",") if x.strip().isdigit()
+                        ]
                         if cat_ids:
                             categories = Category.objects.filter(
                                 Q(id__in=cat_ids),
@@ -308,8 +310,10 @@ def product_create(request):
 
                 messages.success(request, "商品を登録しました。")
                 return redirect("main:product_list")
+
             else:
                 messages.error(request, "入力内容に誤りがあります。")
+
         else:
             form = ProductForm(user=request.user)
 
@@ -329,9 +333,14 @@ def product_create(request):
                 "selected_category_ids": [],
             },
         )
+
     except Exception as e:
-        log_error(user=request.user, type_name=type(
-            e).__name__, source="product_create", err=e)
+        log_error(
+            user=request.user,
+            type_name=type(e).__name__,
+            source="product_create",
+            err=e
+        )
         messages.error(request, "商品登録中にエラーが発生しました。")
         return redirect("main:product_list")
 

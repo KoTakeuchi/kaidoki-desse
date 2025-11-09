@@ -580,22 +580,45 @@ main .card.product-card {
 /* ==========================================================
    商品編集：画像サイズ調整（親枠の75%で中央配置）
    ========================================================== */
+
+/* 親行（row）全体を中央揃えのflexコンテナ化 */
+.card .row.g-4 {
+    display: flex;
+    align-items: center;
+    /* 縦方向中央 */
+    justify-content: center;
+    /* 横方向中央（必要なら） */
+    min-height: 480px;
+    /* 高さをカードに合わせる */
+
+}
+
+/* ==============================
+   商品編集ページ：画像サイズを左カラムの75%に拡大配置
+   ============================== */
 .col-md-5.text-center {
     display: flex;
-    justify-content: center;
     align-items: center;
-    height: 360px;
-    /* ← 高さを明示的に確保 */
-    background-color: transparent;
+    /* 縦中央 */
+    justify-content: center;
+    /* 横中央 */
+    height: 100%;
 }
 
 .product-edit-image {
-    width: 75%;
-    /* ← 固定幅（maxではなくwidthに変更） */
+    width: 70%;
+    /* 左カラムの70%サイズに拡大 */
     height: auto;
+    /* 比率維持 */
     object-fit: contain;
     display: block;
-    margin: 0 auto;
+}
+
+/* ==============================
+   カテゴリ要素間の余白
+   ============================== */
+body.product-edit-page .cat-tag.user {
+    margin-top: 4px !important;
 }
 
 /* ==========================================================
@@ -608,6 +631,37 @@ body.product-edit-page input[id="id_shop_name"] {
     color: #333 !important;
     border-color: #ccc !important;
 }
+
+/* ==============================
+   買い時価格/割引率　見た目
+   ============================== */
+body.product-edit-page #id_threshold_price,
+body.product-edit-page #id_flag_value,
+body.product-edit-page #id_threshold_price_unit,
+body.product-edit-page #id_flag_value_unit,
+body.product-edit-page .text-muted {
+    margin-top: 10px;
+    border-radius: 8px !important;
+}
+
+/* ==============================
+   下のカードの余白調整
+   ============================== */
+body.product-edit-page .card .row.g-4 {
+    min-height: unset !important;
+}
+
+body.product-edit-page .card {
+    margin-bottom: 5px !important;
+}
+
+/* ==============================
+   更新するボタンの列　余白調整
+   ============================== */
+body.product-edit-page .form-footer {
+    margin-top: 14px !important;
+}
+
 
 /* ============================== ============================== ============================== ==============================
   　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　カテゴリ管理（category_my.html）
@@ -767,7 +821,7 @@ body.product-edit-page input[id="id_shop_name"] {
 }
 
 /* ================================================ =================================================== ================================================
-   　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品登録・編集フォーム専用スタイル群（product_form.html）
+   　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品登録フォーム専用スタイル群（product_form.html）
    ================================================　 ============== =====================================================================================
 
 /* --- カードデザイン（フォーム外枠） --- */

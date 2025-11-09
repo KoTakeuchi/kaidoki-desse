@@ -2,6 +2,8 @@
 {% load static %}
 {% block title %}{{ product.product_name }} の編集{% endblock %}
 
+{% block body_class %}product-edit-page{% endblock %}
+
 {% block page_content %}
 <div class="page-header">
   <h1 class="page-title">
@@ -36,12 +38,12 @@
             <label class="form-label fw-bold">カテゴリ</label>
             <div class="category-section">
               {% for cat in global_categories %}
-                <span class="cat-tag common {% if cat.id in selected_category_ids %}active{% endif %}"
-                      data-cat-id="{{ cat.id }}">{{ cat.category_name }}</span>
+              <span class="cat-tag common {% if cat.id in selected_category_ids %}active{% endif %}"
+                    data-cat-id="{{ cat.id }}">{{ cat.category_name }}</span>
               {% endfor %}
               {% for cat in user_categories %}
-                <span class="cat-tag user {% if cat.id in selected_category_ids %}active{% endif %}"
-                      data-cat-id="{{ cat.id }}">{{ cat.category_name }}</span>
+              <span class="cat-tag user {% if cat.id in selected_category_ids %}active{% endif %}"
+                    data-cat-id="{{ cat.id }}">{{ cat.category_name }}</span>
               {% endfor %}
             </div>
             <input type="hidden" name="selected_cats" id="selectedCats" value="{{ selected_category_ids|join:',' }}">
@@ -78,49 +80,50 @@
           <label class="form-label fw-bold">通知条件</label>
           <div class="flag-buttons mt-2">
             {% if product.flag_type == 'buy_price' %}
-              <div class="flag-btn active">買い時価格</div>
+            <div class="flag-btn active">買い時価格</div>
             {% elif product.flag_type == 'percent_off' %}
-              <div class="flag-btn active">割引率</div>
+            <div class="flag-btn active">割引率</div>
             {% elif product.flag_type == 'lowest_price' %}
-              <div class="flag-btn active">最安値</div>
+            <div class="flag-btn active">最安値</div>
             {% endif %}
           </div>
           <div class="flag-desc-box mt-3">
-            通知条件は変更できません。<br>通知条件を変更したい場合は商品一覧から削除し新しく登録し直してください。
+            通知条件は変更できません。通知条件を変更したい場合は<br>
+            商品一覧からこの商品カードを削除し新しく登録し直してください。
           </div>
         </div>
 
         <div class="col-md-6">
           {% if product.flag_type == 'buy_price' %}
-            <label class="form-label fw-bold d-block">買い時価格</label>
-            <div class="yen-group">
-              <input type="number" name="threshold_price" id="id_threshold_price"
-                     class="form-control text-end"
-                     value="{{ product.threshold_price|default_if_none:'' }}" min="1" step="1">
-              <span>円</span>
-            </div>
+          <label class="form-label fw-bold d-block">買い時価格</label>
+          <div class="yen-group">
+            <input type="number" name="threshold_price" id="id_threshold_price"
+                   class="form-control text-end"
+                   value="{{ product.threshold_price|default_if_none:'' }}" min="1" step="1">
+            <span id="id_threshold_price_unit">円</span>
+          </div>
           {% elif product.flag_type == 'percent_off' %}
-            <label class="form-label fw-bold d-block">割引率</label>
-            <div class="yen-group">
-              <select name="flag_value" id="id_flag_value" class="form-select text-end">
-                <option value="5" {% if product.flag_value == 5 %}selected{% endif %}>5</option>
-                <option value="10" {% if product.flag_value == 10 %}selected{% endif %}>10</option>
-                <option value="15" {% if product.flag_value == 15 %}selected{% endif %}>15</option>
-                <option value="20" {% if product.flag_value == 20 %}selected{% endif %}>20</option>
-                <option value="30" {% if product.flag_value == 30 %}selected{% endif %}>30</option>
-                <option value="50" {% if product.flag_value == 50 %}selected{% endif %}>50</option>
-              </select>
-              <span>％</span>
-            </div>
+          <label class="form-label fw-bold d-block">割引率</label>
+          <div class="yen-group">
+            <select name="flag_value" id="id_flag_value" class="form-select text-end">
+              <option value="5" {% if product.flag_value == 5 %}selected{% endif %}>5</option>
+              <option value="10" {% if product.flag_value == 10 %}selected{% endif %}>10</option>
+              <option value="15" {% if product.flag_value == 15 %}selected{% endif %}>15</option>
+              <option value="20" {% if product.flag_value == 20 %}selected{% endif %}>20</option>
+              <option value="30" {% if product.flag_value == 30 %}selected{% endif %}>30</option>
+              <option value="50" {% if product.flag_value == 50 %}selected{% endif %}>50</option>
+            </select>
+            <span id="id_flag_value_unit">％</span>
+          </div>
           {% elif product.flag_type == 'lowest_price' %}
-            <label class="form-label fw-bold d-block">最安値通知</label>
-            <p class="text-muted">登録以降の最安値を更新したら通知されます。</p>
+          <label class="form-label fw-bold d-block">最安値通知</label>
+          <p class="text-muted">登録以降の最安値を更新したら通知されます。</p>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- ✅ フッターボタン：登録ページと同仕様 -->
+    <!-- ✅ フッターボタン -->
     <div class="form-footer d-flex justify-content-between align-items-center mt-4">
       <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
         ← 一覧へ戻る
