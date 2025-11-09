@@ -82,3 +82,116 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ flag_type.js 読み込み完了");
+
+  const flagBtns = document.querySelectorAll(".flag-btn");
+  const descBox = document.getElementById("flagDesc");
+  const flagTypeHidden = document.getElementById("flagTypeHidden");
+
+  const wrapRegular = document.getElementById("wrap_regular");
+  const wrapThreshold = document.getElementById("wrap_threshold");
+  const wrapPercent = document.getElementById("wrap_percent");
+
+  const hideAll = () => {
+    [wrapRegular, wrapThreshold, wrapPercent].forEach(el => {
+      if (el) el.style.display = "none";
+    });
+  };
+
+  const showWrap = (type) => {
+    hideAll();
+    if (type === "buy_price") wrapThreshold.style.display = "block";
+    if (type === "percent_off") {
+      wrapRegular.style.display = "block";
+      wrapPercent.style.display = "block";
+    }
+  };
+
+  flagBtns.forEach(btn => {
+    btn.addEventListener("mouseenter", () => {
+      descBox.textContent = btn.dataset.desc;
+    });
+
+    btn.addEventListener("mouseleave", () => {
+      descBox.textContent = "ボタンにマウスを乗せると説明が表示されます。";
+    });
+
+    btn.addEventListener("click", () => {
+      flagBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const type = btn.dataset.type;
+      flagTypeHidden.value = type;
+      showWrap(type);
+    });
+  });
+
+  // 初期表示（フォーム値に合わせて）
+  if (flagTypeHidden.value) showWrap(flagTypeHidden.value);
+});
+// =============================================================
+// 通知条件切り替え（買い時価格・割引率・最安値）
+// =============================================================
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ flag_setting.js loaded");
+
+  const buttons = document.querySelectorAll(".flag-btn");
+  const hidden = document.getElementById("flagTypeHidden");
+
+  const wrapThreshold = document.getElementById("wrap_threshold"); // 買い時価格入力欄
+  const wrapPercent = document.getElementById("wrap_percent");     // 割引率セレクト欄
+  const descBox = document.getElementById("flagDesc");
+
+  if (!buttons.length || !hidden) {
+    console.warn("⚠️ 通知条件ボタンまたは hidden が見つかりません。");
+    return;
+  }
+
+  // 初期状態リセット
+  const hideAll = () => {
+    if (wrapThreshold) wrapThreshold.style.display = "none";
+    if (wrapPercent) wrapPercent.style.display = "none";
+  };
+
+  // 種類別表示
+  const showWrap = (type) => {
+    hideAll();
+    switch (type) {
+      case "buy_price":
+        if (wrapThreshold) wrapThreshold.style.display = "block";
+        descBox.textContent = "指定価格以下になったとき通知します。最も基本的な通知方法です。";
+        break;
+      case "percent_off":
+        if (wrapPercent) wrapPercent.style.display = "block";
+        descBox.textContent = "登録時価格から指定％OFFになったとき通知します。セールやイベント検知に便利です。";
+        break;
+      case "lowest_price":
+        descBox.textContent = "登録以来の最安値を更新したら通知します。価格履歴に基づいた通知です。";
+        break;
+      default:
+        descBox.textContent = "ボタンにマウスを乗せると説明が表示されます。";
+    }
+  };
+
+  // 初期表示（hiddenの値が存在する場合）
+  if (hidden.value) showWrap(hidden.value);
+
+  // クリックイベント登録
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.type;
+
+      // アクティブ切替
+      buttons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // hidden更新
+      hidden.value = type;
+
+      // 表示切替
+      showWrap(type);
+    });
+  });
+});

@@ -1,4 +1,5 @@
 # --- START(1/2): main/forms.py ---
+from .models import Product, Category
 from django.contrib.auth.forms import PasswordChangeForm
 from django import forms
 from django.core.exceptions import ValidationError
@@ -13,6 +14,7 @@ User = get_user_model()
 # ======================================================
 # 商品登録・編集フォーム
 # ======================================================
+
 class ProductForm(forms.ModelForm):
     """商品登録・編集フォーム（カテゴリ最大2件）"""
 
@@ -20,8 +22,16 @@ class ProductForm(forms.ModelForm):
         queryset=Category.objects.none(),
         required=False,
         widget=forms.CheckboxSelectMultiple(
-            attrs={"class": "category-checkbox"}),
+            attrs={"class": "category-checkbox"}
+        ),
         label="カテゴリ（最大2件まで選択可）",
+    )
+
+    # ✅ ChoiceField → CharField に置き換え（Djangoの自動バリデーション回避）
+    flag_type = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+        label="通知条件",
     )
 
     class Meta:
@@ -34,13 +44,29 @@ class ProductForm(forms.ModelForm):
             "threshold_price",
             "priority",
             "categories",
+            "flag_type",
         ]
         widgets = {
-            "product_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "商品名"}),
-            "shop_name": forms.TextInput(attrs={"class": "form-control", "placeholder": "ショップ名"}),
-            "product_url": forms.URLInput(attrs={"class": "form-control", "placeholder": "楽天市場の商品URL"}),
-            "initial_price": forms.NumberInput(attrs={"class": "form-control", "readonly": "readonly", "min": "1"}),
-            "threshold_price": forms.NumberInput(attrs={"class": "form-control", "placeholder": "買い時価格（円）", "min": "1"}),
+            # ✅ 最初は編集不可（API成功後 JS で editable クラスを付けて解除）
+            "product_name": forms.TextInput(
+                attrs={"class": "form-control", "readonly": "readonly"}
+            ),
+            "shop_name": forms.TextInput(
+                attrs={"class": "form-control", "readonly": "readonly"}
+            ),
+
+            # 商品URL
+            "product_url": forms.URLInput(
+                attrs={"class": "form-control", "placeholder": "楽天市場の商品URL"}
+            ),
+
+            "initial_price": forms.NumberInput(
+                attrs={"class": "form-control",
+                       "readonly": "readonly", "min": "1"}
+            ),
+            "threshold_price": forms.NumberInput(
+                attrs={"class": "form-control", "min": "1"}
+            ),
             "priority": forms.Select(
                 choices=[("高", "高"), ("普通", "普通")],
                 attrs={"class": "form-select"},
@@ -86,6 +112,35 @@ class ProductForm(forms.ModelForm):
         if cats and len(cats) > 2:
             raise ValidationError("カテゴリは最大2件まで選択できます。")
         return cats
+
+    def clean_flag_type(self):
+        """通知条件の選択必須チェック"""
+        flag_type = self.cleaned_data.get("flag_type")
+
+        # ✅ Noneや空文字はすべてNG扱い
+        if not flag_type or flag_type == "None":
+            raise ValidationError("通知条件を選択してください。")
+
+        # ✅ 選択肢外（JS改変など）の場合も念のため弾く
+        valid_choices = ["buy_price", "percent_off", "lowest_price"]
+        if flag_type not in valid_choices:
+            raise ValidationError("通知条件を選択してください。")
+
+        return flag_type
+
+    def clean(self):
+        """通知条件と価格の整合チェック"""
+        cleaned_data = super().clean()
+        flag_type = cleaned_data.get("flag_type")
+        initial_price = cleaned_data.get("initial_price")
+        threshold_price = cleaned_data.get("threshold_price")
+
+        # 買い時価格が登録時価格より高い場合はエラー
+        if flag_type == "buy_price" and threshold_price and initial_price:
+            if threshold_price > initial_price:
+                self.add_error("threshold_price", "登録時価格より低い金額を入力してください。")
+
+        return cleaned_data
 
 
 # ======================================================

@@ -1,70 +1,56 @@
-
 // =============================================================
-// カテゴリ選択：共通・独自問わず最大2件まで選択可
+// カテゴリ選択（最盛期仕様）
+// 共通・独自問わず最大2件まで選択可（pillボタン方式）
 // 対応テンプレート：product_form.html
 // =============================================================
-(() => {
-    console.log("✅ category_limit.js (select-based unified max2) loaded");
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ category_limit.js 読み込み完了");
 
-    const select = document.getElementById("id_categories");
-    if (!select) {
-        console.warn("⚠️ id_categories が見つかりません。");
-        return;
-    }
+    const tags = document.querySelectorAll(".cat-tag");
+    const hiddenInput = document.querySelector("#selected_cats");
+    const limitInfo = document.querySelector("#category-limit-info");
 
-    const MAX = 2;
-    const noticeId = "category-limit-notice";
+    const MAX_SELECT = 2;
+    let selectedIds = [];
 
-    // ---------------------------------------------------------
-    // 警告メッセージ表示
-    // ---------------------------------------------------------
-    function showNotice(msg) {
-        let box = document.getElementById(noticeId);
-        if (!box) {
-            box = document.createElement("div");
-            box.id = noticeId;
-            box.className = "alert alert-warning small mt-2 text-center";
-
-            // select.after() が使えない環境に備えたフォールバック
-            if (typeof select.after === "function") {
-                select.after(box);
+    // --- 選択状態をUIに反映 ---
+    const updateUI = () => {
+        tags.forEach(tag => {
+            const id = tag.dataset.id;
+            if (selectedIds.includes(id)) {
+                tag.classList.add("active");
             } else {
-                select.insertAdjacentElement("afterend", box);
+                tag.classList.remove("active");
             }
-        }
+        });
+        hiddenInput.value = selectedIds.join(",");
+    };
 
-        box.textContent = msg;
-        box.style.display = "block";
-    }
+    // --- ボタン押下時処理 ---
+    tags.forEach(tag => {
+        tag.addEventListener("click", () => {
+            const id = tag.dataset.id;
 
-    // ---------------------------------------------------------
-    // メッセージ非表示
-    // ---------------------------------------------------------
-    function hideNotice() {
-        const box = document.getElementById(noticeId);
-        if (box) box.style.display = "none";
-    }
+            if (selectedIds.includes(id)) {
+                // 再クリック → 解除
+                selectedIds = selectedIds.filter(x => x !== id);
+            } else {
+                // 新規選択
+                if (selectedIds.length >= MAX_SELECT) {
+                    // 一番古いものを外す（FIFO）
+                    selectedIds.shift();
+                }
+                selectedIds.push(id);
+            }
 
-    // ---------------------------------------------------------
-    // 選択制限処理
-    // ---------------------------------------------------------
-    select.addEventListener("change", () => {
-        const selected = Array.from(select.selectedOptions);
+            limitInfo.textContent =
+                selectedIds.length > MAX_SELECT
+                    ? "カテゴリは最大2つまで選択できます。"
+                    : "";
 
-        if (selected.length > MAX) {
-            // ✅ 超過した最後の選択を自動解除
-            const last = selected[selected.length - 1];
-            if (last) last.selected = false;
-
-            showNotice(`カテゴリは最大${MAX}件まで選択できます。`);
-
-            // ⏱ 3秒後に自動で警告を非表示
-            clearTimeout(select._hideTimer);
-            select._hideTimer = setTimeout(hideNotice, 3000);
-        } else {
-            hideNotice();
-        }
-
-        console.log(`🟡 選択中カテゴリ数: ${selected.length}`);
+            updateUI();
+        });
     });
-})();
+
+    updateUI();
+});

@@ -30,6 +30,10 @@
 </style>
 {% endblock %}
 
+{% block body_open %}
+<body class="{% block body_class %}{% endblock %}">
+{% endblock %}
+
 {% block header %}
 <header class="header-bar">
   <div class="header-inner px-3">

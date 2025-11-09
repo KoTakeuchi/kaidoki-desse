@@ -25,7 +25,11 @@
   {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+{# ★ ここを修正：body_open / body_class ブロックを使う #}
+{% block body_open %}
+<body class="{% block body_class %}{% endblock %}">
+{% endblock %}
+
   <div class="page-wrapper d-flex flex-column min-vh-100">
     {% block header %}{% endblock %}
 
