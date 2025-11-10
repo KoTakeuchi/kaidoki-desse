@@ -1,22 +1,23 @@
-# --- START: scripts/insert_test_data.py ---
 import os
 import sys
 import django
 import random
 from datetime import datetime, timedelta
+from django.utils import timezone
+from pathlib import Path
 
-# ====== プロジェクトルートをパスに追加 ======
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(BASE_DIR)
+# プロジェクトのルートパスを追加
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 
-# ====== Django設定モジュール指定 ======
+# DJANGO_SETTINGS_MODULEを設定
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kaidoki.settings")
 
-# ====== Django初期化 ======
+# 以降、Djangoの初期化
+import django
 django.setup()
 
-# ====== モデルを初期化後に読み込み ======
-from main.models import Product, PriceHistory
+from main.models import Product, PriceHistory  # これでmainモデルをインポート
 
 # ======================================================
 # 既存データ削除
@@ -72,6 +73,17 @@ products_info = [
 ]
 
 # ======================================================
+# 在庫数を決定する関数
+# ======================================================
+def get_stock_count(info, i):
+    if "在庫0" in info["product_name"]:
+        return 0 if i % 10 == 0 else random.randint(5, 20)
+    elif "在庫わずか" in info["product_name"]:
+        return 1 if i % 7 == 0 else random.randint(10, 30)
+    else:
+        return random.randint(5, 50)
+
+# ======================================================
 # データ生成
 # ======================================================
 print("テストデータ作成中...")
@@ -87,30 +99,27 @@ for info in products_info:
         priority=info["priority"],
         is_in_stock=True,
         user_id=1,
-        product_url=f"https://example.com/test/{random.randint(1000,9999)}",  # ★ユニークURL対応
+        # ★ユニークURL対応
+        product_url=f"https://example.com/test/{random.randint(1000, 9999)}",
     )
 
     # 過去180日分データ生成（日ごと1件ずつ）
     for i in range(180):
-        # ✅ 修正：datetime型で180日前から順番に設定
-        date = datetime.now() - timedelta(days=(179 - i))
+        # ✅ 修正：timezone.now()を使用
+        date = timezone.now() - timedelta(days=(179 - i))
         price_fluctuation = random.randint(-1500, 1500)
         price = max(1000, info["initial_price"] + price_fluctuation)
 
-        # 在庫パターン分岐
-        if "在庫0" in info["product_name"]:
-            stock = 0 if i % 10 == 0 else random.randint(5, 20)
-        elif "在庫わずか" in info["product_name"]:
-            stock = 1 if i % 7 == 0 else random.randint(10, 30)
-        else:
-            stock = random.randint(5, 50)
+        stock = get_stock_count(info, i)
 
-        PriceHistory.objects.create(
-            product=product,
-            price=price,
-            stock_count=stock,
-            checked_at=date,  # ✅ 修正後：datetimeを直接使用
-        )
+        # 重複データを避けるため、既に同じデータが存在しない場合のみ追加
+        if not PriceHistory.objects.filter(product=product, checked_at=date).exists():
+            PriceHistory.objects.create(
+                product=product,
+                price=price,
+                stock_count=stock,
+                checked_at=date,  # ✅ 修正後：timezone.now()を使用
+            )
 
 print("✅ テストデータ登録完了")
 # --- END: scripts/insert_test_data.py ---

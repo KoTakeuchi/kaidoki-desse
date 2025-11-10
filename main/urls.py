@@ -90,6 +90,9 @@ urlpatterns = [
     path("api/price_history/<int:product_id>/",
          views_api.ProductPriceHistoryView.as_view(),
          name="api_price_history"),
+    path('api/get_price_data/<int:product_id>/',
+         views_product.get_price_data, name='get_price_data'),
+
 
     # ============================================================
     # カテゴリAPI関連

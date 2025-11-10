@@ -1,4 +1,5 @@
 # --- START: main/views_product.py ---
+from .models import Product, PriceHistory
 from django.utils import timezone
 from django.http import JsonResponse
 from main.models import Product, PriceHistory
@@ -10,7 +11,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Prefetch
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from main.forms import ProductForm
 from main.models import Product, Category, PriceHistory
 from main.utils.error_logger import log_error
@@ -19,6 +20,7 @@ import decimal
 import json
 from django.http import JsonResponse
 from main.models import Product, PriceHistory
+
 
 # ======================================================
 # 内部共通関数
@@ -233,8 +235,6 @@ def product_list(request: HttpRequest) -> HttpResponse:
         return redirect("main:landing_page")
 
 
-# --- START: main/views_product.py (抜粋・product_detail 関数全体差し替え) ---
-
 @login_required
 def product_detail(request, pk):
     """商品詳細ページ"""
@@ -250,10 +250,21 @@ def product_detail(request, pk):
 
     price_data = []
     for h in histories:
+        # 価格と在庫のデータを整形と補完
+        price = float(h.price) if h.price is not None else 0.0
+        stock = int(h.stock_count) if h.stock_count is not None else 0
+
+        # price_data をテンプレートに渡す前にログを出力
+        print("=== DEBUG: price_data ===")
+        print(price_data)  # price_dataが配列であるか、確認
+
+        # その後にJSON化してテンプレートに渡す
+        price_data_json = json.dumps(price_data, ensure_ascii=False)
+
         price_data.append({
             "date": h.checked_at.strftime("%Y-%m-%d"),
-            "price": float(h.price),
-            "stock": None if h.stock_count is None else int(h.stock_count),
+            "price": price,
+            "stock": stock,
         })
 
     # ======================================================
@@ -275,13 +286,10 @@ def product_detail(request, pk):
     threshold_value = None
     if product.flag_type == "buy_price" and product.threshold_price:
         threshold_value = float(product.threshold_price)
-
     elif product.flag_type == "percent_off" and product.threshold_price:
         if product.initial_price:
             threshold_value = float(product.initial_price) * \
                 (1 - float(product.threshold_price) / 100)
-
-    # 最安値通知は閾値ラインなし
     elif product.flag_type == "lowest_price":
         threshold_value = None
 
@@ -292,7 +300,7 @@ def product_detail(request, pk):
         price_data.append({
             "date": timezone.now().strftime("%Y-%m-%d"),
             "price": float(product.latest_price or product.initial_price or 0),
-            "stock": int(product.is_in_stock) if product.is_in_stock is not None else None,
+            "stock": int(product.is_in_stock) if product.is_in_stock is not None else 0,
         })
 
     # ======================================================
@@ -308,6 +316,45 @@ def product_detail(request, pk):
     }
     return render(request, "main/product_detail.html", context)
 
+
+# views_product.py
+
+
+def get_price_data(request, product_id):
+    try:
+        # 商品情報を取得
+        product = Product.objects.get(id=product_id)
+
+        # 価格履歴データの取得（チェック日順で並べ替え）
+        price_history = PriceHistory.objects.filter(
+            product=product).order_by('checked_at')
+
+        # threshold_price が None の場合は 0 を設定
+        threshold_price = float(
+            product.threshold_price) if product.threshold_price is not None else 0.0
+
+        # 価格データを整形
+        price_data = [
+            {
+                # 日付を 'YYYY-MM-DD' 形式に変換
+                'date': record.checked_at.strftime('%Y-%m-%d'),
+                'price': float(record.price),  # 価格を数値に変換
+                'stock': record.stock_count,  # 在庫数を取得
+                'threshold_price': threshold_price  # 閾値を設定
+            }
+            for record in price_history
+        ]
+
+        # 価格データが空であればエラーレスポンスを返す
+        if not price_data:
+            return JsonResponse({"error": "価格データがありません"}, status=404)
+
+        # 価格データが正しく取得できた場合はそれを返す
+        return JsonResponse({"price_data": price_data})
+
+    except Product.DoesNotExist:
+        # 商品が見つからない場合はエラーレスポンスを返す
+        return JsonResponse({"error": "商品が見つかりません"}, status=404)
 
 # ======================================================
 # 商品登録
