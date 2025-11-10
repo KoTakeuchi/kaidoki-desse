@@ -90,7 +90,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
 
                 # 共通カテゴリを実際の Category に変換
                 if global_ids:
-                    common_cats = CommonCategory.objects.filter(
+                    common_cats = Category.objects.filter(
                         id__in=global_ids)
                     cat_names = [c.category_name for c in common_cats]
                     q_filter |= Q(
@@ -155,8 +155,9 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 global_ids = [i - 100 for i in ids if i >= 100]
                 user_ids = [i for i in ids if i < 100]
 
-                common_cats = CommonCategory.objects.filter(id__in=global_ids)
-                for c in common_cats:
+                category_cats = Category.objects.filter(
+                    id__in=global_ids, is_global=True)
+                for c in category_cats:
                     filter_tags.append(
                         ("cat", f"{c.category_name}", "filter-tag-common"))
 

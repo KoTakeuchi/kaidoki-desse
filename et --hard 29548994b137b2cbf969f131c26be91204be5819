@@ -1,0 +1,143 @@
+[33mcommit 29548994b137b2cbf969f131c26be91204be5819[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/graph-drawing-abandon[m[33m, [m[1;31morigin/feature/graph-drawing-abandon[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Mon Nov 10 19:04:20 2025 +0900
+
+    グラフ描画の断念とコードの修正
+
+[33mcommit de17eac7a1427ccdec1be1cd99c5afc06b8b3863[m[33m ([m[1;31morigin/feature/graph-drawing-ajax-switch[m[33m, [m[1;32mfeature/product-detail[m[33m, [m[1;32mfeature/graph-drawing-ajax-switch[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Mon Nov 10 05:57:55 2025 +0900
+
+    グラフ描画の修正前の状態
+
+[33mcommit cd6e5ad44af2cf27b79ee7bb0a0d49bea040c568[m[33m ([m[1;31morigin/feature/product-edit[m[33m, [m[1;32mfeature/product-edit[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 9 20:21:22 2025 +0900
+
+    商品編集機能完了（割引後価格計算含む）
+
+[33mcommit 29312bf8f329b3b0641a90dd2ea8fc530eb85472[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 9 19:12:26 2025 +0900
+
+    feat: 商品編集機能の実装完了（CSS調整前）
+
+[33mcommit 6e3a135f7e52ded7783f7e43b666fa4e603d820b[m[33m ([m[1;32mfeature/product-list-fix[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 9 15:39:15 2025 +0900
+
+    商品編集(仮)作成完了：一覧編集ボタン連携／フォーム基本構成確認
+
+[33mcommit 0c7f3bc472f42e7c7a41c8eb67a0182423837e85[m[33m ([m[1;31morigin/feature/product-list-fix[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 9 14:09:10 2025 +0900
+
+    商品一覧ページ：価格表示ロジック背景デザイン調整 完了
+
+[33mcommit 5fa87cac2f09cc4e0820d739743aab838dd635d9[m[33m ([m[1;31morigin/feature/product-create-fix[m[33m, [m[1;32mfeature/product-create-fix[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 9 10:09:48 2025 +0900
+
+    商品登録フォーム修正（API連携UI整備）
+
+[33mcommit 94d3fe6d58c9e4e8bef0a80b1d087eaf5c15d0aa[m[33m ([m[1;31morigin/feature/product-create-ui-fix[m[33m, [m[1;32mfeature/product-create-ui-fix[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sat Nov 8 21:03:16 2025 +0900
+
+    商品一覧のUI・絞り込み・並び替え機能を最盛期状態まで復旧
+
+[33mcommit 05e6794aeda9145421dc98561544724b547d7fcc[m[33m ([m[1;32mbackup/final-sync-broken[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sat Nov 8 16:10:39 2025 +0900
+
+    fix: 環境復旧対応完了（admin正常化views_product修正済）
+
+[33mcommit d4f3e8994f639e546a9193f9d31219d841584c6c[m[33m ([m[1;32mfeature/final-sync[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sat Nov 8 13:19:00 2025 +0900
+
+    temp: prepare for final check before confirmation
+
+[33mcommit 6cb12360db2cd86cd188bed711159ae697115ac1[m[33m ([m[1;32mfeature/product-create-ui[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Thu Nov 6 20:07:04 2025 +0900
+
+    商品登録画面：カテゴリ選択機能（共通独自問わず最大2件、自動切替）実装完了
+
+[33mcommit 83ad69b80d16dc00253b75097b54ffc1ce1c607f[m[33m ([m[1;31morigin/feature/admin-category-crud[m[33m, [m[1;32mfeature/admin-category-crud[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Thu Nov 6 17:15:27 2025 +0900
+
+    CSS分離後 商品登録画面改修中（APIステータス幅調整readonly制御修正）
+
+[33mcommit 853733f61aa7a841f6b6a62409b8bb128eda02f8[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Wed Nov 5 22:16:12 2025 +0900
+
+    管理画面 共通カテゴリCRUD完了
+
+[33mcommit 1823f82186c5715196645d791eb132de0a59fb2f[m[33m ([m[1;31morigin/backup/css-pre-merge[m[33m, [m[1;32mfeature/css-rework-temp[m[33m, [m[1;32mbackup/css-pre-merge[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Wed Nov 5 10:34:22 2025 +0900
+
+    app.css と user.css の統合前スナップショット
+
+[33mcommit 72b41197472e17cd125f7d895f7866d96a9d5a1d[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Wed Nov 5 09:20:35 2025 +0900
+
+    カテゴリCRUD機能完成（商品登録画面改修前）
+
+[33mcommit bf8b0c0f6687161868828f0525be2f1fc3a03fae[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Wed Nov 5 00:41:09 2025 +0900
+
+    管理者機能分離（admin_app）完了：UI整理CSS統合ルーティング修正
+
+[33mcommit 116e6ff6bb509e81fd33e28b942f3200c1507bbb[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Tue Nov 4 21:43:53 2025 +0900
+
+    安定版: 管理者画面UI・カテゴリ管理まで実装
+
+[33mcommit 60bd1641218bd9ad3a4f6eaed93a2e581ce34a13[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Tue Nov 4 18:18:49 2025 +0900
+
+    現在のカテゴリ追加後の状態をバックアップ
+
+[33mcommit c1ba09b06e3445910a6f2437ab37f68246f0dce5[m[33m ([m[1;33mtag: [m[1;33mbackup-before-html-replace[m[33m)[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Tue Nov 4 14:51:28 2025 +0900
+
+    バックアップ: 一括置換前のテンプレート状態を保存
+
+[33mcommit f284465fe5ffa80d23d5e9a6d4804bc62e9afd66[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Nov 2 19:32:49 2025 +0900
+
+    layout-user.html と user.css を新規追加／flag_setting・user_edit 連携準備
+
+[33mcommit 493484b5c016e837a52b94c2086fdb585d87ffda[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Oct 26 22:53:18 2025 +0900
+
+    ✨ 楽天API連携完成：URL入力で商品情報を自動反映＋画像プレビュー機能実装
+
+[33mcommit fa03e9ec1fef371954bc863a01d58d28bbfd4763[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Sun Oct 26 19:31:01 2025 +0900
+
+    Initial commit: プロジェクト初期化
+
+[33mcommit 316bacc78cf8134bc8dd3e0c54aeeef0502985f2[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Mon Oct 6 18:41:04 2025 +0900
+
+    add requirements.txt
+
+[33mcommit 64b3d5e33f9e46481a870e02973c8664b39e276b[m
+Author: KoTakeuchi <2nd.takeuchi@gmail.com>
+Date:   Mon Oct 6 14:43:05 2025 +0900
+
+    first commit
