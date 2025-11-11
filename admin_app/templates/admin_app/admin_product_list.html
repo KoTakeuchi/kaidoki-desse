@@ -18,6 +18,18 @@
     </div>
   </form>
 
+  <!-- ▼ 表示件数切替 -->
+  <div class="text-end mb-2">
+    <form method="get" class="d-inline">
+      <input type="hidden" name="q" value="{{ query }}">
+      <select name="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline">
+        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件</option>
+        <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50件</option>
+        <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100件</option>
+      </select>
+    </form>
+  </div>
+
   <!-- 📋 商品一覧 -->
   {% if products %}
   <div class="table-responsive">

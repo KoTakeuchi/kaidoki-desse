@@ -410,3 +410,57 @@ h4 {
     border-color: #2c7e7e !important;
     color: #fff !important;
 }
+
+
+/* =========================
+   ステータスバッジ（エラー一覧用）
+   ========================= */
+.badge-status {
+    display: inline-block;
+    padding: 0.3em 0.75em;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.badge-unresolved {
+    background-color: #c35656;
+    /* 赤みがかった未対応 */
+}
+
+.badge-in-progress {
+    background-color: #f7cb6e;
+    /* アクセントカラー（進行中） */
+    color: #333;
+}
+
+.badge-resolved {
+    background-color: #3ca9a9;
+    /* メインカラー（完了） */
+}
+
+.badge-unknown {
+    background-color: #999;
+}
+
+/* ===============================
+   対応済みレコード行の背景色（強制適用）
+   =============================== */
+.table tbody tr.resolved-row td {
+    background-color: #cccccc !important;
+}
+
+.table-hover>tbody>tr.resolved-row:hover>* {
+    background-color: #e9e9e9 !important;
+}
+
+
+
+/* ===============================
+アクションボタン　配置調整
+   =============================== */
+
+.action-buttons {
+    padding-top: 0 !important;
+}

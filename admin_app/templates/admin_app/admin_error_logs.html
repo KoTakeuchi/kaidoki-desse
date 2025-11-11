@@ -9,23 +9,56 @@
 
   <!-- 🔍 検索フォーム -->
   <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
     </div>
-    <div class="col-md-3">
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold text-secondary">ステータス</label>
+      <select name="status" class="form-select">
+        <option value="">全て</option>
+        <option value="unresolved" {% if request.GET.status == "unresolved" %}selected{% endif %}>未対応</option>
+        <option value="in_progress" {% if request.GET.status == "in_progress" %}selected{% endif %}>対応中</option>
+        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済み</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label fw-semibold text-secondary">エラー種別</label>
+      <select name="type_name" class="form-select">
+        <option value="">全て</option>
+        {% for t in type_list %}
+          <option value="{{ t }}" {% if request.GET.type_name == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
       <label class="form-label fw-semibold text-secondary">開始日</label>
       <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
     </div>
-    <div class="col-md-3">
+
+    <div class="col-md-2">
       <label class="form-label fw-semibold text-secondary">終了日</label>
       <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
     </div>
-    <div class="col-md-2 text-end">
+
+    <div class="col-md-1 text-end">
       <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
     </div>
   </form>
-
+  <!-- ▼ 表示件数切替 -->
+  <div class="text-end mb-2">
+    <form method="get" class="d-inline">
+      <input type="hidden" name="q" value="{{ query }}">
+      <select name="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline">
+        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件</option>
+        <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50件</option>
+        <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100件</option>
+      </select>
+    </form>
+  </div>
   <!-- ======================== -->
   <!-- 📋 エラーログ一覧 -->
   <!-- ======================== -->
@@ -35,85 +68,50 @@
       <thead class="table-light">
         <tr class="text-secondary">
           <th style="width:5%;">ID</th>
+          <th style="width:8%;">ステータス</th>
+          <th style="width:8%;">対応者</th>
           <th style="width:10%;">ユーザー</th>
-          <th style="width:15%;">発生箇所</th>
+          <th style="width:10%;">発生箇所</th>
           <th style="width:15%;">エラー種類</th>
-          <th style="width:35%;">内容</th>
-          <th style="width:15%;">日時</th>
+          <th style="width:29%;">内容</th>
+          <th style="width:10%;">日時</th>
           <th style="width:5%;">操作</th>
         </tr>
       </thead>
-      <tbody>
-        {% for log in logs %}
-        <tr>
-          <td>{{ log.id }}</td>
-          <td>{{ log.user.username|default:"-" }}</td>
-          <td>{{ log.source|default:"-" }}</td>
-          <td>{{ log.type_name|default:"-" }}</td>
-          <td class="text-truncate" style="max-width:300px;">
-            {{ log.message|default:"-" }}
-          </td>
-          <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
-          <td>
-            <button class="btn btn-sm text-white rounded-0"
-                    style="background-color:#3CA9A9;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#errorDetailModal{{ log.id }}">
-              詳細
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
+        <tbody>
+          {% for log in logs %}
+          <tr class="{% if log.status == 'resolved' %}resolved-row{% endif %}">
+            <td>{{ log.id }}</td>
+            <td>
+              {% if log.status == "unresolved" %}
+                <span class="badge" style="background-color:#c35656;">未対応</span>
+              {% elif log.status == "in_progress" %}
+                <span class="badge" style="background-color:#F7CB6E; color:#333;">対応中</span>
+              {% elif log.status == "resolved" %}
+                <span class="badge" style="background-color:#3CA9A9;">対応済み</span>
+              {% endif %}
+            </td>
+            <td>{{ log.handled_by.username|default:"-" }}</td>
+            <td>{{ log.user.username|default:"-" }}</td>
+            <td>{{ log.source|default:"-" }}</td>
+            <td>{{ log.type_name|default:"-" }}</td>
+            <td class="text-truncate" style="max-width:300px;">
+              {{ log.message|default:"-" }}
+            </td>
+            <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+            <td>
+              <a href="{% url 'admin_app:admin_error_detail' log.id %}"
+                class="btn btn-sm text-white rounded-0"
+                style="background-color:#3CA9A9;">
+                詳細
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
     </table>
   </div>
-
-  <!-- ======================== -->
-  <!-- 🪟 詳細モーダル -->
-  <!-- ======================== -->
-  {% for log in logs %}
-  <div class="modal fade" id="errorDetailModal{{ log.id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 rounded-0">
-        <div class="modal-header" style="background-color:#2E5E5E;">
-          <h5 class="modal-title fw-bold text-white">エラー詳細</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
-        </div>
-        <div class="modal-body">
-          <table class="table table-borderless mb-0">
-            <tr>
-              <th class="text-secondary" style="width:25%;">ID</th>
-              <td>{{ log.id }}</td>
-            </tr>
-            <tr>
-              <th class="text-secondary">ユーザー</th>
-              <td>{{ log.user.username|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="text-secondary">発生箇所</th>
-              <td>{{ log.source|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="text-secondary">エラー種類</th>
-              <td>{{ log.type_name|default:"-" }}</td>
-            </tr>
-            <tr>
-              <th class="text-secondary">内容</th>
-              <td><pre class="mb-0" style="white-space: pre-wrap;">{{ log.message|default:"-" }}</pre></td>
-            </tr>
-            <tr>
-              <th class="text-secondary">発生日時</th>
-              <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
-            </tr>
-          </table>
-        </div>
-        <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
     {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
   {% else %}
   <p class="text-muted mt-3">エラーログはまだ登録されていません。</p>

@@ -1,9 +1,12 @@
 # =============================
 #  Import
 # =============================
+from .models import ErrorLog
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth import get_user_model
 from admin_app.models import CommonCategory
 from django.shortcuts import render, redirect, get_object_or_404
-from main.models import Category, Product, ErrorLog, User, NotificationEvent
+from main.models import Category, Product, User, NotificationEvent
 from django.db.models import Prefetch, Count, Q
 from django.utils import timezone
 from django.contrib.auth.decorators import user_passes_test
@@ -11,6 +14,8 @@ from django.http import JsonResponse
 from django.contrib import messages
 from datetime import timedelta
 from main.utils.pagination_helper import paginate_queryset
+from admin_app.models import ErrorLog
+from django.core.paginator import Paginator
 
 # =============================
 #  管理者判定
@@ -227,15 +232,126 @@ def admin_notification_detail(request, log_id):
 
 @user_passes_test(is_admin)
 def admin_error_logs(request):
-    """管理者用エラーログ一覧"""
-    logs = ErrorLog.objects.all().order_by("-created_at")
+    from .models import ErrorLog
 
-    # ✅ 共通関数でページネーション
-    page_obj, paginator = paginate_queryset(request, logs, per_page=20)
+    logs = ErrorLog.objects.all()
+
+    query = request.GET.get("q", "")
+    status = request.GET.get("status", "")
+    type_name = request.GET.get("type_name", "")
+    start_date = request.GET.get("start_date", "")
+    end_date = request.GET.get("end_date", "")
+
+    if query:
+        logs = logs.filter(
+            Q(user__username__icontains=query)
+            | Q(source__icontains=query)
+            | Q(message__icontains=query)
+        )
+    if status:
+        logs = logs.filter(status=status)
+    if type_name:
+        logs = logs.filter(type_name=type_name)
+    if start_date:
+        logs = logs.filter(created_at__date__gte=start_date)
+    if end_date:
+        logs = logs.filter(created_at__date__lte=end_date)
+
+    # エラー種別リストを distinct で抽出
+    type_list = ErrorLog.objects.values_list(
+        "type_name", flat=True).distinct().order_by("type_name")
+
+    # ページネーション
+    per_page = int(request.GET.get("per_page", 20))
+    paginator = Paginator(logs, per_page)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "admin_app/admin_error_logs.html",  # ← ここを修正
+        {
+            "logs": page_obj,
+            "paginator": paginator,
+            "page_obj": page_obj,
+            "query": query,
+            "status": status,
+            "type_name": type_name,
+            "start_date": start_date,
+            "end_date": end_date,
+            "type_list": type_list,
+        },
+    )
+
+
+User = get_user_model()
+
+
+@user_passes_test(is_admin)
+def update_error_status(request, log_id):
+    """エラーログの対応ステータス・対応者・メモ更新"""
+    if request.method == "POST":
+        log = get_object_or_404(ErrorLog, pk=log_id)
+        new_status = request.POST.get("status")
+        note = request.POST.get("note", "").strip()
+        handled_by_id = request.POST.get("handled_by")
+
+        if new_status in ["unresolved", "in_progress", "resolved"]:
+            log.status = new_status
+            log.note = note or log.note
+            if handled_by_id:
+                try:
+                    admin_user = User.objects.get(
+                        id=handled_by_id, is_staff=True)
+                    log.handled_by = admin_user
+                except User.DoesNotExist:
+                    pass
+            log.save(update_fields=["status", "note", "handled_by"])
+            messages.success(request, f"エラーID {log.id} の対応状況を更新しました。")
+
+    return redirect("admin_app:admin_error_logs")
+
+
+User = get_user_model()
+
+
+def is_admin(user):
+    return user.is_staff  # 既に定義済みならそれを使う
+
+
+@user_passes_test(is_admin)
+def admin_error_detail(request, log_id):
+    """エラーログ詳細 + 対応編集フォーム"""
+    log = get_object_or_404(ErrorLog, pk=log_id)
+
+    # スタッフ(管理者)だけを候補にする
+    admin_users = User.objects.filter(is_staff=True).order_by("username")
+
+    if request.method == "POST":
+        # フォームから値を拾う
+        status = request.POST.get("status") or "unresolved"
+        handled_by_id = request.POST.get("handled_by") or None
+        note = (request.POST.get("note") or "").strip()
+
+        log.status = status
+        log.note = note
+
+        if handled_by_id:
+            try:
+                log.handled_by = User.objects.get(pk=handled_by_id)
+            except User.DoesNotExist:
+                log.handled_by = None
+        else:
+            log.handled_by = None
+
+        log.save(update_fields=["status", "note", "handled_by"])
+
+        messages.success(request, "エラー対応情報を更新しました。")
+
+        return redirect("admin_app:admin_error_logs")
 
     context = {
-        "logs": page_obj,
-        "page_obj": page_obj,
-        "paginator": paginator,
+        "log": log,
+        "admin_users": admin_users,
     }
-    return render(request, "admin_app/admin_error_logs.html", context)
+    return render(request, "admin_app/admin_error_detail.html", context)
