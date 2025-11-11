@@ -494,8 +494,7 @@ h4 {
 
 
 #type-select:disabled {
-    background-color: #808080;
-    color: #fff;
+    background-color: #cccccc;
     cursor: not-allowed;
 }
 
