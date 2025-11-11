@@ -6,7 +6,6 @@ from . import (
     views,
     views_flag,
     views_profile,
-    views_user,
     views_auth,
     views_api,
     views_product,
@@ -30,8 +29,7 @@ urlpatterns = [
     # ============================================================
     # ユーザー関連
     # ============================================================
-    path("user/profile/", views_profile.profile_view, name="profile"),
-    path("user/edit/", views_user.user_edit, name="user_edit"),
+    path("user/edit/", views_profile.profile_view, name="user_edit"),
     path("user/delete/", views_profile.account_delete_view, name="account_delete"),
 
     # ============================================================
@@ -120,6 +118,9 @@ urlpatterns = [
     path("notifications/", views_dashboard.notification_history, name="notifications"),
     path("notifications/read/<int:pk>/",
          views_dashboard.mark_notification_read, name="notification_read"),
+    path("notifications/open/<int:pk>/",
+         views_dashboard.notification_redirect, name="notification_redirect"),
+
 
     # --- 通知ログ ---
     path("notifications/log/", views_dashboard.notification_history,

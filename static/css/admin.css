@@ -329,3 +329,84 @@ h4 {
 .admin-category-delete:hover {
     background-color: #163434;
 }
+
+/* ============================
+   モーダルアニメーション（上から落ちるタイプ）
+   ============================ */
+
+/* Bootstrapデフォルトfadeの影響を完全無効化 */
+.modal.fade .modal-dialog {
+    transform: none !important;
+    transition: none !important;
+}
+
+/* 上からストンと落ちてくる演出 */
+.modal.custom-slide .modal-dialog {
+    transform: translateY(-40px);
+    opacity: 0;
+    transition: transform 0.22s cubic-bezier(0.3, 0, 0.45, 1) !important,
+        opacity 0.22s linear !important;
+}
+
+.modal.custom-slide.show .modal-dialog {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* ============================
+   モーダルヘッダー全塗り・角丸解除
+   ============================ */
+
+.modal-content {
+    border-radius: 0 !important;
+    /* モーダル全体の角丸を無効化 */
+    overflow: hidden !important;
+    /* ヘッダー背景を完全塗り */
+}
+
+.modal-header {
+    background-color: #2E5E5E !important;
+    /* ナビと同系の濃青緑 */
+    color: #ffffff !important;
+    border-bottom: none !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    margin: 0 !important;
+    padding: 1rem 1.25rem !important;
+}
+
+.modal-header .modal-title {
+    color: #ffffff !important;
+}
+
+.modal-header .btn-close {
+    filter: invert(1) brightness(100%) !important;
+    opacity: 0.9;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+    filter: invert(1) brightness(80%) !important;
+}
+
+/* ==============================
+   ページネーション共通デザイン
+   ============================== */
+.pagination .page-link {
+    color: var(--primary) !important;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #2c7e7e !important;
+    color: #fff !important;
+    border-color: #2c7e7e !important;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #2c7e7e !important;
+    border-color: #2c7e7e !important;
+    color: #fff !important;
+}

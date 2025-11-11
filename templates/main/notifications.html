@@ -2,7 +2,6 @@
 {% block title %}買い時通知一覧{% endblock %}
 
 {% block page_content %}
-<!-- ✅ AUTH準拠タイトル構造 -->
 <div class="page-header">
   <h1 class="page-title">
     <span class="title-inner">買い時通知一覧</span>
@@ -12,64 +11,44 @@
 <div class="container py-4">
   <div class="card shadow-sm p-4">
 
-    <!-- ✅ フィルタ・ソート -->
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
       <h5 class="mb-2 mb-md-0">🔔 買い時通知一覧</h5>
-
-      <form method="get" class="d-flex gap-2 flex-wrap">
-        <select name="filter" class="form-select form-select-sm" onchange="this.form.submit()">
-          <option value="all" {% if filter_type == "all" %}selected{% endif %}>すべて</option>
-          <option value="unread" {% if filter_type == "unread" %}selected{% endif %}>未読のみ</option>
-          <option value="read" {% if filter_type == "read" %}selected{% endif %}>既読のみ</option>
-        </select>
-
-        <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
-          <option value="desc" {% if sort_order == "desc" %}selected{% endif %}>新しい順</option>
-          <option value="asc" {% if sort_order == "asc" %}selected{% endif %}>古い順</option>
-        </select>
-      </form>
     </div>
 
-    <!-- ✅ 通知一覧 -->
     {% if logs %}
       <ul class="list-group">
         {% for n in logs %}
-          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap
-                     {% if not n.is_read %}bg-light border-start border-4 border-danger{% endif %}">
+          {% if not n.is_read %}  {# 既読を除外して表示 #}
+          <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
             <div>
-              <strong>{{ n.product.product_name }}</strong>
-              {% if n.event_type == "在庫復活通知" %}
+              <a href="{% url 'main:notification_redirect' n.id %}" class="text-decoration-none fw-bold text-dark">
+                {{ n.product.product_name }}
+              </a>
+
+              {% if n.event_type == "stock_low" %}
                 <span class="badge bg-success ms-2">📦 在庫復活</span>
-              {% elif n.event_type == "在庫少通知" %}
+              {% elif n.event_type == "stock_few" %}
                 <span class="badge bg-warning text-dark ms-2">⚠ 在庫少</span>
-              {% elif n.event_type == "買い時価格ヒット" %}
+              {% elif n.event_type == "threshold_hit" %}
                 <span class="badge bg-primary ms-2">💰 買い時</span>
-              {% elif n.event_type == "過去最安値を更新" %}
+              {% elif n.event_type == "lowest_price" %}
                 <span class="badge bg-info text-dark ms-2">📉 最安値</span>
-              {% elif n.event_type == "割引率指定以上" %}
+              {% elif n.event_type == "discount_over" %}
                 <span class="badge bg-secondary ms-2">🎯 割引</span>
               {% endif %}
-              {% if not n.is_read %}
-                <span class="badge bg-danger ms-2">未読</span>
-              {% endif %}
+
               <br>
               <small class="text-muted">{{ n.message }}</small>
             </div>
-
-            <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
-              <small class="text-secondary me-2">{{ n.occurred_at|date:"Y-m-d H:i" }}</small>
-              <a href="{% url 'main:notification_read' n.id %}" class="btn btn-sm btn-outline-primary mark-read-btn">
-                ✅ 既読
-              </a>
-            </div>
           </li>
+          {% endif %}
         {% endfor %}
+
       </ul>
     {% else %}
-      <p class="text-muted text-center mt-3">該当する通知はありません。</p>
+      <p class="text-muted text-center mt-3">現在表示できる通知はありません。</p>
     {% endif %}
 
-    <!-- ✅ 戻るボタン -->
     <div class="text-center mt-4">
       <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary">商品一覧に戻る</a>
     </div>

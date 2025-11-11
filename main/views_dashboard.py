@@ -1,4 +1,7 @@
 # --- START: main/views_dashboard.py ---
+import random
+from main.models import NotificationEvent, Product
+from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -74,8 +77,9 @@ def notification_history(request):
     """通知履歴ページ"""
     user = request.user
     logs = NotificationEvent.objects.filter(user=user).order_by("-occurred_at")
+    products = Product.objects.filter(user=user)  # ✅ 全商品を取得してテンプレートに渡す
 
-    return render(request, "main/notifications.html", {"logs": logs})
+    return render(request, "main/notifications.html", {"logs": logs, "products": products})
 
 
 # ======================================================
@@ -93,6 +97,37 @@ def mark_notification_read(request, pk):
         messages.error(request, "指定された通知が存在しません。")
 
     return redirect("main:notification_history")
+
+
+@login_required
+def notification_redirect(request, pk):
+    """
+    通知クリック時：
+    - 既読フラグをTrueに変更（削除はしない）
+    - ユーザー画面では既読通知を非表示
+    - 関連商品詳細へ遷移（なければランダム遷移）
+    """
+    try:
+        notif = get_object_or_404(NotificationEvent, pk=pk, user=request.user)
+
+        # ✅ 削除ではなく既読化
+        if not notif.is_read:
+            notif.is_read = True
+            notif.save(update_fields=["is_read"])
+
+        # ✅ ユーザー側では既読を一覧に表示しないようにするため、
+        #     notifications.html 側で「{% if not n.is_read %}」条件を使う
+        product = notif.product or Product.objects.filter(
+            user=request.user).order_by("?").first()
+
+        if product:
+            return redirect("main:product_detail", pk=product.id)
+        else:
+            return redirect("main:notifications")
+
+    except NotificationEvent.DoesNotExist:
+        messages.warning(request, "指定された通知は存在しません。")
+        return redirect("main:notifications")
 
 
 @login_required

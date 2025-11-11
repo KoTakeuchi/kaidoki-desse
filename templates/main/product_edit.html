@@ -61,9 +61,9 @@
               </div>
               <div class="text-muted small" id="priorityDesc">
                 {% if form.priority.value == "高" %}
-                  6時間ごとに最新価格を取得。通知頻度が高めです。
+                  2時間ごとに最新価格と在庫数を取得。通知頻度が高めです。
                 {% else %}
-                  24時間ごとに最新価格を取得。アプリ通知・メール通知なし。
+                  24時間ごとに最新価格と在庫数を取得。アプリ通知・メール通知なし。
                 {% endif %}
               </div>
               <input type="hidden" name="priority" id="id_priority" value="{{ form.priority.value }}">

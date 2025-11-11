@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (desc) {
             desc.textContent = isHigh
-                ? "24時間ごとに最新価格を取得。アプリ通知・メール通知なし。"
-                : "72時間ごとに最新価格を取得。通知頻度が抑えられます。";
+                ? "2時間ごとに最新価格と在庫数を取得。アプリ通知・メール通知なし。"
+                : "24時間ごとに最新価格と在庫数を取得。通知頻度が抑えられます。";
         }
 
         console.log(`🔁 優先度変更: ${hidden.value}`);

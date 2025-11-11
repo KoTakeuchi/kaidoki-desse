@@ -1,43 +1,122 @@
 {% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
-{% block title %}Kaidoki Desse 管理 | エラーログ一覧{% endblock %}
+{% block title %}Kaidoki Desse 管理 | エラー管理{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid py-4">
-  <h3 class="fw-bold text-dark mb-4">⚠ エラーログ一覧</h3>
+  <h2 class="fw-bold mb-4 text-dark">エラー管理</h2>
 
+  <!-- 🔍 検索フォーム -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-4">
+      <label class="form-label fw-semibold text-secondary">キーワード</label>
+      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-semibold text-secondary">開始日</label>
+      <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label fw-semibold text-secondary">終了日</label>
+      <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+    </div>
+    <div class="col-md-2 text-end">
+      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+    </div>
+  </form>
+
+  <!-- ======================== -->
+  <!-- 📋 エラーログ一覧 -->
+  <!-- ======================== -->
   {% if logs %}
   <div class="table-responsive">
-    <table class="table align-middle mb-0 border-top" style="border-color:#b4e4e4;">
+    <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead class="table-light">
         <tr class="text-secondary">
-          <th>ID</th>
-          <th>ユーザー</th>
-          <th>発生箇所</th>
-          <th>エラー種類</th>
-          <th>内容</th>
-          <th>日時</th>
+          <th style="width:5%;">ID</th>
+          <th style="width:10%;">ユーザー</th>
+          <th style="width:15%;">発生箇所</th>
+          <th style="width:15%;">エラー種類</th>
+          <th style="width:35%;">内容</th>
+          <th style="width:15%;">日時</th>
+          <th style="width:5%;">操作</th>
         </tr>
       </thead>
       <tbody>
         {% for log in logs %}
         <tr>
           <td>{{ log.id }}</td>
-          <td>{{ log.user|default:"-" }}</td>
-          <td>{{ log.source }}</td>
-          <td>{{ log.type_name }}</td>
-          <td>
-            <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ log.err }}</pre>
+          <td>{{ log.user.username|default:"-" }}</td>
+          <td>{{ log.source|default:"-" }}</td>
+          <td>{{ log.type_name|default:"-" }}</td>
+          <td class="text-truncate" style="max-width:300px;">
+            {{ log.message|default:"-" }}
           </td>
           <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+          <td>
+            <button class="btn btn-sm text-white rounded-0"
+                    style="background-color:#3CA9A9;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#errorDetailModal{{ log.id }}">
+              詳細
+            </button>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- ======================== -->
+  <!-- 🪟 詳細モーダル -->
+  <!-- ======================== -->
+  {% for log in logs %}
+  <div class="modal fade" id="errorDetailModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 rounded-0">
+        <div class="modal-header" style="background-color:#2E5E5E;">
+          <h5 class="modal-title fw-bold text-white">エラー詳細</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <table class="table table-borderless mb-0">
+            <tr>
+              <th class="text-secondary" style="width:25%;">ID</th>
+              <td>{{ log.id }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">ユーザー</th>
+              <td>{{ log.user.username|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">発生箇所</th>
+              <td>{{ log.source|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">エラー種類</th>
+              <td>{{ log.type_name|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">内容</th>
+              <td><pre class="mb-0" style="white-space: pre-wrap;">{{ log.message|default:"-" }}</pre></td>
+            </tr>
+            <tr>
+              <th class="text-secondary">発生日時</th>
+              <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+    {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
   {% else %}
-  <p class="text-muted mt-3">エラーログはまだありません。</p>
+  <p class="text-muted mt-3">エラーログはまだ登録されていません。</p>
   {% endif %}
 </div>
 {% endblock %}

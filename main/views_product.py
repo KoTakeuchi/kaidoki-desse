@@ -385,26 +385,31 @@ def product_create(request):
 
                 if flag_type == "percent_off" and flag_value:
                     try:
-                        product.flag_value = float(flag_value)
-                        # ✅ 割引後価格を初期計算してthreshold_priceに保存
+                        product.flag_value = decimal.Decimal(flag_value).quantize(
+                            decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+                        # 割引後価格の計算
                         if product.initial_price:
-                            discounted_price = int(
-                                product.initial_price *
-                                (100 - product.flag_value) / 100
-                            )
+                            discounted_price = product.initial_price * \
+                                (1 - product.flag_value / 100)
                             product.threshold_price = discounted_price
                     except ValueError:
                         product.flag_value = None
 
                 elif flag_type == "buy_price" and flag_value:
                     try:
-                        product.flag_value = int(flag_value)
-                        product.threshold_price = int(flag_value)
-                    except ValueError:
-                        product.flag_value = None
+                        # 入力された値をそのまま買い時価格として設定
+                        product.threshold_price = decimal.Decimal(flag_value).quantize(
+                            decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP)
 
-                else:
-                    product.flag_value = None
+                        # 通知条件に買い時価格を設定
+                        # flag_value は不要にする
+                        product.flag_type = "buy_price"  # 通知条件タイプを「買い時価格」に設定
+                        product.flag_value = None  # これ以降は flag_value を使用しない
+
+                    except ValueError:
+                        # エラーハンドリング：値が不正な場合は買い時価格を None に設定
+                        product.threshold_price = None
+                        product.flag_value = None
 
                 # --- 保存 ---
                 product.save()

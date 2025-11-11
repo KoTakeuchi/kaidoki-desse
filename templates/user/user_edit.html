@@ -1,8 +1,8 @@
 {% extends "layout-user.html" %}
+{% load static %}
 {% block title %}ユーザー情報編集{% endblock %}
 
 {% block page_content %}
-<!-- ✅ AUTH準拠タイトル構造 -->
 <div class="page-header">
   <h1 class="page-title">
     <span class="title-inner">ユーザー情報編集</span>
@@ -17,6 +17,8 @@
 
     <form method="post" action="{% url 'main:user_edit' %}">
       {% csrf_token %}
+
+      <!-- ユーザー名 -->
       <div class="mb-3">
         <label for="id_username" class="form-label fw-semibold">ユーザー名</label>
         {{ form.username }}
@@ -25,6 +27,7 @@
         {% endif %}
       </div>
 
+      <!-- メールアドレス -->
       <div class="mb-3">
         <label for="id_email" class="form-label fw-semibold">メールアドレス</label>
         {{ form.email }}
@@ -34,6 +37,28 @@
         <div class="form-text text-muted">
           通知メールはこのアドレス宛に送信されます。
         </div>
+      </div>
+
+      <!-- パスワード関連 -->
+      <hr>
+      <h6 class="fw-semibold mt-3">パスワード変更</h6>
+
+      <div class="mb-3 position-relative">
+        <label for="id_current_password" class="form-label">現在のパスワード</label>
+        {{ form.current_password }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_current_password"></i>
+      </div>
+
+      <div class="mb-3 position-relative">
+        <label for="id_new_password1" class="form-label">新しいパスワード</label>
+        {{ form.new_password1 }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_new_password1"></i>
+      </div>
+
+      <div class="mb-4 position-relative">
+        <label for="id_new_password2" class="form-label">新しいパスワード（確認用）</label>
+        {{ form.new_password2 }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_new_password2"></i>
       </div>
 
       <div class="text-center mt-4">

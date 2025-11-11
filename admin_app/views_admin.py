@@ -10,11 +10,12 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from django.contrib import messages
 from datetime import timedelta
-
+from main.utils.pagination_helper import paginate_queryset
 
 # =============================
 #  管理者判定
 # =============================
+
 
 def is_admin(user):
     return user.is_staff or user.is_superuser
@@ -49,9 +50,27 @@ def admin_dashboard(request):
 
 @user_passes_test(is_admin)
 def admin_user_list(request):
-    """全ユーザー一覧"""
+    """全ユーザー一覧（検索＋ページネーション）"""
+    query = request.GET.get("q", "").strip()
     users = User.objects.annotate(product_count=Count("products"))
-    return render(request, "admin_app/admin_user_list.html", {"users": users})
+
+    if query:
+        users = users.filter(
+            Q(username__icontains=query) |
+            Q(email__icontains=query)
+        )
+
+    # ✅ ページネーション適用
+    page_obj, paginator = paginate_queryset(request, users, per_page=20)
+
+    context = {
+        "users": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "query": query,
+    }
+
+    return render(request, "admin_app/admin_user_list.html", context)
 
 
 # =============================
@@ -60,14 +79,35 @@ def admin_user_list(request):
 
 @user_passes_test(is_admin)
 def admin_product_list(request):
-    """全ユーザーの商品一覧"""
+    """全ユーザーの商品一覧 + キーワード検索 + ページネーション"""
+    query = request.GET.get("q", "").strip()
+
     products = (
         Product.objects
         .select_related("user")
         .prefetch_related("categories")
         .order_by("-created_at")
     )
-    return render(request, "admin_app/admin_product_list.html", {"products": products})
+
+    # 🔍 検索キーワードが指定されている場合
+    if query:
+        products = products.filter(
+            Q(product_name__icontains=query)
+            | Q(user__username__icontains=query)
+            | Q(categories__category_name__icontains=query)
+        ).distinct()
+
+    # ✅ ページネーション適用
+    page_obj, paginator = paginate_queryset(request, products, per_page=20)
+
+    context = {
+        "products": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "query": query,
+    }
+
+    return render(request, "admin_app/admin_product_list.html", context)
 
 
 # =============================
@@ -137,30 +177,41 @@ def admin_category(request):
 
 @user_passes_test(is_admin)
 def admin_notification_list(request):
-    query = request.GET.get("q", "")
-    start_date = request.GET.get("start_date", "")
-    end_date = request.GET.get("end_date", "")
+    """通知ログ一覧 + キーワード・日付検索 + ページネーション"""
+    query = request.GET.get("q", "").strip()
+    start_date = request.GET.get("start_date", "").strip()
+    end_date = request.GET.get("end_date", "").strip()
 
     logs = NotificationEvent.objects.select_related(
         "user", "product").order_by("-occurred_at")
 
+    # 🔍 キーワード検索
     if query:
         logs = logs.filter(
             Q(user__username__icontains=query)
             | Q(product__product_name__icontains=query)
             | Q(message__icontains=query)
         )
-    if start_date:
-        logs = logs.filter(occurred_at__gte=start_date)
-    if end_date:
-        logs = logs.filter(occurred_at__lte=end_date)
 
-    return render(request, "admin_app/admin_notifications.html", {
-        "logs": logs,
+    # 📅 日付フィルタ（開始・終了）
+    if start_date:
+        logs = logs.filter(occurred_at__date__gte=start_date)
+    if end_date:
+        logs = logs.filter(occurred_at__date__lte=end_date)
+
+    # ✅ ページネーション適用
+    page_obj, paginator = paginate_queryset(request, logs, per_page=20)
+
+    context = {
+        "logs": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
         "query": query,
         "start_date": start_date,
         "end_date": end_date,
-    })
+    }
+
+    return render(request, "admin_app/admin_notifications.html", context)
 
 
 @user_passes_test(is_admin)
@@ -178,4 +229,13 @@ def admin_notification_detail(request, log_id):
 def admin_error_logs(request):
     """管理者用エラーログ一覧"""
     logs = ErrorLog.objects.all().order_by("-created_at")
-    return render(request, "admin_app/admin_error_logs.html", {"logs": logs})
+
+    # ✅ 共通関数でページネーション
+    page_obj, paginator = paginate_queryset(request, logs, per_page=20)
+
+    context = {
+        "logs": page_obj,
+        "page_obj": page_obj,
+        "paginator": paginator,
+    }
+    return render(request, "admin_app/admin_error_logs.html", context)
