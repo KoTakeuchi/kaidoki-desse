@@ -101,7 +101,7 @@ def process_daily_notifications():
         # --- 通知イベント抽出 ---
         stock_events = NotificationEvent.objects.filter(
             user=user,
-            event_type__in=["restock", "stock_low"],
+            event_type__in=["restock", "stock_restore"],
             sent_flag=False,
         )
 

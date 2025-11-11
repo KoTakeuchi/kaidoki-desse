@@ -31,7 +31,7 @@ def run():
 
     # ✅ 各イベントタイプを英語キーで定義（モデルに合わせる）
     event_map = {
-        "stock_low": "在庫復活通知",
+        "stock_restore": "在庫復活通知",
         "stock_few": "在庫少通知",
         "threshold_hit": "買い時価格を下回る価格検知",
         "lowest_price": "過去最安値を更新",

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -80,3 +81,34 @@ class ErrorLog(models.Model):
         verbose_name = "管理用エラーログ"
         verbose_name_plural = "管理用エラーログ"
         ordering = ["-created_at"]
+
+# I:\school\kaidoki-desse\admin_app\models.py
+
+
+class NotificationLog(models.Model):
+    METHOD_CHOICES = [
+        ('email', 'メール'),
+        ('app', 'アプリ'),
+    ]
+
+    TYPE_CHOICES = [
+        ('mail_buy_timing', '買い時お知らせ'),
+        ('mail_stock', '在庫お知らせ'),
+        ('threshold_hit', '買い時価格'),
+        ('discount_over', '割引率'),
+        ('lowest_price', '最安値'),
+        ('stock_few', '在庫少'),
+        ('stock_restore', '在庫復活'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        'main.Product', on_delete=models.CASCADE, null=True, blank=True)
+    method = models.CharField(max_length=20, choices=METHOD_CHOICES)
+    type = models.CharField(max_length=30, choices=TYPE_CHOICES)
+    message = models.TextField(blank=True, null=True)
+    is_read = models.BooleanField(default=False)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.get_method_display()}] {self.get_type_display()} ({self.user.username})"

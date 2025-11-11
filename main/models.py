@@ -1,4 +1,5 @@
 # 実行ディレクトリ: I:\school\kaidoki-desse\main\models.py
+from django.contrib.auth.signals import user_logged_in
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth import get_user_model
@@ -74,6 +75,26 @@ def create_default_category(sender, instance, created, **kwargs):
     if created:
         Category.objects.get_or_create_unclassified(instance)
 
+# ======================================================
+# 論理削除対応マネージャ
+# ======================================================
+
+
+class ProductManager(models.Manager):
+    """論理削除対応マネージャ"""
+
+    def get_queryset(self):
+        # デフォルトでは削除済みを除外
+        return super().get_queryset().filter(is_deleted=False)
+
+    def all_with_deleted(self):
+        # 削除済みも含めて取得
+        return super().get_queryset()
+
+    def deleted_only(self):
+        # 削除済みのみ取得
+        return super().get_queryset().filter(is_deleted=True)
+
 
 # ======================================================
 # 商品
@@ -86,12 +107,13 @@ class Product(models.Model):
 
     FLAG_TYPE_CHOICES = [
         ("buy_price", "買い時価格"),
-        ("percent_off", "割引後価格"),
+        ("percent_off", "割引率"),
         ("lowest_price", "最安値"),
     ]
 
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="products")
+        User, on_delete=models.PROTECT, related_name="products"
+    )
     product_name = models.CharField("商品名", max_length=255)
     shop_name = models.CharField(
         "ショップ名", max_length=255, blank=True, null=True)
@@ -100,30 +122,43 @@ class Product(models.Model):
 
     # 価格情報
     initial_price = models.DecimalField(
-        "登録時価格", max_digits=10, decimal_places=0, null=True, blank=True, validators=[validate_positive]
+        "登録時価格",
+        max_digits=10,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        validators=[validate_positive],
     )
     latest_price = models.DecimalField(
-        "最新価格", max_digits=10, decimal_places=0, null=True, blank=True, validators=[validate_positive]
+        "最新価格",
+        max_digits=10,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        validators=[validate_positive],
     )
     threshold_price = models.DecimalField(
-        "買い時価格", max_digits=10, decimal_places=0, null=True, blank=True, validators=[validate_positive]
+        "買い時価格",
+        max_digits=10,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        validators=[validate_positive],
     )
 
-    # ✅ 新規追加：買い時条件タイプ
+    # 通知条件関連
     flag_type = models.CharField(
         "買い時条件タイプ",
         max_length=20,
         choices=FLAG_TYPE_CHOICES,
         blank=True,
         null=True,
-        help_text="買い時価格／割引後価格／最安値のいずれかを指定",
+        help_text="買い時価格／割引率／最安値のいずれかを指定",
     )
-
-    # Product モデル内に追加
     flag_value = models.DecimalField(
         "通知条件値",
-        max_digits=10,       # ← 最大10桁（価格にも対応）
-        decimal_places=0,    # ← 小数なし（整数として保存）
+        max_digits=10,
+        decimal_places=0,
         null=True,
         blank=True,
         help_text="買い時価格・割引率・最安値の基準値（flag_typeに応じて解釈）",
@@ -134,14 +169,35 @@ class Product(models.Model):
     latest_stock_count = models.IntegerField("最新在庫数", null=True, blank=True)
     flag_reached = models.BooleanField("買い時達成", default=False)
     priority = models.CharField(
-        "優先度", max_length=10, choices=PRIORITY_CHOICES, default="普通")
+        "優先度",
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="普通",
+    )
 
     # カテゴリ（共通＋独自）
     categories = models.ManyToManyField(
-        Category, related_name="products", blank=True)
+        Category, related_name="products", blank=True
+    )
 
+    # ✅ 共通カテゴリを追加（管理用マスタ）
+    common_categories = models.ManyToManyField(
+        "admin_app.CommonCategory",
+        related_name="products",
+        blank=True,
+        verbose_name="共通カテゴリ",
+        help_text="共通カテゴリマスタとの紐付け",
+    )
+
+    # 作成・更新
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)
+
+    # ✅ 新規追加：論理削除
+    is_deleted = models.BooleanField("削除フラグ", default=False)
+
+    # ✅ カスタムマネージャ適用
+    objects = ProductManager()
 
     class Meta:
         verbose_name = "商品"
@@ -149,11 +205,21 @@ class Product(models.Model):
         ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "product_url"], name="uq_user_product_url")
+                fields=["user", "product_url"], name="uq_user_product_url"
+            )
         ]
 
     def __str__(self):
         return self.product_name
+
+    # ======================================================
+    # 論理削除メソッド
+    # ======================================================
+
+    def delete(self, using=None, keep_parents=False):
+        """論理削除：物理削除せず is_deleted=True にする"""
+        self.is_deleted = True
+        self.save(update_fields=["is_deleted"])
 
 
 # ======================================================
@@ -180,11 +246,21 @@ class PriceHistory(models.Model):
 # 通知イベント
 # ======================================================
 class NotificationEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ("stock_few", "在庫少通知"),
+        ("stock_restore", "在庫復活通知"),
+        ("threshold_hit", "買い時価格検知"),
+        ("discount_over", "指定割引率下回り"),
+        ("lowest_price", "過去最安値更新"),
+    ]
+
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="notification_events")
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="notification_events")
-    event_type = models.CharField("イベント種別", max_length=50)
+    event_type = models.CharField(
+        "イベント種別", max_length=50, choices=EVENT_TYPE_CHOICES
+    )
     message = models.TextField("通知内容", blank=True)
     occurred_at = models.DateTimeField("発生日時", auto_now_add=True)
     is_read = models.BooleanField("既読", default=False)
@@ -239,3 +315,29 @@ class UserNotificationSetting(models.Model):
 
     def __str__(self):
         return f"{self.user.username} 通知設定"
+
+# ======================================================
+# 管理者　ユーザー画面用
+# ======================================================
+
+
+User = get_user_model()
+
+
+class UserProfile(models.Model):
+    """ユーザーログイン情報（ログイン回数など）"""
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="profile")
+    login_count = models.PositiveIntegerField("ログイン回数", default=0)
+
+    def __str__(self):
+        return f"{self.user.username} のプロフィール"
+
+# ✅ ログイン時にカウントアップ
+
+
+@receiver(user_logged_in)
+def increment_login_count(sender, user, request, **kwargs):
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile.login_count += 1
+    profile.save(update_fields=["login_count"])

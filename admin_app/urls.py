@@ -20,5 +20,9 @@ urlpatterns = [
          views_admin.update_error_status, name="update_error_status"),
     path("error_logs/<int:log_id>/",
          views_admin.admin_error_detail, name="admin_error_detail"),
+]
 
+urlpatterns += [
+    path("users/detail/<int:user_id>/",
+         views_admin.admin_user_detail_modal, name="admin_user_detail_modal"),
 ]

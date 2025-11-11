@@ -8,8 +8,8 @@
   <h2 class="fw-bold mb-4 text-dark">エラー管理</h2>
 
   <!-- 🔍 検索フォーム -->
-  <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-3">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
+    <div class="flex-fill" style="min-width:240px;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
     </div>
@@ -44,8 +44,10 @@
       <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
     </div>
 
-    <div class="col-md-1 text-end">
-      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+    <!-- 検索／クリア -->
+    <div class="d-flex gap-2 align-items-end">
+      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_error_logs' %}" class="btn btn-outline-secondary px-4">クリア</a>
     </div>
   </form>
   <!-- ▼ 表示件数切替 -->
@@ -70,11 +72,11 @@
           <th style="width:5%;">ID</th>
           <th style="width:8%;">ステータス</th>
           <th style="width:8%;">対応者</th>
-          <th style="width:10%;">ユーザー</th>
-          <th style="width:10%;">発生箇所</th>
-          <th style="width:15%;">エラー種類</th>
+          <th style="width:10%;">ユーザー名</th>
+          <th style="width:12%;">エラー種別</th>
+          <th style="width:13%;">発生箇所</th>
           <th style="width:29%;">内容</th>
-          <th style="width:10%;">日時</th>
+          <th style="width:10%;">発生日時</th>
           <th style="width:5%;">操作</th>
         </tr>
       </thead>
@@ -84,17 +86,17 @@
             <td>{{ log.id }}</td>
             <td>
               {% if log.status == "unresolved" %}
-                <span class="badge" style="background-color:#c35656;">未対応</span>
+                未対応
               {% elif log.status == "in_progress" %}
-                <span class="badge" style="background-color:#F7CB6E; color:#333;">対応中</span>
+                対応中
               {% elif log.status == "resolved" %}
-                <span class="badge" style="background-color:#3CA9A9;">対応済み</span>
+                対応済み
               {% endif %}
             </td>
             <td>{{ log.handled_by.username|default:"-" }}</td>
             <td>{{ log.user.username|default:"-" }}</td>
-            <td>{{ log.source|default:"-" }}</td>
             <td>{{ log.type_name|default:"-" }}</td>
+            <td>{{ log.source|default:"-" }}</td>
             <td class="text-truncate" style="max-width:300px;">
               {{ log.message|default:"-" }}
             </td>

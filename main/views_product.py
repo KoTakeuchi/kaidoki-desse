@@ -589,23 +589,32 @@ def product_edit(request, pk):
         return redirect("main:product_list")
 
 
+# --- 修正後: main/views_product.py ---
 @login_required
 def product_delete(request, pk):
-    """商品削除"""
+    """商品削除（論理削除対応）"""
     try:
         product = get_object_or_404(Product, pk=pk, user=request.user)
 
         if request.method == "POST":
-            product.delete()
-            messages.success(request, "商品を削除しました。")
+            # ✅ 論理削除に変更
+            product.is_deleted = True
+            product.save(update_fields=["is_deleted"])
+
+            messages.success(request, "商品を削除しました（論理削除）。")
             return redirect("main:product_list")
 
         return render(request, "main/product_confirm_delete.html", {
             "product": product
         })
+
     except Exception as e:
-        log_error(user=request.user, type_name=type(
-            e).__name__, source="product_delete", err=e)
+        log_error(
+            user=request.user,
+            type_name=type(e).__name__,
+            source="product_delete",
+            err=e,
+        )
         messages.error(request, "商品削除中にエラーが発生しました。")
         return redirect("main:product_list")
 # --- END: main/views_product.py ---

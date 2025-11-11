@@ -1,24 +1,73 @@
 {% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
-{% block title %}Kaidoki Desse 管理 | 商品一覧{% endblock %}
+{% block title %}Kaidoki Desse 管理 | 商品管理{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid py-4">
-  <h2 class="fw-bold mb-4 text-dark">商品管理</h2>
+  <h2 class="fw-bold mb-4 text-dark mt-3">商品管理</h2>
 
   <!-- 🔍 検索フォーム -->
-  <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-5">
-      <label class="form-label fw-semibold text-secondary">キーワード検索</label>
-      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="商品名・ユーザー名・カテゴリ">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
+
+    <!-- キーワード -->
+    <div class="flex-fill" style="min-width:240px;">
+      <label class="form-label fw-semibold text-secondary">キーワード</label>
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="商品名・ユーザー名・カテゴリ">
     </div>
-    <div class="col-md-2">
-      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+
+    <!-- 状態 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">状態</label>
+      <select name="is_deleted" class="form-select">
+        <option value="">全て</option>
+        <option value="false" {% if request.GET.is_deleted == "false" %}selected{% endif %}>存続</option>
+        <option value="true" {% if request.GET.is_deleted == "true" %}selected{% endif %}>削除済</option>
+      </select>
+    </div>
+
+    <!-- 通知条件 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">通知条件</label>
+      <select name="flag_type" class="form-select">
+        <option value="">全て</option>
+        <option value="buy_price" {% if request.GET.flag_type == "buy_price" %}selected{% endif %}>買い時価格</option>
+        <option value="percent_off" {% if request.GET.flag_type == "percent_off" %}selected{% endif %}>割引率</option>
+        <option value="lowest_price" {% if request.GET.flag_type == "lowest_price" %}selected{% endif %}>最安値</option>
+      </select>
+    </div>
+
+    <!-- 優先度 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">優先度</label>
+      <select name="priority" class="form-select">
+        <option value="">全て</option>
+        <option value="高" {% if request.GET.priority == "高" %}selected{% endif %}>高</option>
+        <option value="普通" {% if request.GET.priority == "普通" %}selected{% endif %}>普通</option>
+      </select>
+    </div>
+
+    <!-- 開始日 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">開始日（登録日）</label>
+      <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
+    </div>
+
+    <!-- 終了日 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">終了日</label>
+      <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
+    </div>
+
+    <!-- 検索・クリア -->
+    <div class="d-flex gap-2 align-items-end">
+      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_product_list' %}" class="btn btn-outline-secondary px-4">クリア</a>
     </div>
   </form>
-
-  <!-- ▼ 表示件数切替 -->
+  <!-- ========================== -->
+  <!-- 📄 表示件数切替フォーム -->
+  <!-- ========================== -->
   <div class="text-end mb-2">
     <form method="get" class="d-inline">
       <input type="hidden" name="q" value="{{ query }}">
@@ -30,49 +79,91 @@
     </form>
   </div>
 
+
   <!-- 📋 商品一覧 -->
   {% if products %}
   <div class="table-responsive">
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
-      <thead class="table-light">
-        <tr class="text-secondary">
-          <th>ID</th>
-          <th>商品名</th>
-          <th>ユーザー</th>
-          <th>カテゴリ</th>
-          <th>価格</th>
-          <th>登録日</th>
-          <th>更新日</th>
-          <th>操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in products %}
-        <tr>
-          <td>{{ p.id }}</td>
-          <td class="text-truncate" style="max-width:220px;">{{ p.product_name }}</td>
-          <td>{{ p.user.username }}</td>
-          <td>{{ p.category.category_name|default:"-" }}</td>
-          <td>{{ p.current_price|default:"-" }} 円</td>
-          <td>{{ p.created_at|date:"Y/m/d" }}</td>
-          <td>{{ p.updated_at|date:"Y/m/d" }}</td>
-          <td>
-            <button class="btn btn-sm text-white rounded-0"
-                    style="background-color:#3CA9A9;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#productDetailModal{{ p.id }}">
-              詳細
-            </button>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+      <thead>
+          <tr class="text-secondary">
+            <th style="width:4%;">ID</th>
+            <th style="width:9%;">ユーザー名</th>
+            <th style="width:5%;">状態</th>
+            <th style="width:7%;">通知条件</th>
+            <th style="width:5%;">優先度</th>
+            <th style="width:18%;">カテゴリ名</th>
+            <th style="width:32%;">商品名</th>
+            <th style="width:10%;">登録日</th>
+            <th style="width:5%;">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.user.username }}</td>
+            <td>
+              {% if p.is_deleted %}
+                削除済
+              {% else %}
+                存続
+              {% endif %}
+            </td>
+            <!-- ✅ 通知条件（タグのみ。数値削除） -->
+            <td>
+              {% if p.flag_type %}
+                {% if p.flag_type == "buy_price" %}
+                  買い時価格
+                {% elif p.flag_type == "percent_off" %}
+                  割引率
+                {% elif p.flag_type == "lowest_price" %}
+                  最安値
+                {% endif %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <!-- ✅ 優先度タグ（白黒反転） -->
+            <td>
+              {% if p.priority == "高" %}
+                高
+              {% else %}
+                普通
+              {% endif %}
+            </td>
+
+            <!-- ✅ カテゴリから [testuser] [共通] を除外 -->
+            <td>
+              {% if p.categories.all %}
+                {% with p.categories.all|join:" / " as category_list %}
+                  {{ category_list|cut:"[testuser]"|cut:"[共通]" }}
+                {% endwith %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+
+            <td class="text-truncate" style="max-width:220px;">{{ p.product_name }}</td>
+            <td>{{ p.created_at|date:"Y/m/d H:i" }}</td>
+
+            <!-- ✅ 詳細モーダル呼び出し -->
+            <td>
+              <button class="btn btn-sm text-white rounded-0"
+                      style="background-color:#3CA9A9;"
+                      data-bs-toggle="modal"
+                      data-bs-target="#productDetailModal{{ p.id }}">
+                詳細
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
   </div>
 
-  <!-- ▼ モーダルをループ外にまとめて出力 -->
+  <!-- ▼ モーダル -->
   {% for p in products %}
-  <div class="modal fade custom-slide" id="productDetailModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="productDetailModal{{ p.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content border-0 rounded-0">
         <div class="modal-header" style="background-color:#b4e4e4;">
@@ -83,10 +174,44 @@
           <table class="table table-borderless mb-0">
             <tr><th class="text-secondary" style="width:25%;">商品名</th><td>{{ p.product_name }}</td></tr>
             <tr><th class="text-secondary">ユーザー</th><td>{{ p.user.username }}</td></tr>
-            <tr><th class="text-secondary">カテゴリ</th><td>{{ p.category.category_name|default:"-" }}</td></tr>
-            <tr><th class="text-secondary">現在価格</th><td>{{ p.current_price|default:"-" }} 円</td></tr>
+              <td>
+                <tr>
+                  <th class="text-secondary">カテゴリ</th>
+                  <td>
+                    {% if p.categories.exists %}
+                      {% for c in p.categories.all %}
+                        {{ c.category_name|cut:"[testuser]"|cut:"[共通]" }}{% if not forloop.last %} / {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      -
+                    {% endif %}
+                  </td>
+                </tr>
+              </td>
+            </tr>
+            <tr><th class="text-secondary">通知条件</th>
+              <td>
+                {% if p.flag_type == "buy_price" %}
+                  <span class="badge text-white rounded-0 px-2 py-1" style="background-color:#9c566d;">買い時価格</span>
+                {% elif p.flag_type == "percent_off" %}
+                  <span class="badge text-white rounded-0 px-2 py-1" style="background-color:#9c8e56;">割引率</span>
+                {% elif p.flag_type == "lowest_price" %}
+                  <span class="badge text-white rounded-0 px-2 py-1" style="background-color:#56669c;">最安値</span>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+            <tr><th class="text-secondary">優先度</th>
+              <td>
+                {% if p.priority == "高" %}
+                  <span class="badge bg-dark text-white rounded-0 px-2 py-1">高</span>
+                {% else %}
+                  <span class="badge bg-white text-dark border border-dark rounded-0 px-2 py-1">普通</span>
+                {% endif %}
+              </td>
+            </tr>
             <tr><th class="text-secondary">登録日</th><td>{{ p.created_at|date:"Y/m/d H:i" }}</td></tr>
-            <tr><th class="text-secondary">最終更新</th><td>{{ p.updated_at|date:"Y/m/d H:i" }}</td></tr>
             <tr><th class="text-secondary">商品URL</th>
               <td>
                 {% if p.product_url %}
@@ -96,17 +221,17 @@
                 {% endif %}
               </td>
             </tr>
-            <tr><th class="text-secondary">メモ</th><td>{{ p.memo|default:"-" }}</td></tr>
           </table>
         </div>
-        <div class="modal-footer bg-light">
+        <div class="modal-footer bg-light justify-content-center">
           <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
         </div>
       </div>
     </div>
   </div>
   {% endfor %}
-    {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
+
+  {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
   {% else %}
   <p class="text-muted mt-3">商品データはまだ登録されていません。</p>
   {% endif %}

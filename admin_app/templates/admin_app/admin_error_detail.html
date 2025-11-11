@@ -12,11 +12,11 @@
     <div class="card-body">
       <div class="row mb-2">
         <div class="col-md-6"><strong>ID</strong><br>{{ log.id }}</div>
-        <div class="col-md-6"><strong>ユーザー</strong><br>{{ log.user.username|default:"-" }}</div>
+        <div class="col-md-6"><strong>ユーザー名</strong><br>{{ log.user.username|default:"-" }}</div>
       </div>
       <div class="row mb-2">
         <div class="col-md-6"><strong>発生箇所</strong><br>{{ log.source|default:"-" }}</div>
-        <div class="col-md-6"><strong>種類</strong><br>{{ log.type_name|default:"-" }}</div>
+        <div class="col-md-6"><strong>エラー種別</strong><br>{{ log.type_name|default:"-" }}</div>
       </div>
       <div class="mb-3">
         <strong>内容</strong><br>

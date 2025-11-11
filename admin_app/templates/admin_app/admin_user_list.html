@@ -7,22 +7,68 @@
 <div class="container-fluid py-4">
   <h2 class="fw-bold mb-4 text-dark">ユーザー管理</h2>
 
-  <!-- 🔍 検索フォーム -->
-  <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-6">
-      <label class="form-label fw-semibold text-secondary">キーワード検索</label>
-      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・メールアドレス">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
+    <!-- キーワード -->
+    <div class="flex-fill" style="min-width:200px;">
+      <label class="form-label fw-semibold text-secondary">キーワード</label>
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="ユーザー名・メール">
     </div>
-    <div class="col-md-2">
-      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+
+    <!-- 権限 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">権限</label>
+      <select name="role" class="form-select">
+        <option value="">全て</option>
+        <option value="staff" {% if request.GET.role == "staff" %}selected{% endif %}>管理者</option>
+        <option value="user" {% if request.GET.role == "user" %}selected{% endif %}>一般</option>
+      </select>
+    </div>
+
+    <!-- 状態 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">状態</label>
+      <select name="is_active" class="form-select">
+        <option value="">全て</option>
+        <option value="true" {% if request.GET.is_active == "true" %}selected{% endif %}>有効</option>
+        <option value="false" {% if request.GET.is_active == "false" %}selected{% endif %}>無効</option>
+      </select>
+    </div>
+
+    <!-- 基準項目 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">日付基準</label>
+      <select name="date_field" class="form-select">
+        <option value="date_joined" {% if request.GET.date_field == "date_joined" %}selected{% endif %}>登録日</option>
+        <option value="last_login" {% if request.GET.date_field == "last_login" %}selected{% endif %}>最終ログイン</option>
+      </select>
+    </div>
+
+    <!-- 開始日 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">開始日</label>
+      <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
+    </div>
+
+    <!-- 終了日 -->
+    <div>
+      <label class="form-label fw-semibold text-secondary">終了日</label>
+      <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
+    </div>
+
+    <!-- 検索／クリア -->
+    <div class="d-flex gap-2 align-items-end">
+      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_user_list' %}" class="btn btn-outline-secondary px-4">クリア</a>
     </div>
   </form>
+
   <!-- ▼ 表示件数切替 -->
   <div class="text-end mb-2">
     <form method="get" class="d-inline">
       <input type="hidden" name="q" value="{{ query }}">
       <select name="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline">
-        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件</option>
+        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件
+        </option>
         <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50件</option>
         <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100件</option>
       </select>
@@ -34,47 +80,56 @@
   {% if users %}
   <div class="table-responsive">
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
-      <thead class="table-light">
-        <tr class="text-secondary">
-          <th>ID</th>
-          <th>ユーザー名</th>
-          <th>メール</th>
-          <th>商品数</th>
-          <th>登録日</th>
-          <th>最終ログイン</th>
-          <th>権限</th>
-          <th>操作</th>
+      <thead>
+        <tr>
+          <th style="width:4%;">ID</th>
+          <th style="width:6%;">権限</th>
+          <th style="width:6%;">ステータス</th>
+          <th style="width:12%;">ユーザー名</th>
+          <th style="width:12%;">メールアドレス</th>
+          <th style="width:4%;">商品数</th>
+          <th style="width:6%;">ログイン回数</th>
+          <th style="width:10%;">登録日時</th>
+          <th style="width:10%;">最終ログイン</th>
+          <th style="width:5%;">操作</th>
         </tr>
       </thead>
       <tbody>
         {% for u in users %}
         <tr>
           <td>{{ u.id }}</td>
-          <td>{{ u.username }}</td>
-          <td>{{ u.email|default:"-" }}</td>
-          <td>{{ u.product_count|default:0 }}</td>
-          <td>{{ u.date_joined|date:"Y/m/d" }}</td>
-          <td>{{ u.last_login|date:"Y/m/d H:i"|default:"-" }}</td>
           <td>
-            {% if u.is_superuser %}
-              <span class="badge bg-dark rounded-0 text-white">管理者</span>
-            {% elif u.is_staff %}
-              <span class="badge bg-secondary rounded-0 text-white">スタッフ</span>
+            {% if u.is_staff %}
+            管理者
             {% else %}
-              <span class="badge border border-dark text-dark rounded-0 bg-white">一般</span>
+            一般
             {% endif %}
           </td>
+          <!-- 状態 -->
           <td>
-            <button class="btn btn-sm text-white rounded-0"
-                    style="background-color:#3CA9A9;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#userDetailModal{{ u.id }}">
+            {% if u.is_active %}
+            有効
+            {% else %}
+            無効
+            {% endif %}
+          </td>
+          <td>{{ u.username }}</td>
+          <td>{{ u.email|default:"-" }}</td>
+          <td>{{ u.products.count }}</td>
+          <!-- ログイン回数 -->
+          <td>{{ u.profile.login_count|default:0 }}</td>
+          <td>{{ u.date_joined|date:"Y/m/d H:i" }}</td>
+          <td>{{ u.last_login|date:"Y/m/d H:i" }}</td>
+          <td>
+            <button class="btn btn-sm text-white rounded-0" style="background-color:#3CA9A9;" data-bs-toggle="modal"
+              data-bs-target="#userDetailModal{{ u.id }}">
               詳細
             </button>
           </td>
         </tr>
         {% endfor %}
       </tbody>
+
     </table>
   </div>
 
@@ -89,23 +144,40 @@
         </div>
         <div class="modal-body">
           <table class="table table-borderless mb-0">
-            <tr><th style="width: 25%;" class="text-secondary">ユーザー名</th><td>{{ u.username }}</td></tr>
-            <tr><th class="text-secondary">メールアドレス</th><td>{{ u.email|default:"-" }}</td></tr>
-            <tr><th class="text-secondary">登録日</th><td>{{ u.date_joined|date:"Y/m/d H:i" }}</td></tr>
-            <tr><th class="text-secondary">最終ログイン</th><td>{{ u.last_login|date:"Y/m/d H:i"|default:"-" }}</td></tr>
-            <tr><th class="text-secondary">権限</th>
-                <td>{% if u.is_superuser %}管理者{% elif u.is_staff %}スタッフ{% else %}一般{% endif %}</td></tr>
-            <tr><th class="text-secondary">登録商品数</th><td>{{ u.product_count }}</td></tr>
+            <tr>
+              <th style="width: 25%;" class="text-secondary">ユーザー名</th>
+              <td>{{ u.username }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">メールアドレス</th>
+              <td>{{ u.email|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">登録日</th>
+              <td>{{ u.date_joined|date:"Y/m/d H:i" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">最終ログイン</th>
+              <td>{{ u.last_login|date:"Y/m/d H:i"|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">権限</th>
+              <td>{% if u.is_superuser %}管理者{% elif u.is_staff %}スタッフ{% else %}一般{% endif %}</td>
+            </tr>
+            <tr>
+              <th class="text-secondary">登録商品数</th>
+              <td>{{ u.product_count }}</td>
+            </tr>
           </table>
         </div>
-        <div class="modal-footer bg-light">
+        <div class="modal-footer bg-light justify-content-center">
           <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
         </div>
       </div>
     </div>
   </div>
   {% endfor %}
-    {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
+  {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
 
   {% else %}
   <p class="text-muted mt-3">ユーザー情報はまだ登録されていません。</p>

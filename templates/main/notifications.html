@@ -25,7 +25,7 @@
                 {{ n.product.product_name }}
               </a>
 
-              {% if n.event_type == "stock_low" %}
+              {% if n.event_type == "stock_restore" %}
                 <span class="badge bg-success ms-2">📦 在庫復活</span>
               {% elif n.event_type == "stock_few" %}
                 <span class="badge bg-warning text-dark ms-2">⚠ 在庫少</span>

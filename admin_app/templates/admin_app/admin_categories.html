@@ -21,7 +21,7 @@
           <th>登録ユーザー数</th>
           <th>登録商品数</th>
           <th>最終更新者</th> <!-- ✅ 追加 -->
-          <th>最終更新日</th>
+          <th>最終更新日時</th>
         </tr>
       </thead>
       <tbody>
@@ -30,9 +30,9 @@
           <td>{{ forloop.counter }}</td>
           <td>
             {% if cat.product_count > 0 %}
-            <span class="badge bg-success">使用中</span>
+            使用中
             {% else %}
-            <span class="badge bg-secondary">未使用</span>
+            未使用
             {% endif %}
           </td>
 
@@ -55,7 +55,7 @@
           <td>{{ cat.user_count }}</td>
           <td>{{ cat.product_count }}</td>
           <td>{{ cat.updated_by.username|default:"-" }}</td> <!-- ✅ 新列 -->
-          <td>{{ cat.updated_at|date:"Y/m/d" }}</td>
+          <td>{{ cat.updated_at|date:"Y/m/d H:i" }}</td>
         </tr>
 
         <!-- ✅ 削除モーダル -->
