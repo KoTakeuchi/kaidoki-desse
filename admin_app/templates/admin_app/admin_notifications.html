@@ -8,13 +8,16 @@
   <h2 class="fw-bold mb-4 text-dark">通知管理</h2>
 
   <!-- 🔍 検索フォーム -->
-  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
-    <div class="flex-fill" style="min-width:240px;">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-2 mb-4 justify-content-between" style="width:100%;">
+
+    <!-- キーワード -->
+    <div style="width:20%;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・商品名・内容">
     </div>
 
-    <div class="col-md-2">
+    <!-- 通知方法 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">通知方法</label>
       <select name="method" id="method-select" class="form-select">
         <option value="">選択してください</option>
@@ -23,7 +26,8 @@
       </select>
     </div>
 
-    <div class="col-md-2">
+    <!-- 通知種別 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">通知種別</label>
       <select name="type" id="type-select" class="form-select" disabled>
         <option value="">通知方法を先に選択</option>
@@ -33,22 +37,26 @@
       </select>
     </div>
 
-    <div class="col-md-2">
+    <!-- 開始日 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">開始日</label>
       <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
     </div>
 
-    <div class="col-md-2">
+    <!-- 終了日 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">終了日</label>
       <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
     </div>
 
     <!-- 検索／クリア -->
-    <div class="d-flex gap-2 align-items-end">
-      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
-      <a href="{% url 'admin_app:admin_notifications' %}" class="btn btn-outline-secondary px-4">クリア</a>
+    <div style="width:20%;" class="d-flex gap-2 align-items-end justify-content-end">
+      <button type="submit" class="btn text-white px-3" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_notifications' %}" class="btn btn-outline-secondary px-3">クリア</a>
     </div>
+
   </form>
+
 
   <!-- ========================== -->
   <!-- 📄 表示件数切替フォーム -->
@@ -73,14 +81,14 @@
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead class="table-light">
         <tr class="text-secondary">
-          <th style="width:4%;">ID</th>
-          <th style="width:6%;">通知方法</th>
+          <th style="width:6%;">ID</th>
+          <th style="width:10%;">通知方法</th>
           <th style="width:6%;">既読</th>
           <th style="width:12%;">ユーザー名</th>
-          <th style="width:24%;">商品名</th>
-          <th style="width:30%;">内容</th>
-          <th style="width:13%;">通知日時</th>
-          <th style="width:5%;">操作</th>
+          <th style="width:20%;">商品名</th>
+          <th style="width:25%;">内容</th>
+          <th style="width:16%;">通知日時</th>
+          <th style="width:10%;">操作</th>
         </tr>
       </thead>
       <tbody>

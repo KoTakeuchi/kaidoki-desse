@@ -8,48 +8,47 @@
   <h2 class="fw-bold mb-4 text-dark">エラー管理</h2>
 
   <!-- 🔍 検索フォーム -->
-  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
-    <div class="flex-fill" style="min-width:240px;">
+  <form method="get" class="d-flex align-items-end justify-content-between flex-wrap mb-4" style="gap: 8px;">
+    <div style="width: 22%;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
-      <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
     </div>
 
-    <div class="col-md-2">
+    <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">ステータス</label>
       <select name="status" class="form-select">
         <option value="">全て</option>
+        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済</option>
         <option value="unresolved" {% if request.GET.status == "unresolved" %}selected{% endif %}>未対応</option>
-        <option value="in_progress" {% if request.GET.status == "in_progress" %}selected{% endif %}>対応中</option>
-        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済み</option>
       </select>
     </div>
 
-    <div class="col-md-2">
+    <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">エラー種別</label>
-      <select name="type_name" class="form-select">
+      <select name="type" class="form-select">
         <option value="">全て</option>
-        {% for t in type_list %}
-          <option value="{{ t }}" {% if request.GET.type_name == t %}selected{% endif %}>{{ t }}</option>
-        {% endfor %}
+        <option value="TypeError" {% if request.GET.type == "TypeError" %}selected{% endif %}>TypeError</option>
+        <option value="ValueError" {% if request.GET.type == "ValueError" %}selected{% endif %}>ValueError</option>
+        <option value="NameError" {% if request.GET.type == "NameError" %}selected{% endif %}>NameError</option>
       </select>
     </div>
 
-    <div class="col-md-2">
+    <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">開始日</label>
-      <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
+      <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
     </div>
 
-    <div class="col-md-2">
+    <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">終了日</label>
-      <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
+      <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
     </div>
 
-    <!-- 検索／クリア -->
-    <div class="d-flex gap-2 align-items-end">
-      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
-      <a href="{% url 'admin_app:admin_error_logs' %}" class="btn btn-outline-secondary px-4">クリア</a>
+    <div style="width: 20%; display: flex; gap: 4px; align-items: end;">
+      <button type="submit" class="btn text-white w-50" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_error_logs' %}" class="btn btn-outline-secondary w-50">クリア</a>
     </div>
   </form>
+
   <!-- ▼ 表示件数切替 -->
   <div class="text-end mb-2">
     <form method="get" class="d-inline">
@@ -69,15 +68,15 @@
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead class="table-light">
         <tr class="text-secondary">
-          <th style="width:5%;">ID</th>
+          <th style="width:6%;">ID</th>
           <th style="width:8%;">ステータス</th>
-          <th style="width:8%;">対応者</th>
-          <th style="width:10%;">ユーザー名</th>
-          <th style="width:12%;">エラー種別</th>
-          <th style="width:13%;">発生箇所</th>
-          <th style="width:29%;">内容</th>
-          <th style="width:10%;">発生日時</th>
-          <th style="width:5%;">操作</th>
+          <th style="width:11%;">対応者</th>
+          <th style="width:11%;">ユーザー名</th>
+          <th style="width:14%;">エラー種別</th>
+          <th style="width:14%;">発生箇所</th>
+          <th style="width:12%;">内容</th>
+          <th style="width:14%;">発生日時</th>
+          <th style="width:10%;">操作</th>
         </tr>
       </thead>
         <tbody>

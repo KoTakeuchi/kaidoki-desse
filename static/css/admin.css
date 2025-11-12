@@ -559,3 +559,68 @@ h4 {
 .alert {
     border-radius: 0 !important;
 }
+
+/* ▼ サイドバーのレスポンシブ調整 */
+@media (max-width: 1280px) {
+    .sidebar {
+        width: 240px;
+    }
+
+    .content {
+        margin-left: 240px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .sidebar {
+        width: 160px;
+    }
+
+    .sidebar .nav-link {
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .sidebar-header {
+        font-size: 1.1rem;
+    }
+
+    .content {
+        margin-left: 160px;
+    }
+}
+
+/* ダッシュボード下部テーブルの横幅固定＆…省略 */
+.dashboard-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 内容 / 発生箇所 など少し広めに表示する列 */
+.dashboard-cell-long {
+    max-width: 180px;
+    /* ここは好みで微調整OK */
+}
+
+
+/* テーブル列幅指定を強制反映させる */
+.table {
+    table-layout: fixed !important; /* 固定レイアウトにする */
+    width: 100% !important;
+}
+
+/* 内容の折り返し・はみ出し対策 */
+.table th,
+.table td {
+    word-wrap: break-word !important;
+    white-space: nowrap !important; /* 必要に応じて auto に変更 */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}

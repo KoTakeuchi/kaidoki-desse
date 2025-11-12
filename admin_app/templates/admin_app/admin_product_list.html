@@ -8,16 +8,16 @@
   <h2 class="fw-bold mb-4 text-dark mt-3">商品管理</h2>
 
   <!-- 🔍 検索フォーム -->
-  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-2 mb-4 justify-content-between" style="width:100%;">
 
     <!-- キーワード -->
-    <div class="flex-fill" style="min-width:240px;">
+    <div style="width: 18%;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="商品名・ユーザー名・カテゴリ">
     </div>
 
     <!-- 状態 -->
-    <div>
+    <div style="width: 11%;">
       <label class="form-label fw-semibold text-secondary">状態</label>
       <select name="is_deleted" class="form-select">
         <option value="">全て</option>
@@ -27,7 +27,7 @@
     </div>
 
     <!-- 通知条件 -->
-    <div>
+    <div style="width: 11%;">
       <label class="form-label fw-semibold text-secondary">通知条件</label>
       <select name="flag_type" class="form-select">
         <option value="">全て</option>
@@ -38,7 +38,7 @@
     </div>
 
     <!-- 優先度 -->
-    <div>
+    <div style="width: 11%;">
       <label class="form-label fw-semibold text-secondary">優先度</label>
       <select name="priority" class="form-select">
         <option value="">全て</option>
@@ -48,23 +48,25 @@
     </div>
 
     <!-- 開始日 -->
-    <div>
-      <label class="form-label fw-semibold text-secondary">開始日（登録日）</label>
+    <div style="width: 13%;">
+      <label class="form-label fw-semibold text-secondary">開始日</label>
       <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
     </div>
 
     <!-- 終了日 -->
-    <div>
+    <div style="width: 13%;">
       <label class="form-label fw-semibold text-secondary">終了日</label>
       <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
     </div>
 
     <!-- 検索・クリア -->
-    <div class="d-flex gap-2 align-items-end">
-      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
-      <a href="{% url 'admin_app:admin_product_list' %}" class="btn btn-outline-secondary px-4">クリア</a>
+    <div style="width: 17%;" class="d-flex gap-2 align-items-end justify-content-end">
+      <button type="submit" class="btn text-white px-3" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_product_list' %}" class="btn btn-outline-secondary px-3">クリア</a>
     </div>
+
   </form>
+
   <!-- ========================== -->
   <!-- 📄 表示件数切替フォーム -->
   <!-- ========================== -->
@@ -86,15 +88,15 @@
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead>
           <tr class="text-secondary">
-            <th style="width:4%;">ID</th>
+            <th style="width:6%;">ID</th>
             <th style="width:9%;">ユーザー名</th>
-            <th style="width:5%;">状態</th>
-            <th style="width:7%;">通知条件</th>
-            <th style="width:5%;">優先度</th>
-            <th style="width:18%;">カテゴリ名</th>
-            <th style="width:32%;">商品名</th>
-            <th style="width:10%;">登録日</th>
-            <th style="width:5%;">操作</th>
+            <th style="width:8%;">状態</th>
+            <th style="width:12%;">通知条件</th>
+            <th style="width:7%;">優先度</th>
+            <th style="width:20%;">カテゴリ名</th>
+            <th style="width:15%;">商品名</th>
+            <th style="width:16%;">登録日</th>
+            <th style="width:8%;">操作</th>
           </tr>
         </thead>
         <tbody>

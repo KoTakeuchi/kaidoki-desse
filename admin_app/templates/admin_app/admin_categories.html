@@ -14,14 +14,14 @@
     <table class="table table-bordered align-middle text-center mb-0 admin-category-table">
       <thead class="table-light">
         <tr>
-          <th>No</th>
-          <th>ステータス</th>
-          <th>カテゴリ名</th>
-          <th>操作</th>
-          <th>登録ユーザー数</th>
-          <th>登録商品数</th>
-          <th>最終更新者</th> <!-- ✅ 追加 -->
-          <th>最終更新日時</th>
+          <th style="width:4%;">No</th>
+          <th style="width:8%;">ステータス</th>
+          <th style="width:16%;">カテゴリ名</th>
+          <th style="width:25%;">操作</th>
+          <th style="width:8%;">登録ユーザー数</th>
+          <th style="width:8%;">登録商品数</th>
+          <th style="width:8%;">最終更新者</th> <!-- ✅ 追加 -->
+          <th style="width:16%;">最終更新日時</th>
         </tr>
       </thead>
       <tbody>
@@ -38,19 +38,29 @@
 
           <td class="text-center fw-semibold">{{ cat.category_name }}</td>
 
-          <td class="text-center">
-            <div class="d-inline-flex align-items-center justify-content-center gap-2">
-              <form method="POST" class="d-inline-flex align-items-center gap-2">
+          <td class="text-center" style="min-width:220px;">
+            <div class="d-flex align-items-center justify-content-center w-100" style="gap:4px;">
+              <form method="POST" class="d-flex align-items-center w-100" style="gap:4px;">
                 {% csrf_token %}
                 <input type="hidden" name="edit_id" value="{{ cat.id }}">
                 <input type="text" name="new_name" placeholder="新しい名前"
-                  class="form-control form-control-sm admin-category-input">
-                <button type="submit" class="btn btn-sm text-white admin-category-edit">変更</button>
+                  class="form-control form-control-sm admin-category-input flex-grow-1"
+                  style="flex:1; min-width:60px; max-width:100%; box-sizing:border-box;">
+                <div class="d-flex align-items-center" style="gap:0;">
+                  <button type="submit" class="btn btn-sm text-white admin-category-edit"
+                    style="background-color:#3CA9A9; border-radius:0; margin-right:0; white-space:nowrap;">
+                    変更
+                  </button>
+                  <button class="btn btn-sm text-white admin-category-delete"
+                    style="background-color:#C35656; border-radius:0; margin-left:0; white-space:nowrap;"
+                    data-bs-toggle="modal" data-bs-target="#deleteModal{{ cat.id }}">
+                    削除
+                  </button>
+                </div>
               </form>
-              <button class="btn btn-sm text-white admin-category-delete" data-bs-toggle="modal"
-                data-bs-target="#deleteModal{{ cat.id }}">削除</button>
             </div>
           </td>
+
 
           <td>{{ cat.user_count }}</td>
           <td>{{ cat.product_count }}</td>

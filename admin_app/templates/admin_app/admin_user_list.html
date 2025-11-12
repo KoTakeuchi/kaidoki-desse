@@ -7,15 +7,15 @@
 <div class="container-fluid py-4">
   <h2 class="fw-bold mb-4 text-dark">ユーザー管理</h2>
 
-  <form method="get" class="d-flex align-items-end flex-wrap gap-3 mb-4">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-2 mb-4 justify-content-between" style="width:100%;">
     <!-- キーワード -->
-    <div class="flex-fill" style="min-width:200px;">
+    <div style="width:20%;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="ユーザー名・メール">
     </div>
 
     <!-- 権限 -->
-    <div>
+    <div style="width:11%;">
       <label class="form-label fw-semibold text-secondary">権限</label>
       <select name="role" class="form-select">
         <option value="">全て</option>
@@ -25,7 +25,7 @@
     </div>
 
     <!-- 状態 -->
-    <div>
+    <div style="width:11%;">
       <label class="form-label fw-semibold text-secondary">状態</label>
       <select name="is_active" class="form-select">
         <option value="">全て</option>
@@ -34,8 +34,8 @@
       </select>
     </div>
 
-    <!-- 基準項目 -->
-    <div>
+    <!-- 日付基準 -->
+    <div style="width:11%;">
       <label class="form-label fw-semibold text-secondary">日付基準</label>
       <select name="date_field" class="form-select">
         <option value="date_joined" {% if request.GET.date_field == "date_joined" %}selected{% endif %}>登録日</option>
@@ -44,21 +44,21 @@
     </div>
 
     <!-- 開始日 -->
-    <div>
+    <div style="width:11%;">
       <label class="form-label fw-semibold text-secondary">開始日</label>
       <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
     </div>
 
     <!-- 終了日 -->
-    <div>
+    <div style="width:11%;">
       <label class="form-label fw-semibold text-secondary">終了日</label>
       <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
     </div>
 
     <!-- 検索／クリア -->
-    <div class="d-flex gap-2 align-items-end">
-      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">検索</button>
-      <a href="{% url 'admin_app:admin_user_list' %}" class="btn btn-outline-secondary px-4">クリア</a>
+    <div style="width:17%;" class="d-flex gap-2 align-items-end justify-content-end">
+      <button type="submit" class="btn text-white px-3" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_user_list' %}" class="btn btn-outline-secondary px-3">クリア</a>
     </div>
   </form>
 

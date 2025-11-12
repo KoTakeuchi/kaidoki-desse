@@ -29,36 +29,39 @@
   <form method="post">
     {% csrf_token %}
 
-    <div class="card shadow-sm mb-3" style="height: 25vh;">
-      <div class="card-body">
-        <div class="row g-3 align-items-center mb-3">
-          <div class="col-md-4">
-            <label class="form-label fw-semibold">対応ステータス</label>
-            <select name="status" class="form-select">
-              <option value="unresolved" {% if log.status == "unresolved" %}selected{% endif %}>未対応</option>
-              <option value="in_progress" {% if log.status == "in_progress" %}selected{% endif %}>対応中</option>
-              <option value="resolved" {% if log.status == "resolved" %}selected{% endif %}>対応済み</option>
-            </select>
+      <!-- 🔹 下部：対応ステータス・メモ -->
+      <div class="card shadow-sm mt-4" style="max-height: 40vh; overflow-y: auto;">
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-secondary">対応ステータス</label>
+              <select name="status" class="form-select">
+                <option value="unresolved" {% if log.status == "unresolved" %}selected{% endif %}>未対応</option>
+                <option value="in_progress" {% if log.status == "in_progress" %}selected{% endif %}>対応中</option>
+                <option value="resolved" {% if log.status == "resolved" %}selected{% endif %}>対応済み</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-secondary">対応者</label>
+              <select name="handled_by" class="form-select">
+                <option value="">選択してください</option>
+                {% for admin_user in admin_users %}
+                  <option value="{{ admin_user.id }}" {% if log.handled_by and log.handled_by.id == admin_user.id %}selected{% endif %}>
+                    {{ admin_user.username }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-          <div class="col-md-4">
-            <label class="form-label fw-semibold">対応者</label>
-            <select name="handled_by" class="form-select">
-              <option value="">選択してください</option>
-              {% for user in admin_users %}
-                <option value="{{ user.id }}" {% if log.handled_by and log.handled_by.id == user.id %}selected{% endif %}>
-                  {{ user.username }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
 
-        <div class="mb-3">
-          <label class="form-label fw-semibold">対応メモ</label>
-          <textarea name="note" class="form-control" style="height: 120px;">{{ log.note|default:"" }}</textarea>
+          <div>
+            <label class="form-label fw-semibold text-secondary">対応メモ</label>
+            <textarea name="response_memo" class="form-control" rows="6"
+              style="resize: vertical; max-height: 200px; overflow-y: auto;">{{ log.response_memo|default:"" }}</textarea>
+          </div>
         </div>
       </div>
-    </div>
+
 
     <!-- ボタンはカードの外だけど同じ form 内 -->
     <div class="d-flex justify-content-between mt-2" style="padding: 0 0.25rem;">
