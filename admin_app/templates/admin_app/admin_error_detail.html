@@ -1,0 +1,77 @@
+{% extends "admin_app/layout-admin.html" %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | エラー詳細{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid py-4" style="min-height: 80vh;">
+  <h2 class="fw-bold mb-4 text-dark">エラー詳細</h2>
+
+  <!-- 🔹 上部：エラー詳細情報 -->
+  <div class="card shadow-sm mb-4" style="height: 55vh; overflow-y: auto;">
+    <div class="card-body">
+      <div class="row mb-2">
+        <div class="col-md-6"><strong>ID</strong><br>{{ log.id }}</div>
+        <div class="col-md-6"><strong>ユーザー名</strong><br>{{ log.user.username|default:"-" }}</div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-md-6"><strong>発生箇所</strong><br>{{ log.source|default:"-" }}</div>
+        <div class="col-md-6"><strong>エラー種別</strong><br>{{ log.type_name|default:"-" }}</div>
+      </div>
+      <div class="mb-3">
+        <strong>内容</strong><br>
+        <pre class="p-3 bg-light border rounded" style="white-space: pre-wrap;">{{ log.message|default:"-" }}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 下部：対応フォーム（カード + ボタン全部まとめてひとつの form） -->
+  <form method="post">
+    {% csrf_token %}
+
+      <!-- 🔹 下部：対応ステータス・メモ -->
+      <div class="card shadow-sm mt-4" style="max-height: 40vh; overflow-y: auto;">
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-secondary">対応ステータス</label>
+              <select name="status" class="form-select">
+                <option value="unresolved" {% if log.status == "unresolved" %}selected{% endif %}>未対応</option>
+                <option value="in_progress" {% if log.status == "in_progress" %}selected{% endif %}>対応中</option>
+                <option value="resolved" {% if log.status == "resolved" %}selected{% endif %}>対応済み</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold text-secondary">対応者</label>
+              <select name="handled_by" class="form-select">
+                <option value="">選択してください</option>
+                {% for admin_user in admin_users %}
+                  <option value="{{ admin_user.id }}" {% if log.handled_by and log.handled_by.id == admin_user.id %}selected{% endif %}>
+                    {{ admin_user.username }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label fw-semibold text-secondary">対応メモ</label>
+            <textarea name="response_memo" class="form-control" rows="6"
+              style="resize: vertical; max-height: 200px; overflow-y: auto;">{{ log.response_memo|default:"" }}</textarea>
+          </div>
+        </div>
+      </div>
+
+
+    <!-- ボタンはカードの外だけど同じ form 内 -->
+    <div class="d-flex justify-content-between mt-2" style="padding: 0 0.25rem;">
+      <a href="{% url 'admin_app:admin_error_logs' %}" class="btn text-white px-4" style="background-color:#6c757d;">
+        戻る
+      </a>
+      <button type="submit" class="btn text-white px-4" style="background-color:#3CA9A9;">
+        更新
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

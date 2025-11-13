@@ -1,37 +1,89 @@
 {% extends "layout-user.html" %}
-{% block page_content %}
-<div class="user-edit-page">
-  <h1 class="page-title"><span class="marker">ユーザー情報編集</span></h1>
+{% load static %}
+{% block title %}ユーザー情報編集{% endblock %}
 
-  <!-- 情報編集フォーム -->
-  <div class="user-card mb-4">
+{% block page_content %}
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">ユーザー情報編集</span>
+  </h1>
+</div>
+
+<div class="container py-4">
+
+  <!-- ✅ 情報編集フォーム -->
+  <div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">ユーザー情報</h5>
+
     <form method="post" action="{% url 'main:user_edit' %}">
       {% csrf_token %}
+
+      <!-- ユーザー名 -->
       <div class="mb-3">
-        <label for="id_username" class="form-label">ユーザー名</label>
+        <label for="id_username" class="form-label fw-semibold">ユーザー名</label>
         {{ form.username }}
+        {% if form.username.errors %}
+          <div class="error-text mt-1">{{ form.username.errors.0 }}</div>
+        {% endif %}
       </div>
+
+      <!-- メールアドレス -->
       <div class="mb-3">
-        <label for="id_email" class="form-label">メールアドレス</label>
+        <label for="id_email" class="form-label fw-semibold">メールアドレス</label>
         {{ form.email }}
+        {% if form.email.errors %}
+          <div class="error-text mt-1">{{ form.email.errors.0 }}</div>
+        {% endif %}
+        <div class="form-text text-muted">
+          通知メールはこのアドレス宛に送信されます。
+        </div>
       </div>
-      <div class="text-center">
-        <button type="submit" class="btn-main">変更を保存</button>
+
+      <!-- パスワード関連 -->
+      <hr>
+      <h6 class="fw-semibold mt-3">パスワード変更</h6>
+
+      <div class="mb-3 position-relative">
+        <label for="id_current_password" class="form-label">現在のパスワード</label>
+        {{ form.current_password }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_current_password"></i>
+      </div>
+
+      <div class="mb-3 position-relative">
+        <label for="id_new_password1" class="form-label">新しいパスワード</label>
+        {{ form.new_password1 }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_new_password1"></i>
+      </div>
+
+      <div class="mb-4 position-relative">
+        <label for="id_new_password2" class="form-label">新しいパスワード（確認用）</label>
+        {{ form.new_password2 }}
+        <i class="fa-solid fa-eye toggle-password" data-target="id_new_password2"></i>
+      </div>
+
+      <div class="text-center mt-4">
+        <button type="submit" class="btn btn-danger rounded-pill px-5" style="background:#C35656;border:none;">
+          変更を保存
+        </button>
       </div>
     </form>
   </div>
 
-  <!-- アカウント削除 -->
-  <div class="user-card delete-section text-center">
-    <h2 class="section-title">アカウント削除</h2>
-    <p class="desc">
+  <!-- ✅ アカウント削除 -->
+  <div class="card shadow-sm p-4 text-center border-danger-subtle">
+    <h5 class="text-danger mb-2">アカウント削除</h5>
+    <p class="text-muted small mb-3">
       この操作は取り消すことができません。<br>
       本当に削除してもよろしいですか？
     </p>
+
     <form method="post" action="{% url 'main:account_delete' %}">
       {% csrf_token %}
-      <button type="submit" class="btn-delete">アカウントを削除する</button>
+      <button type="submit" class="btn btn-outline-danger rounded-pill px-4">
+        アカウントを削除する
+      </button>
     </form>
   </div>
+
 </div>
 {% endblock %}

@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =============================
     async function updateUnreadBadge() {
         try {
-            const res = await fetch("/main/unread_count_api/");
+            const res = await fetch("/main/api/unread_count/");
             if (!res.ok) throw new Error("HTTPエラー");
             const data = await res.json();
             const count = data.unread_count || 0;

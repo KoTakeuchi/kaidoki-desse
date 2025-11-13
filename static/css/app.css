@@ -30,7 +30,7 @@ html,
 body {
   height: 100%;
   margin: 0;
-  padding: 20;
+  padding: 0;
   font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', system-ui, sans-serif;
   color: var(--text);
   background-color: #f7f8f9;
@@ -38,22 +38,19 @@ body {
   background-repeat: repeat;
   background-size: cover;
   background-attachment: fixed;
+  min-height: 90vh;
 }
 
-/* ✅ 固定ヘッダー対策：すべての通常ページで余白を確保 */
-/* body {
-    padding-top: 80px;
-  }
- */
-
-/* メインラッパーの上詰まり防止 */
-.main-wrapper,
-.container,
-.content-wrapper {
-  margin-top: 1rem;
+/* コンテナ */
+.container {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
 }
 
-/* 共通フォント設定 */
+/* ======================== */
+/* === フォント・要素 === */
+/* ======================== */
 body,
 input,
 select,
@@ -65,7 +62,7 @@ button {
 }
 
 /* =============================== */
-/* === 手描きマーカー付きタイトル === */
+/* === タイトル（共通） === */
 /* =============================== */
 .page-title-container {
   text-align: center;
@@ -106,15 +103,6 @@ button {
 }
 
 /* ======================== */
-/* === コンテナ共通 === */
-/* ======================== */
-.container {
-  max-width: 1100px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
-
-/* ======================== */
 /* === 共通ボタン === */
 /* ======================== */
 .btn-primary,
@@ -124,9 +112,7 @@ button {
   color: #fff;
   transition: all 0.2s ease;
   border-radius: 1.25rem;
-  padding: 5px;
-  padding-left: 12px;
-  padding-right: 10px;
+  padding: 5px 12px;
   text-align: center;
 }
 
@@ -162,56 +148,14 @@ select:focus {
   outline: none;
 }
 
-/* === ラベル共通 === */
 .form-label {
   margin-bottom: 0.4rem;
   font-weight: 700;
   color: #333;
 }
 
-/* === 入力ラッパー === */
-.input-wrapper {
-  position: relative;
-  margin-bottom: 1.2rem;
-}
-
-/* === パスワード表示切替ボタン === */
-.toggle-password {
-  position: absolute;
-  right: 0.8rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #aaa;
-  cursor: pointer;
-  padding: 0;
-  font-size: 1rem;
-  line-height: 1;
-  z-index: 2;
-}
-
-.toggle-password:hover {
-  color: var(--primary);
-}
-
-/* === メール補足文 === */
-.form-note {
-  font-size: 0.85rem;
-  color: #666;
-  margin-top: 0.2rem;
-}
-
-/* === エラーメッセージ === */
-.error-message {
-  color: var(--primary);
-  font-size: 0.85rem;
-  margin-top: 0.3rem;
-  margin-left: 0.2rem;
-}
-
 /* ======================== */
-/* === カードデザイン === */
+/* === カード共通 === */
 /* ======================== */
 .card {
   border-radius: 12px;
@@ -221,13 +165,6 @@ select:focus {
   border: 2px solid #eee;
 }
 
-/* ✅ 商品一覧ページのカードホバーはアニメ削除 */
-/* .page-products .card:hover {
-  transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-} */
-
-/* 通常カードのホバー */
 .product-list-wrapper .product-card:hover {
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -368,7 +305,7 @@ img,
 }
 
 /* =============================== */
-/* === スマホ（〜490px）専用 === */
+/* === スマホ対応（〜490px） === */
 /* =============================== */
 @media (max-width: 490px) {
   body {
@@ -411,4 +348,27 @@ img,
     width: 18px;
     height: 18px;
   }
+}
+
+/* ============================= */
+/* ✅ フッター位置と余白補正 */
+/* ============================= */
+html,
+body {
+  height: 100% !important;
+}
+
+body {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 90vh !important;
+}
+
+main {
+  flex: 1 !important;
+  padding-bottom: 3rem !important;
+}
+
+.footer-brand {
+  margin-top: clamp(3rem, 8vh, 6rem) !important;
 }

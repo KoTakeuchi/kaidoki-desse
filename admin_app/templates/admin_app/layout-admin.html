@@ -5,24 +5,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}管理者ダッシュボード | Kaidoki Desse{% endblock %}</title>
+  <title>{% block page_title %}管理者ダッシュボード | Kaidoki Desse{% endblock %}</title>
 
   <!-- ▼ Favicon -->
   <link rel="icon" type="image/png" href="{% static 'images/icon_admin.png' %}">
   <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/icon_admin.png' %}">
 
-  <!-- フォント（MakinasFlat + Noto Sans JP + Quantico） -->
+  <!-- ▼ Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quantico:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap -->
+  <!-- ▼ Bootstrap -->
   <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 
-  <!-- 管理画面CSS -->
+  <!-- ▼ 管理画面専用CSS -->
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
   {% block extra_css %}{% endblock %}
 </head>
@@ -30,54 +28,61 @@
 <body class="bg-light">
   <div class="admin-layout d-flex">
 
+    <!-- ======================== -->
     <!-- ▼ サイドバー -->
+    <!-- ======================== -->
     <aside class="sidebar d-flex flex-column">
 
-      <!-- ▼ ロゴエリア -->
+      <!-- ロゴ -->
       <div class="sidebar-header d-flex align-items-center px-4 py-3 fw-bold">
         <img src="{% static 'images/icon_admin.png' %}" alt="logo" style="height:1.4rem; margin-right:0.6rem;">
         <span>Kaidoki Desse</span>
       </div>
 
-      <!-- ▼ ナビ -->
+      <!-- ナビゲーション -->
       <nav class="flex-grow-1">
         <ul class="nav flex-column py-2">
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_dashboard' %}">
-              <img src="{% static 'images/admin_dashobord.png' %}" alt="Dashboard" class="nav-icon">Dashboard
+              <img src="{% static 'images/admin_dashobord.png' %}" alt="Dashboard" class="nav-icon">
+              Dashboard
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_user_list' %}">
-              <img src="{% static 'images/admin_user.png' %}" alt="Users" class="nav-icon">Users
+              <img src="{% static 'images/admin_user.png' %}" alt="Users" class="nav-icon">
+              Users
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_product_list' %}">
-              <img src="{% static 'images/admin_product.png' %}" alt="Products" class="nav-icon">Products
+              <img src="{% static 'images/admin_product.png' %}" alt="Products" class="nav-icon">
+              Products
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_category' %}">
-              <img src="{% static 'images/admin_category.png' %}" alt="Categories" class="nav-icon">Categories
+              <img src="{% static 'images/admin_category.png' %}" alt="Categories" class="nav-icon">
+              Categories
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_notifications' %}">
-              <img src="{% static 'images/admin_notification.png' %}" alt="Notifications" class="nav-icon">Notifications
+              <img src="{% static 'images/admin_notification.png' %}" alt="Notifications" class="nav-icon">
+              Notifications
             </a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin_app:admin_error_logs' %}">
-              <img src="{% static 'images/admin_error.png' %}" alt="Error Logs" class="nav-icon">Error Logs
+              <img src="{% static 'images/admin_error.png' %}" alt="Error Logs" class="nav-icon">
+              Error Logs
             </a>
           </li>
         </ul>
-
       </nav>
 
-      <!-- ▼ フッター（Logout） -->
-      <div class="sidebar-footer fw-bold py-3 px-4">
+      <!-- ログアウト -->
+      <div class="sidebar-footer fw-bold py-3 px-4 border-top">
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit" class="logout-btn">Logout</button>
@@ -85,12 +90,16 @@
       </div>
     </aside>
 
+    <!-- ======================== -->
     <!-- ▼ メインコンテンツ -->
+    <!-- ======================== -->
     <main class="content flex-grow-1 p-4">
       {% block admin_content %}{% endblock %}
     </main>
 
   </div>
+
+  {% block extra_js %}{% endblock %}
 </body>
 
 </html>

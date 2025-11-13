@@ -1,139 +1,145 @@
-// =============================
-// 商品詳細ページ：価格 × 在庫推移グラフ描画
-// =============================
-document.addEventListener("DOMContentLoaded", () => {
-    const canvas = document.getElementById("priceChart");
-    const jsonElem = document.getElementById("price-data-json");
-    if (!canvas || !jsonElem) return;
+document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById("priceChart");
+    if (!ctx) {
+        console.error("Canvasエレメントが見つかりません。");
+        return;
+    }
 
-    let priceData = [];
+    const jsonEl = document.getElementById("price-data-json");
+    if (!jsonEl) {
+        console.error("価格データのJSONエレメントが見つかりません。");
+        return;
+    }
+
+    let priceData;
     try {
-        const rawText = jsonElem.textContent.replace(/\n/g, "").trim();
-        priceData = JSON.parse(rawText);
-        if (typeof priceData === "string") priceData = JSON.parse(priceData);
-    } catch {
-        console.warn("価格データのパースに失敗しました。");
+        priceData = JSON.parse(jsonEl.textContent);
+        console.log('価格データ:', priceData);  // データ構造を確認
+    } catch (e) {
+        console.error("価格データのJSON解析に失敗:", e);
+        document.getElementById("priceChart").innerHTML = "<p>価格データの読み込みに失敗しました。</p>";
         return;
     }
 
-    // 🔹 空データ対策
-    if (!Array.isArray(priceData) || priceData.length === 0) {
-        if (canvas.parentElement) {
-            canvas.parentElement.insertAdjacentHTML(
-                "beforebegin",
-                "<p class='text-center text-muted mb-0 py-4'>価格履歴データがまだありません。</p>"
-            );
-            canvas.remove();
-        }
+    // price_data配列を正しく取得する処理
+    if (!Array.isArray(priceData)) {
+        console.error("価格データが配列ではありません:", priceData);
+        document.getElementById("priceChart").innerHTML = "<p>価格データが配列ではありません。</p>";
         return;
     }
 
-    // ...（既存のChart.js描画処理）...
-});
+    // labels, prices, stocks, thresholdの取得
+    const labels = priceData.map(d => d.date);
+    const prices = priceData.map(d => parseFloat(d.price));  // 数値型に変換
+    const stocks = priceData.map(d => (d.stock === 0 ? 0 : d.stock));  // 0に変換
+    const threshold = priceData[0].threshold_price || Infinity; // 価格データ内の最初の項目の閾値を取得
 
+    console.log('ラベル:', labels);  // ラベルを確認
+    console.log('価格データ:', prices);  // 価格データを確認
+    console.log('在庫データ:', stocks);  // 在庫データを確認
 
-// =============================
-// データ整形
-// =============================
-const labels = priceData.map(p => p.date);
-const prices = priceData.map(p => parseFloat(p.price));
-const stocks = priceData.map(p => parseFloat(p.stock ?? p.stock_count ?? 0));
-
-const threshold = parseFloat(canvas.dataset.threshold || "0") || 0;
-const maxStock = Math.max(...stocks);
-const suggestedMaxStock = maxStock > 0 ? maxStock + 1 : 1;
-
-// =============================
-// グラフが既に存在する場合は破棄（再描画対策）
-// =============================
-if (window.priceChartInstance) {
-    window.priceChartInstance.destroy();
-}
-
-// =============================
-// Chart.js グラフ生成
-// =============================
-const ctx = canvas.getContext("2d");
-window.priceChartInstance = new Chart(ctx, {
-    data: {
-        labels,
+    // Chart.js の設定
+    const chartData = {
+        labels: labels,
         datasets: [
-            // 🔸価格（折れ線）
             {
-                label: "価格（円）",
+                label: "価格",
                 data: prices,
-                yAxisID: "yPrice",
-                type: "line",
-                borderColor: "#C35656",
-                backgroundColor: "transparent",
-                borderWidth: 2.5,
-                fill: false,
-                tension: 0.25,
-                pointRadius: 4,
-                pointBackgroundColor: prices.map(v =>
-                    v < threshold && threshold > 0 ? "#FF4B4B" : "#C35656"
-                ),
-                order: 1
+                borderColor: "#FF5733", // 価格のラインカラー
+                fill: false
             },
-            // 🔹在庫（棒グラフ）
             {
-                label: "在庫数（個）",
+                label: "在庫",
                 data: stocks,
-                yAxisID: "yStock",
-                type: "bar",
-                backgroundColor: "rgba(106, 144, 181, 0.6)",
-                borderColor: "#6A90B5",
-                borderWidth: 1,
-                order: 2
-            },
-            // 🟡買い時ライン（しきい値）
-            ...(threshold > 0
-                ? [
-                    {
-                        label: "買い時価格",
-                        data: Array(labels.length).fill(threshold),
-                        yAxisID: "yPrice",
-                        borderColor: "#F7CB6E",
-                        borderDash: [5, 4],
-                        borderWidth: 4,
-                        type: "line",
-                        fill: false,
-                        pointRadius: 0,
-                        order: 10,
-                        segment: { borderDashOffset: 0 }
-                    }
-                ]
-                : [])
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: { title: { display: true, text: "日付" } },
-            yPrice: {
-                type: "linear",
-                position: "left",
-                title: { display: true, text: "価格（円）" },
-                grid: { drawOnChartArea: true }
-            },
-            yStock: {
-                type: "linear",
-                position: "right",
-                title: { display: true, text: "在庫数（個）" },
-                grid: { drawOnChartArea: false },
-                beginAtZero: true,
-                ticks: {
-                    precision: 0,
-                    stepSize: 1,
-                    callback: value => (Number.isInteger(value) ? value : "")
-                },
-                suggestedMax: suggestedMaxStock
+                borderColor: "#33FF57", // 在庫のラインカラー
+                fill: false
             }
-        },
-        plugins: {
-            legend: { position: "bottom" }
+        ]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
         }
-    }
-});
+    };
+
+    // グラフ描画処理
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    type: "bar",
+                    label: "在庫数",
+                    data: stocks,
+                    backgroundColor: "#3ca9a9",
+                    borderWidth: 0,
+                    yAxisID: "y2",
+                    order: 1,
+                },
+                {
+                    type: "line",
+                    label: "価格（円）",
+                    data: prices,
+                    borderColor: "#C35656",
+                    backgroundColor: "rgba(195,86,86,0.2)",
+                    borderWidth: 2,
+                    tension: 0.3,
+                    yAxisID: "y",
+                    order: 2,
+                },
+                {
+                    type: "line",
+                    label: "閾値ライン",
+                    data: Array(labels.length).fill(threshold),
+                    borderColor: "#F7CB6E",
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    pointRadius: 0,
+                    yAxisID: "y",
+                    order: 3,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: { display: true, text: "日付" },
+                    ticks: { maxTicksLimit: 10 },
+                },
+                y: {
+                    title: { display: true, text: "価格（円）" },
+                    beginAtZero: true,
+                    position: "left",
+                },
+                y2: {
+                    title: { display: true, text: "在庫数" },
+                    beginAtZero: true,
+                    position: "right",
+                    grid: { drawOnChartArea: false },
+                },
+            },
+            plugins: {
+                legend: { position: "bottom" },
+                zoom: {
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: "x",
+                    },
+                    pan: {
+                        enabled: true,
+                        mode: "x",
+                    },
+                },
+            },
+        },
+        plugins: [ChartZoom],
+    });
 });

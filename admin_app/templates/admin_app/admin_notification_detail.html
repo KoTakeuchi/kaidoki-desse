@@ -1,8 +1,101 @@
 {% extends "admin_app/layout-admin.html" %}
-{% block title %}通知詳細{% endblock %}
+{% load static %}
+
+{% block title %}Kaidoki Desse 管理 | 通知詳細{% endblock %}
+
 {% block admin_content %}
-<div class="container py-4">
-    <h1 class="text-primary">通知詳細ページ（仮）</h1>
-    <p>このページはまだ実装中です。</p>
+<div class="container-fluid py-4" style="min-height: 80vh;">
+  <h2 class="fw-bold mb-4 text-dark">通知詳細</h2>
+
+  <!-- 🔹 上部：通知の詳細情報 -->
+  <div class="card shadow-sm mb-4" style="height: 60vh; overflow-y: auto;">
+    <div class="card-body">
+      <div class="row mb-2">
+        <div class="col-md-6">
+          <strong>ID</strong><br>
+          {{ log.id }}
+        </div>
+        <div class="col-md-6">
+          <strong>ユーザー名</strong><br>
+          {{ log.user.username|default:"-" }}
+        </div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-6">
+          <strong>商品名</strong><br>
+          {{ log.product.product_name|default:"-" }}
+        </div>
+        <div class="col-md-6">
+          <strong>ショップ名</strong><br>
+          {{ log.product.shop_name|default:"-" }}
+        </div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col-md-6">
+          <strong>通知方法</strong><br>
+          {% if log.event_type|slice:":5" == "mail_" %}
+            <span class="badge text-dark rounded-0 px-2 py-1"style="background:#8f8d67;">メール</span>
+          {% else %}
+            <span class="badge text-white rounded-0 px-2 py-1" style="background:#67688f;">アプリ</span>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <strong>通知種別</strong><br>
+          {% if log.event_type == "stock_restore" %}
+            在庫復活通知
+          {% elif log.event_type == "stock_few" %}
+            在庫少通知
+          {% elif log.event_type == "threshold_hit" %}
+            買い時価格を下回る価格検知
+          {% elif log.event_type == "lowest_price" %}
+            過去最安値を更新
+          {% elif log.event_type == "discount_over" %}
+            指定割引率を下回る価格検知
+          {% elif log.event_type == "mail_buy_timing" %}
+            メール：買い時お知らせ
+          {% elif log.event_type == "mail_stock" %}
+            メール：在庫お知らせ
+          {% else %}
+            -
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <strong>発生日時</strong><br>
+          {{ log.occurred_at|date:"Y/m/d H:i" }}
+        </div>
+        <div class="col-md-6">
+          <strong>既読ステータス</strong><br>
+          {% if log.is_read %}
+            <span class="badge border border-dark text-dark rounded-0 bg-white">既読</span>
+          {% else %}
+            <span class="badge bg-dark rounded-0 text-white">未読</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <strong>内容</strong><br>
+            <pre class="p-3 bg-light border rounded" style="white-space: pre-wrap; max-height: 300px; overflow-y: auto;">
+            {{ log.message|default:"-" }}
+            </pre>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 下部：戻るボタンのみ（閲覧専用） -->
+  <div class="d-flex justify-content-between mt-3">
+    <a href="{% url 'admin_app:admin_notifications' %}"
+       class="btn text-white px-4"
+       style="background-color:#6c757d;">
+      戻る
+    </a>
+    <div></div>  {# 右側は将来拡張用に空けておく #}
+  </div>
 </div>
 {% endblock %}

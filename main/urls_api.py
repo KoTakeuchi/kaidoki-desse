@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from . import views_api  # ✅ views_api を明示的に import
 
 from .views_api import (
     HealthCheck,
@@ -13,8 +14,6 @@ from .views_api import (
     UserNotificationSettingView,
     CategoryViewSet,
 )
-from . import views_product  # ✅ 楽天APIビューを追加
-
 
 # === DRFルーター定義 ===
 router = DefaultRouter()
@@ -38,12 +37,18 @@ urlpatterns = [
     ),
 
     # --- ユーザー通知設定 ---
-    path("user/settings/", UserNotificationSettingView.as_view(),
-         name="user-settings"),
+    path(
+        "user/settings/",
+        UserNotificationSettingView.as_view(),
+        name="user-settings",
+    ),
 
     # --- 楽天API ---
-    path("fetch_rakuten_item/", views_product.fetch_rakuten_item,
-         name="fetch_rakuten_item"),  # ✅ 追加
+    path(
+        "fetch_rakuten_item/",
+        views_api.fetch_rakuten_item,  # ✅ 修正済み参照
+        name="fetch_rakuten_item",
+    ),
 ]
 
 # === JWT認証 ===

@@ -1,3 +1,18 @@
+/* ========================
+   AUTHページ用リセット
+   ======================== */
+
+/* user.css の固定ヘッダー余白を無効化 */
+body {
+    padding-top: 0 !important;
+}
+
+/* user.css の固定ヘッダー化を解除 */
+.header-bar {
+    position: relative !important;
+    top: 0 !important;
+}
+
 /* ============================= */
 /*  ログインページ  */
 /* ============================= */
@@ -259,4 +274,43 @@
 .auth-btn:focus,
 .auth-btn:visited {
     text-decoration: none !important;
+}
+
+/* ========================
+   AUTHページ：ヘッダーとタイトル余白調整（最終確定）
+   ======================== */
+
+/* --- 1920px以下（フルHD含む）で距離を少し詰める --- */
+@media screen and (max-width: 1920px) {
+    .auth-wrapper {
+        padding-top: 1.4rem !important;
+        /* 4rem → 詰めたバランス値 */
+    }
+
+    .page-title {
+        margin-top: 0.8rem !important;
+        /* ヘッダー直下を少し詰める */
+        margin-bottom: 2rem !important;
+        /* カードとの距離は維持 */
+    }
+}
+
+/* --- 1921px以上（2K・4Kなど）では詰めすぎを防ぎ、フルHDと同じ余白を固定 --- */
+@media screen and (min-width: 1921px) {
+    .auth-wrapper {
+        padding-top: 1.4rem !important;
+        /* フルHDと同値で固定 */
+    }
+
+    .page-title {
+        margin-top: 0.8rem !important;
+        margin-bottom: 2rem !important;
+    }
+}
+
+
+/* ② 通常解像度でもカードとの余白を復活させる */
+.page-title {
+    margin-bottom: 2rem !important;
+    /* カードとタイトルの距離を戻す */
 }

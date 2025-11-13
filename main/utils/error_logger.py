@@ -1,48 +1,40 @@
-# ==============================================================
-# ファイル名: error_logger.py
-# 所在地: I:\school\kaidoki-desse\main\utils\error_logger.py
-# 概要: 例外発生時に ErrorLog モデルへ安全に記録するユーティリティ
-# ==============================================================
+# --- START: main/utils/error_logger.py ---
 
+import traceback
+import logging
 from django.utils import timezone
 from main.models import ErrorLog
+
+# Django 標準ロガー
+logger = logging.getLogger(__name__)
 
 
 def log_error(user=None, type_name=None, source=None, err=None):
     """
-    エラーログをデータベースに安全に記録する関数。
-    未ログイン時でもクラッシュせず、print出力でフォールバックする。
-
-    Parameters
-    ----------
-    user : User | None
-        発生時のユーザーオブジェクト（未ログイン時はNone）
-    type_name : str | None
-        例外タイプ（例: ValueError）
-    source : str | None
-        発生箇所（例: 'product_list'）
-    err : Exception | None
-        実際の例外オブジェクト
+    エラーログをDBと標準ログに記録する。
+    user:     エラー発生時のユーザー（匿名可）
+    type_name: 例外クラス名 (例: ValueError)
+    source:   発生箇所（例: 'product_list', 'fetch_rakuten_item_data'）
+    err:      実際の例外オブジェクト
     """
 
-    # try:
-    #     # ErrorLogモデルに記録
-    #     ErrorLog.objects.create(
-    #         user=user,
-    #         type_name=type_name or (
-    #             type(err).__name__ if err else "UnknownError"),
-    #         source=source or "unknown",
-    #         message=str(err) if err else "(no message)",
-    #         created_at=timezone.now(),
-    #     )
+    try:
+        # --- スタックトレース ---
+        tb = "".join(traceback.format_exception(
+            None, err, err.__traceback__)) if err else "(No traceback)"
 
-    #     print(
-    #         f"[ErrorLoggingMiddleware] ログ保存完了: "
-    #         f"{type_name or type(err).__name__} / {source}"
-    #     )
+        # --- 標準ログ出力 ---
+        logger.error(f"[{source}] {type_name}: {err}\n{tb}")
 
-    # except Exception as e:
-    #     # DBに書き込めない場合も安全に出力
-    #     print("[ErrorLoggingMiddleware] 保存または送信失敗:", e)
-    #     print(f"[ErrorLoggingMiddleware] 元エラー: {err}")
-    raise err
+        # --- DB保存（ErrorLogモデル） ---
+        ErrorLog.objects.create(
+            user=user if getattr(user, "is_authenticated", False) else None,
+            type_name=type_name or "UnknownError",
+            source=source or "unspecified",
+            message=f"{err}\n\n{tb}",
+            created_at=timezone.now(),
+        )
+
+    except Exception as e:
+        # DBへの書き込みに失敗してもプロセスを止めない
+        logger.critical(f"[log_error] Failed to log error: {e}")

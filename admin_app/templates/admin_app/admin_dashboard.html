@@ -1,10 +1,29 @@
 {% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
-{% block title %}Kaidoki Desse 管理 | ダッシュボード{% endblock %}
+{% block page_title %}Kaidoki Desse 管理 | ダッシュボード{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+<style>
+  .metric-card {
+    background-color: #f8f9fa;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+  }
+  .metric-sub {
+    font-size: 0.85rem;
+    color: #888;
+  }
+  .metric-diff {
+    font-size: 0.85rem;
+    color: #C35656;
+  }
+  .table td, .table th {
+    vertical-align: middle;
+  }
+</style>
 {% endblock %}
 
 {% block admin_content %}
@@ -12,107 +31,162 @@
   <h2 class="mb-4 fw-bold text-dark">ダッシュボード</h2>
 
   <!-- ======================== -->
-  <!-- メトリクスカード -->
+  <!-- 上半分：メトリクス -->
   <!-- ======================== -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="card border-0 bg-light">
-        <div class="card-body">
-          <h6 class="text-muted mb-1">登録ユーザー数</h6>
-          <h3 class="fw-bold text-dark">{{ stats.user_count }}</h3>
-        </div>
+  <div class="row g-3 mb-5">
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">登録ユーザー数</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.user_count }}</h3>
+        <div class="metric-sub">今月: {{ stats.user_month }} <span class="metric-diff">{{ stats.user_diff }}</span></div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-0 bg-light">
-        <div class="card-body">
-          <h6 class="text-muted mb-1">登録商品数</h6>
-          <h3 class="fw-bold text-dark">{{ stats.product_count }}</h3>
-        </div>
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">登録商品数</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.product_count }}</h3>
+        <div class="metric-sub">今月: {{ stats.product_month }} <span class="metric-diff">{{ stats.product_diff }}</span></div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-0 bg-light">
-        <div class="card-body">
-          <h6 class="text-muted mb-1">今週の通知数</h6>
-          <h3 class="fw-bold text-dark">{{ stats.notification_week }}</h3>
-        </div>
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">通知数</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.notification_week }}</h3>
+        <div class="metric-sub">今月: {{ stats.notification_month }} <span class="metric-diff">{{ stats.notification_diff }}</span></div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card border-0 bg-light">
-        <div class="card-body">
-          <h6 class="text-muted mb-1">総エラーログ数</h6>
-          <h3 class="fw-bold text-dark">{{ stats.error_count }}</h3>
-        </div>
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">エラーログ数</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.error_count }}</h3>
+        <div class="metric-sub">今月: {{ stats.error_month }} <span class="metric-diff">{{ stats.error_diff }}</span></div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">通知成功率</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.notification_success }}%</h3>
+        <div class="metric-sub">前月比 <span class="metric-diff">{{ stats.success_diff }}</span></div>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card metric-card text-center py-3">
+        <h6 class="text-muted mb-1">未対応エラー率</h6>
+        <h3 class="fw-bold text-dark mb-1">{{ stats.unresolved_rate }}%</h3>
+        <div class="metric-sub">前月比 <span class="metric-diff">{{ stats.unresolved_diff }}</span></div>
       </div>
     </div>
   </div>
 
   <!-- ======================== -->
-  <!-- 最新商品登録 -->
+  <!-- 下半分：通知 & エラー -->
   <!-- ======================== -->
-  <div class="card border-0 mb-4">
-    <div class="card-header bg-white border-0 border-bottom" style="border-color:#b4e4e4 !important;">
-      <h5 class="fw-bold mb-0 text-dark">最新の登録商品</h5>
+  <div class="row dashboard-lower">
+    <!-- 🔔 最新の通知 -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom">
+          <h5 class="fw-bold mb-0 text-dark">最新の通知</h5>
+        </div>
+        <div class="card-body p-0">
+          <table class="table align-middle mb-0 dashboard-table">
+            <thead class="table-light">
+              <tr class="text-secondary">
+                <th>ユーザー名</th>
+                <th>通知方法</th>
+                <th>内容</th>
+                <th>通知日時</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for n in latest_notifications %}
+              <tr>
+                <td>{{ n.user.username|default:"-" }}</td>
+                <td class="text-truncate dashboard-cell-long">
+                  {% if "mail_" in n.event_type %}
+                    メール
+                  {% else %}
+                    アプリ
+                  {% endif %}
+                </td>
+                <td>
+                  {% if n.event_type == "threshold_hit" %}買い時価格検知
+                  {% elif n.event_type == "lowest_price" %}最安値更新
+                  {% elif n.event_type == "discount_over" %}割引率検知
+                  {% elif n.event_type == "stock_restore" %}在庫復活
+                  {% elif n.event_type == "stock_few" %}在庫少
+                  {% else %}-{% endif %}
+                </td>
+                <td>{{ n.occurred_at|date:"Y/m/d H:i" }}</td>
+                <td>
+                  {% if n.id %}
+                    <a href="{% url 'admin_app:admin_notification_detail' n.id %}"
+                      class="btn btn-sm text-white rounded-0"
+                      style="background-color:#3CA9A9;">詳細</a>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">通知なし</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div class="card-body p-0">
-      <table class="table align-middle mb-0">
-        <thead class="table-light">
-          <tr class="text-secondary">
-            <th>商品名</th>
-            <th>ユーザー</th>
-            <th>登録日</th>
-            <th>価格</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in latest_products %}
-          <tr>
-            <td>{{ product.product_name }}</td>
-            <td>{{ product.user.username }}</td>
-            <!-- 最新通知テーブル内 -->
-            <td>{{ n.notified_at|date:"Y-m-d H:i" }}</td>
-            <td>{{ product.current_price }} 円</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="4" class="text-center text-muted py-3">データなし</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+      <!-- ⚠️ 最新のエラー -->
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white border-bottom">
+        <h5 class="fw-bold mb-0 text-dark">最新のエラー</h5>
+      </div>
+      <div class="card-body p-0">
+        <table class="table align-middle mb-0 dashboard-table">
+          <thead class="table-light">
+            <tr class="text-secondary">
+              <th>ユーザー名</th>
+              <th>エラー種別</th>
+              <th>発生箇所</th>
+              <th>発生日時</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in latest_errors %}
+            <tr>
+              <td>{{ e.user.username|default:"-" }}</td>
+              <td class="text-truncate dashboard-cell-long">{{ e.type_name|default:"-" }}</td>
+              <td class="text-truncate dashboard-cell-long">{{ e.source|default:"-" }}</td>
+              <td>{{ e.occurred_at|default:e.created_at|date:"Y/m/d H:i" }}</td>
+              <td>
+                {% if e.id %}
+                  <a href="{% url 'admin_app:admin_error_detail' e.id %}"
+                    class="btn btn-sm text-white rounded-0"
+                    style="background-color:#3CA9A9;">詳細</a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-3">エラーなし</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- ======================== -->
-  <!-- 最新通知 -->
-  <!-- ======================== -->
-  <div class="card border-0">
-    <div class="card-header bg-white border-0 border-bottom" style="border-color:#b4e4e4 !important;">
-      <h5 class="fw-bold mb-0 text-dark">最新の通知</h5>
-    </div>
-    <div class="card-body p-0">
-      <table class="table align-middle mb-0">
-        <thead class="table-light">
-          <tr class="text-secondary">
-            <th>通知内容</th>
-            <th>ユーザー</th>
-            <th>送信日</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for n in latest_notifications %}
-          <tr>
-            <td>{{ n.message }}</td>
-            <td>{{ n.user.username }}</td>
-            <td>{{ n.created_at|date:"Y-m-d H:i" }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="3" class="text-center text-muted py-3">データなし</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
 
+  <!-- ======================== -->
+  <!-- 📈 チャート画像 -->
+  <!-- ======================== -->
+  <div class="chart-image-container mt-4">
+    <img src="{% static 'images/charts.png' %}" alt="統計チャート" class="img-fluid dashboard-chart">
+  </div>
 </div>
 {% endblock %}

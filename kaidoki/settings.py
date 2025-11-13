@@ -15,9 +15,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dummy-secret-key")
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
-
 # 環境フラグ（dev/prod）
-ENV = os.getenv("ENV", "dev").lower()   # dev / prod
+ENV = os.getenv("ENV", "dev").lower()  # dev / prod
 
 # ===== DB =====
 if ENV == "prod":
@@ -84,7 +83,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "main.context_processors.unread_count",
+                # "main.context_processors.unread_count",
             ],
         },
     },
@@ -101,31 +100,53 @@ USE_TZ = True
 # ===== 静的ファイル =====
 STATIC_URL = "/static/"
 # 開発用の配置場所（直接参照する）
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # 共通の静的ファイル
+]
+
+# mainアプリの静的ファイルディレクトリがあれば追加
+main_static_dir = BASE_DIR / "main" / "static"
+if main_static_dir.exists() and main_static_dir.is_dir():
+    STATICFILES_DIRS.append(main_static_dir)
+
+
 # collectstatic で集約する先（本番用）
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# ===== メディアファイル =====
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # ===== 認証・遷移 =====
-LOGIN_URL = "login"
-LOGOUT_REDIRECT_URL = "/main/"
-LOGIN_REDIRECT_URL = "main:index"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/main/product/list/"
+LOGOUT_REDIRECT_URL = "/"
 
 # ===== メール =====
 if ENV == "dev":
     # 開発環境ではコンソールに出力
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-    DEFAULT_FROM_EMAIL = 'no-reply@kaidoki-desse.local'
+    USE_REAL_MAIL = os.getenv("USE_REAL_MAIL", "false").lower() == "true"
+    if USE_REAL_MAIL:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+        print("[settings] 実メール送信モード（Gmail）で起動")
+    else:
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+        print("[settings] コンソール出力モードで起動")
 else:
-    # 本番環境ではSMTP経由で送信
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = "smtp.gmail.com"
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.getenv("GMAIL_USER")
-    EMAIL_HOST_PASSWORD = os.getenv("GMAIL_APP_PASSWORD")
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    print("[settings] 本番SMTPモードで起動")
+
+# --- Gmail設定 ---
+# 追加する：ADMIN_EMAIL の定義
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "3rd.takeuchii@gmail.com")
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("GMAIL_USER", ADMIN_EMAIL)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # 同一に設定
+EMAIL_HOST_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 
 # ===== DRF / OpenAPI =====
 REST_FRAMEWORK = {
@@ -171,46 +192,8 @@ else:
     ]
 
 # =============================
-# メール通知設定（エラー報告用）
-# =============================
-
-# ✅ 通常メール設定を上書きせず、明示的に運用通知先を指定
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "3rd.takeuchii@gmail.com")
-
-# ✅ 共通：Gmail送信用のベース設定
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("GMAIL_USER", ADMIN_EMAIL)
-EMAIL_HOST_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-
-# ✅ 開発環境では「コンソール出力 or 実メール送信」を選べるよう分岐
-if ENV == "dev":
-    USE_REAL_MAIL = os.getenv("USE_REAL_MAIL", "false").lower() == "true"
-    if USE_REAL_MAIL:
-        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-        print("[settings]  実メール送信モード（Gmail）で起動")
-    else:
-        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-        print("[settings]  コンソール出力モードで起動")
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    print("[settings]  本番SMTPモードで起動")
-
-
-# =============================
 # 楽天API
 # =============================
-
 RAKUTEN_APP_ID = os.getenv("RAKUTEN_APP_ID", "1016082687225252652")
 RAKUTEN_BASE_URL = os.getenv(
     "RAKUTEN_BASE_URL", "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601")
-
-
-# --- 認証後のリダイレクト先を専用ビューに統一 ---
-LOGIN_REDIRECT_URL = "/main/after_login/"
-
-# （任意）ログアウト後の遷移
-LOGOUT_REDIRECT_URL = "/main/index/"

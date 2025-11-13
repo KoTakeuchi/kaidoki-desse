@@ -2,165 +2,120 @@
 {% load static %}
 {% block title %}{{ product.product_name }} の詳細{% endblock %}
 
+{% block body_class %}product-detail-page{% endblock %}
+
 {% block page_content %}
-<div class="container mt-4">
-    <div class="card shadow-sm p-4">
-        <div class="row">
-            <!-- 左：商品画像 -->
-            <div class="col-md-5 text-center">
-                {% if product.image_url %}
-                <img src="{{ product.image_url }}" alt="{{ product.product_name }}"
-                    class="img-fluid rounded {% if not product.is_in_stock %}opacity-50{% endif %}">
-                {% else %}
-                <img src="{% static 'images/no_image.png' %}" alt="no_image"
-                    class="img-fluid rounded {% if not product.is_in_stock %}opacity-50{% endif %}">
-                {% endif %}
 
-                <!-- 🟡 在庫切れ時メッセージ＋通知ボタン -->
-                {% if not product.is_in_stock %}
-                <div class="alert alert-secondary small mt-3 text-center" role="alert">
-                    現在この商品は在庫切れです。<br>
-                    再入荷時に通知を受け取りたい場合は、以下のボタンで設定を切り替えできます。
-                </div>
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">商品詳細</span>
+  </h1>
+</div>
 
-                <form method="post" class="text-center">
-                    {% csrf_token %}
-                    <button type="submit" name="toggle_restock_notify"
-                        class="btn {% if product.restock_notify_enabled %}btn-outline-danger{% else %}btn-outline-success{% endif %} btn-sm rounded-pill px-4 mt-2">
-                        {% if product.restock_notify_enabled %}通知を停止{% else %}通知を有効化{% endif %}
-                    </button>
-                </form>
-                {% endif %}
+<div class="container py-4">
 
-                <!-- 右：商品情報 -->
-                <div class="col-md-7">
-                    <h3 class="mb-3">
-                        {{ product.product_name }}
-                        {% if not product.is_in_stock %}
-                        <span class="badge bg-secondary ms-2">在庫なし</span>
-                        {% else %}
-                        <span class="badge bg-success ms-2">在庫あり</span>
-                        {% endif %}
-                    </h3>
+  <!-- 商品情報 -->
+  <div class="card shadow-sm p-4 mb-4 {% if is_reached %}border-buytime{% endif %}">
+    <div class="row g-4">
+      <div class="col-md-5 text-center">
+        <img
+          src="{% if product.image_url %}{{ product.image_url }}{% else %}{% static 'images/no_image.png' %}{% endif %}"
+          alt="{{ product.product_name }}" class="product-detail-image">
+      </div>
 
-                    <p class="text-muted mb-2">
-                        カテゴリ：
-                        {% if product.categories.exists %}
-                        {{ product.categories.all|join:"・" }}
-                        {% else %}
-                        未分類
-                        {% endif %}
-                    </p>
+      <div class="col-md-7">
+        <h3 class="fw-bold mb-3">{{ product.product_name }}</h3>
+        <p class="mb-2"><strong>ショップ名：</strong>{{ product.shop_name|default:"不明" }}</p>
 
-                    <p class="text-muted mb-2">ショップ名：{{ product.shop_name|default:"不明" }}</p>
-                    <hr>
+        <p class="mb-2">
+          <strong>カテゴリ：</strong>
+          {% for cat in product.categories.all %}
+            <span class="badge bg-secondary me-1">{{ cat.category_name }}</span>
+          {% empty %}
+            <span class="text-muted">未分類</span>
+          {% endfor %}
+        </p>
 
-                    <!-- 価格・優先度表示は従来通り -->
+        <p class="mb-1">
+          <strong>優先度：</strong>
+          <span class="badge {% if product.priority == '高' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ product.priority }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
 
-                    <a href="{{ product.product_url }}"
-                        class="btn btn-outline-primary mt-3 {% if not product.is_in_stock %}disabled{% endif %}"
-                        target="_blank" tabindex="{% if not product.is_in_stock %}-1{% else %}0{% endif %}">
-                        商品ページを開く
-                    </a>
-                </div>
+  <!-- 通知条件 -->
+  <div class="card shadow-sm p-4 mb-4">
+    <div class="row mb-2">
+      <div class="col-md-6">
+        <label class="form-label fw-bold mb-0">通知条件</label>
+      </div>
+      <div class="col-md-6">
+        {% if product.flag_type == "buy_price" %}
+          <label class="form-label fw-bold mb-0">買い時価格</label>
+        {% elif product.flag_type == "percent_off" %}
+          <label class="form-label fw-bold mb-0">割引率</label>
+        {% elif product.flag_type == "lowest_price" %}
+          <label class="form-label fw-bold mb-0">最安値</label>
+        {% endif %}
+      </div>
+    </div>
 
-                <!-- 右：商品情報 -->
-                <div class="col-md-7">
-                    <h3 class="mb-3">
-                        {{ product.product_name }}
-                        {% if not product.is_in_stock %}
-                        <span class="badge bg-secondary ms-2">在庫なし</span>
-                        {% else %}
-                        <span class="badge bg-success ms-2">在庫あり</span>
-                        {% endif %}
-                    </h3>
-
-                    <p class="text-muted mb-2">カテゴリ：{{ product.category.category_name }}</p>
-                    <p class="text-muted mb-2">ショップ名：{{ product.shop_name|default:"不明" }}</p>
-                    <hr>
-
-                    <p class="mb-1"><strong>定価：</strong>
-                        {% if product.regular_price %}
-                        ¥{{ product.regular_price|floatformat:0 }}
-                        {% else %}<span class="text-muted">未設定</span>{% endif %}
-                    </p>
-
-                    <p class="mb-1"><strong>登録時価格：</strong>
-                        {% if product.initial_price %}
-                        ¥{{ product.initial_price|floatformat:0 }}
-                        {% else %}<span class="text-muted">未設定</span>{% endif %}
-                    </p>
-
-                    <p class="mb-1"><strong>買い時価格：</strong>
-                        {% if product.threshold_price %}
-                        ¥{{ product.threshold_price|floatformat:0 }}
-                        {% else %}<span class="text-muted">未設定</span>{% endif %}
-                    </p>
-
-                    <p class="mb-2">
-                        <strong>優先度：</strong>
-                        <span class="badge {% if product.priority == '高' %}bg-danger{% else %}bg-secondary{% endif %}">
-                            {{ product.priority }}
-                        </span>
-                    </p>
-
-                    <a href="{{ product.product_url }}"
-                        class="btn btn-outline-primary mt-3 {% if not product.is_in_stock %}disabled{% endif %}"
-                        target="_blank">
-                        商品ページを開く
-                    </a>
-                </div>
-            </div>
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <div class="flag-btn active text-center w-100">
+          {% if product.flag_type == "buy_price" %}
+            買い時価格
+          {% elif product.flag_type == "percent_off" %}
+            割引率
+          {% elif product.flag_type == "lowest_price" %}
+            最安値
+          {% else %}
+            通知条件未設定
+          {% endif %}
         </div>
+      </div>
 
-        <!-- 買い時価格設定 -->
-        <div class="card shadow-sm p-4 mt-4">
-            <h5 class="mb-3">買い時価格の設定</h5>
+      <div class="col-md-6 text-end">
+        {% if product.flag_type == "buy_price" %}
+          {{ product.threshold_price|default_if_none:"0"|floatformat:0 }}円
+        {% elif product.flag_type == "percent_off" %}
+          {{ product.flag_value|default_if_none:"0"|floatformat:0 }} %
+        {% elif product.flag_type == "lowest_price" %}
+          登録以降の最安値を更新したら通知
+        {% else %}
+          ―
+        {% endif %}
+      </div>
+    </div>
+  </div>
 
-            {% if is_kaidoki %}
-            <div id="kaidoki-banner" class="alert alert-success py-2 text-center fw-bold">
-                買い時！ 🎯
-            </div>
-            {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-info text-center py-2 mt-2">
-                {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endif %}
+  <!-- 価格 × 在庫推移グラフ -->
+  <div class="card shadow-sm p-4 mb-4">
+    <h5 class="mb-3">価格 × 在庫推移グラフ</h5>
 
-            <form method="post" class="d-flex align-items-center justify-content-center gap-3">
-                {% csrf_token %}
-                {{ form.threshold_price }}
-                <button type="submit" class="btn btn-primary">保存</button>
-            </form>
+    <!-- price_data_json を安全に JS に埋め込む -->
+    {{ price_data_json|json_script:"price-data-json" }}
 
-            {% if form.threshold_price.errors %}
-            <div class="text-danger small text-center mt-2">
-                {{ form.threshold_price.errors.0 }}
-            </div>
-            {% endif %}
-        </div>
+    <!-- Chart.js 描画用キャンバス -->
+     <div class="chart-container" style="height: 400px;">
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
 
-        {{ price_data_json|json_script:"price-data-json" }}
+  <!-- ボタン群 -->
+  <div class="d-flex justify-content-between mt-4">
+    <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+      ← 一覧へ戻る
+    </a>
+    <a href="{{ product.product_url }}" target="_blank" class="btn btn-danger rounded-pill px-4">
+      商品ページを開く
+    </a>
+  </div>
+</div>
 
-        <!-- グラフ -->
-        <div class="card shadow-sm p-4 mt-4">
-            <h5 class="mb-3">価格 × 在庫推移グラフ</h5>
-
-            {% if has_history %}
-            <div class="chart-wrap">
-                <canvas id="priceChart" data-threshold="{{ product.threshold_price|default:0 }}"></canvas>
-            </div>
-            {% else %}
-            <p class="text-center text-muted mb-0 py-4">価格履歴データがまだありません。</p>
-            {% endif %}
-        </div>
-
-
-        <!-- ✅ 外部JSを読み込み -->
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-        <script src="{% static 'js/product_detail.js' %}"></script>
-        <script src="{% static 'js/product_banner.js' %}"></script>
-        {% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/product_detail.js' %}"></script>
+{% endblock %}

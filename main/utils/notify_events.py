@@ -10,7 +10,7 @@ def create_restock_event(product, user):
         NotificationEvent.objects.create(
             product=product,
             user=user,
-            event_type="stock_low",  # モデル内の選択肢に合わせて
+            event_type="stock_restore",  # モデル内の選択肢に合わせて
             message=f"「{product.product_name}」が再入荷しました！",
             occurred_at=timezone.now(),
             sent_flag=False,

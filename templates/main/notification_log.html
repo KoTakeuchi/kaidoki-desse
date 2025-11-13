@@ -2,9 +2,16 @@
 {% block title %}通知履歴{% endblock %}
 
 {% block page_content %}
-<div class="container mt-4">
+<!-- ✅ AUTH準拠タイトル構造 -->
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">通知履歴</span>
+  </h1>
+</div>
+
+<div class="container py-4">
   <div class="card shadow-sm p-4">
-    <h4 class="mb-3">通知履歴</h4>
+    <h5 class="mb-3">🔔 通知履歴一覧</h5>
 
     {% if logs %}
       <ul class="list-group">
@@ -14,7 +21,7 @@
               <strong>{{ log.product.product_name }}</strong><br>
               <small class="text-muted">{{ log.message }}</small>
             </div>
-            <small class="text-secondary">{{ log.notified_at|date:"Y-m-d H:i" }}</small>
+            <small class="text-secondary">{{ log.occurred_at|date:"Y-m-d H:i" }}</small>
           </li>
         {% endfor %}
       </ul>

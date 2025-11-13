@@ -1,32 +1,77 @@
 {% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
-{% block title %}Kaidoki Desse 管理 | 通知ログ{% endblock %}
+{% block title %}Kaidoki Desse 管理 | 通知管理{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid py-4">
-  <h2 class="fw-bold mb-4 text-dark">通知ログ</h2>
+  <h2 class="fw-bold mb-4 text-dark">通知管理</h2>
 
-  <!-- ======================== -->
   <!-- 🔍 検索フォーム -->
-  <!-- ======================== -->
-  <form method="get" class="row g-3 align-items-end mb-4">
-    <div class="col-md-4">
+  <form method="get" class="d-flex align-items-end flex-wrap gap-2 mb-4 justify-content-between" style="width:100%;">
+
+    <!-- キーワード -->
+    <div style="width:20%;">
       <label class="form-label fw-semibold text-secondary">キーワード</label>
       <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="ユーザー名・商品名・内容">
     </div>
-    <div class="col-md-3">
+
+    <!-- 通知方法 -->
+    <div style="width:13%;">
+      <label class="form-label fw-semibold text-secondary">通知方法</label>
+      <select name="method" id="method-select" class="form-select">
+        <option value="">選択してください</option>
+        <option value="email" {% if request.GET.method == "email" %}selected{% endif %}>メール</option>
+        <option value="app" {% if request.GET.method == "app" %}selected{% endif %}>アプリ</option>
+      </select>
+    </div>
+
+    <!-- 通知種別 -->
+    <div style="width:13%;">
+      <label class="form-label fw-semibold text-secondary">通知種別</label>
+      <select name="type" id="type-select" class="form-select" disabled>
+        <option value="">通知方法を先に選択</option>
+        {% for t in type_list %}
+          <option value="{{ t }}" {% if request.GET.type == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- 開始日 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">開始日</label>
       <input type="date" name="start_date" value="{{ start_date }}" class="form-control">
     </div>
-    <div class="col-md-3">
+
+    <!-- 終了日 -->
+    <div style="width:13%;">
       <label class="form-label fw-semibold text-secondary">終了日</label>
       <input type="date" name="end_date" value="{{ end_date }}" class="form-control">
     </div>
-    <div class="col-md-2 text-end">
-      <button type="submit" class="btn text-white w-100" style="background-color:#3CA9A9;">検索</button>
+
+    <!-- 検索／クリア -->
+    <div style="width:20%;" class="d-flex gap-2 align-items-end justify-content-end">
+      <button type="submit" class="btn text-white px-3" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_notifications' %}" class="btn btn-outline-secondary px-3">クリア</a>
     </div>
+
   </form>
+
+
+  <!-- ========================== -->
+  <!-- 📄 表示件数切替フォーム -->
+  <!-- ========================== -->
+  <div class="text-end mb-2">
+    <form method="get" class="d-inline">
+      <input type="hidden" name="q" value="{{ query }}">
+      <select name="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline">
+        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件</option>
+        <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50件</option>
+        <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100件</option>
+      </select>
+    </form>
+  </div>
+
 
   <!-- ======================== -->
   <!-- 📋 通知ログ一覧 -->
@@ -36,71 +81,75 @@
     <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead class="table-light">
         <tr class="text-secondary">
-          <th>ID</th>
-          <th>ユーザー</th>
-          <th>商品</th>
-          <th>内容</th>
-          <th>日時</th>
-          <th>既読</th>
-          <th>操作</th>
+          <th style="width:6%;">ID</th>
+          <th style="width:10%;">通知方法</th>
+          <th style="width:6%;">既読</th>
+          <th style="width:12%;">ユーザー名</th>
+          <th style="width:20%;">商品名</th>
+          <th style="width:25%;">内容</th>
+          <th style="width:16%;">通知日時</th>
+          <th style="width:10%;">操作</th>
         </tr>
       </thead>
       <tbody>
         {% for log in logs %}
         <tr>
           <td>{{ log.id }}</td>
-          <td>{{ log.user.username }}</td>
-          <td>{{ log.product.product_name|default:"-" }}</td>
-          <td class="text-truncate" style="max-width: 260px;">{{ log.message }}</td>
-          <td>{{ log.notified_at|date:"Y/m/d H:i" }}</td>
+
+          <!-- ✅ 通知方法タグ -->
           <td>
-            {% if log.is_read %}
-              <span class="badge bg-secondary rounded-0">既読</span>
+            {% if log.method == "email" %}
+              メール
+            {% elif log.method == "app" %}
+              アプリ
             {% else %}
-              <span class="badge bg-primary rounded-0" style="background-color:#3CA9A9;">未読</span>
+              不明
             {% endif %}
           </td>
+           <td>
+            {% if log.is_read %}
+              既読
+            {% else %}
+             未読
+            {% endif %}
+          </td>
+          <td>{{ log.user.username }}</td>
+          <td class="text-truncate" style="max-width:220px;">
+            {{ log.product.product_name|default:"-" }}
+          </td>
+          <td class="text-truncate" style="max-width:280px;">
+            {% if log.event_type == "stock_restore" %}
+              在庫復活通知
+            {% elif log.event_type == "stock_few" %}
+              在庫少通知
+            {% elif log.event_type == "threshold_hit" %}
+              買い時価格を下回る価格検知
+            {% elif log.event_type == "lowest_price" %}
+              過去最安値を更新
+            {% elif log.event_type == "discount_over" %}
+              指定割引率を下回る価格検知
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ log.occurred_at|date:"Y/m/d H:i" }}</td>
           <td>
-            <button class="btn btn-sm text-white rounded-0"
-                    style="background-color:#3CA9A9;"
-                    data-bs-toggle="modal"
-                    data-bs-target="#notificationDetailModal{{ log.id }}">
-              詳細
-            </button>
+            <a href="{% url 'admin_app:admin_notification_detail' log.id %}"
+              class="btn btn-sm text-white rounded-0"
+              style="background-color:#3CA9A9;">詳細</a>
           </td>
         </tr>
-
-        <!-- ▼ モーダル -->
-        <div class="modal fade" id="notificationDetailModal{{ log.id }}" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 rounded-0">
-              <div class="modal-header" style="background-color:#b4e4e4;">
-                <h5 class="modal-title fw-bold text-dark">通知詳細</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
-              </div>
-              <div class="modal-body">
-                <table class="table table-borderless mb-0">
-                  <tr><th class="text-secondary" style="width: 25%;">ID</th><td>{{ log.id }}</td></tr>
-                  <tr><th class="text-secondary">ユーザー</th><td>{{ log.user.username }}</td></tr>
-                  <tr><th class="text-secondary">商品</th><td>{{ log.product.product_name|default:"-" }}</td></tr>
-                  <tr><th class="text-secondary">通知内容</th><td>{{ log.message }}</td></tr>
-                  <tr><th class="text-secondary">送信日時</th><td>{{ log.notified_at|date:"Y/m/d H:i" }}</td></tr>
-                  <tr><th class="text-secondary">既読状態</th>
-                      <td>{% if log.is_read %}既読{% else %}未読{% endif %}</td></tr>
-                </table>
-              </div>
-              <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-outline-dark rounded-0" data-bs-dismiss="modal">閉じる</button>
-              </div>
-            </div>
-          </div>
-        </div>
         {% endfor %}
       </tbody>
+
     </table>
   </div>
+
+    {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
   {% else %}
   <p class="text-muted mt-3">通知ログはまだ登録されていません。</p>
   {% endif %}
+
 </div>
+<script src="{% static 'js/notification_filter.js' %}"></script>
 {% endblock %}

@@ -12,29 +12,30 @@ body {
     margin: 0;
     padding: 0;
     color: var(--text);
+    background-color: #f7f5f6;
     font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    /* ヘッダー高さ分の余白を確保 */
+    padding-top: 1rem !important;
 }
 
-/* =============================
-   ページタイトル（auth準拠）
-   ============================= */
-.page-title::after {
-    display: none !important;
-}
-
+/* ==============================
+   ページタイトル（authと完全統一）
+   ============================== */
 .page-header {
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding-top: 3rem;
-    height: 5rem !important;
+    /* ✅ ヘッダーからタイトルまでの距離（auth基準） */
+    margin-top: 4.5rem !important;
+    height: auto !important;
+    padding-top: 0 !important;
 }
 
+/* ✅ タイトル文字 */
 .page-title {
     text-align: center;
     margin: 0;
-    margin-bottom: 2.2rem;
     font-size: 2.3rem;
     font-weight: 800;
     color: var(--primary);
@@ -43,6 +44,7 @@ body {
     position: relative;
 }
 
+/* ✅ 下線デザイン（auth共通） */
 .page-title .title-inner {
     position: relative;
     display: inline-block;
@@ -78,6 +80,10 @@ body {
     height: 100%;
 }
 
+.header-actions .navbar-nav {
+    gap: 2rem !important;
+}
+
 .header-actions .nav-link {
     color: #fff;
     font-weight: 700;
@@ -86,12 +92,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0;
     line-height: 1;
     text-decoration: none;
     transition: transform 0.2s ease, opacity 0.2s ease;
     padding: 0.3rem 0;
-    vertical-align: middle;
 }
 
 .header-actions .nav-link:hover {
@@ -99,6 +103,7 @@ body {
     opacity: 1;
 }
 
+/* アイコンサイズ統一 */
 .header-actions .nav-link img,
 .header-actions .nav-link svg {
     margin-right: 3px !important;
@@ -107,17 +112,91 @@ body {
     object-fit: contain;
     display: block;
     border-radius: 0 !important;
-    overflow: visible !important;
     background: none;
 }
 
+/* ▼ ドロップダウン制御 */
 .header-actions .dropdown-toggle::after {
     display: none;
 }
 
-.header-actions .navbar-nav {
-    gap: 2rem !important;
+.header-actions .dropdown-menu {
+    display: none;
+    z-index: 2000 !important;
+    position: absolute;
+    background-color: #fff;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    opacity: 0;
+
+
+    /* ▼位置指定だけ修正 */
+    top: 100%;
+    /* トグルの真下 */
+    right: 0;
+    /* 右端合わせ（dropdown-menu-endと同じ） */
+    left: auto;
+    /* 以前の left 指定を無効化 */
+    transform: translateY(6px);
+    /* 少しだけ下にずらす */
+    margin-top: 0;
 }
+
+
+
+/* hover時に展開 */
+.header-actions .nav-item:hover>.dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 項目hover時の強調 */
+.header-actions .dropdown-item {
+    padding: 0.6rem 1.2rem;
+    transition: background-color 0.2s ease;
+}
+
+.header-actions .dropdown-item:hover {
+    background-color: rgba(195, 86, 86, 0.1);
+    font-weight: 600;
+}
+
+
+
+/* ===============================================
+   ✅ ドロップダウン位置ずれ修正
+   =============================================== */
+.header-actions .nav-item {
+    position: relative;
+    /* ← ドロップダウンの位置基準をここに */
+}
+
+/* ========================
+   ヘッダー固定対策（背景画像保持）
+   ======================== */
+.header-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+/* ヘッダー内部の高さ */
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 70px;
+}
+
+/* ========================　========================　========================　========================　========================
+                                                            商品一覧画面
+   ========================　========================　========================　========================　======================== */
+
 
 /* ========================
    絞り込みフォーム＋タグ配置
@@ -133,6 +212,7 @@ body {
     background-color: #f2d9d9;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 12px !important;
     padding-bottom: 3rem;
     /* タグぶんの空間を常時確保 */
 }
@@ -140,7 +220,6 @@ body {
 /* タグの浮き表示設定 */
 .filter-tags-floating {
     position: absolute;
-    /* 枠下に少し重なる */
     left: 0.2rem;
     right: 1rem;
     display: flex;
@@ -149,7 +228,6 @@ body {
     z-index: 10;
 }
 
-/* タグがないときでも高さ一定 */
 .filter-tags-floating:empty {
     display: none;
 }
@@ -157,11 +235,9 @@ body {
 /* カテゴリチェックボックスと文字の間隔調整 */
 .form-check-input.me-1 {
     margin-right: 0rem !important;
-    /* ← 約8px（デフォルト4px） */
 }
 
-
-/* 買い時　トグルスイッチ */
+/* 買い時トグルスイッチ */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -200,7 +276,7 @@ body {
     transition: .4s;
 }
 
-/* ✅ ON状態（買い時カラー） */
+/* ✅ ON状態 */
 .toggle-switch input:checked+.slider {
     background-color: #F7CB6E;
 }
@@ -235,7 +311,7 @@ body {
 }
 
 .form-check-label.me-3 {
-    margin-right: -0.5em !important;
+    margin-right: -0.2em !important;
 }
 
 .col-md-8.col-12 {
@@ -263,21 +339,12 @@ body {
 
 .justify-content-end {
     margin-left: 25px !important;
-    /* 必要に応じて調整 */
 }
 
 /* ========================
-商品登録ボタン（白背景化）
+   商品登録ボタン（白背景化）
    ======================== */
-.dropdown-toggle.btn {
-    background-color: #fff !important;
-    color: var(--primary) !important;
-    border: 1px solid var(--primary) !important;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
+.dropdown-toggle.btn,
 .btn-outline-danger.btn-sm {
     background-color: #fff !important;
     color: var(--primary) !important;
@@ -296,9 +363,9 @@ body {
     min-width: 88px;
 }
 
-/* =============================
+/* ==============================
    並び順ソートボタン
-   ============================= */
+   ============================== */
 .btn.sort-button.btn-sm.dropdown-toggle {
     background-color: #fff !important;
     color: #333 !important;
@@ -329,9 +396,9 @@ body {
     box-shadow: none !important;
 }
 
-/* =============================
-   チェックボックス／ラジオボタン統一
-   ============================= */
+/* ==============================
+   チェックボックス／ラジオ統一
+   ============================== */
 input[type="radio"],
 input[type="checkbox"],
 .form-check-input {
@@ -348,9 +415,9 @@ input[type="checkbox"],
     box-shadow: 0 0 0 0.2rem rgba(195, 86, 86, 0.25) !important;
 }
 
-/* =============================
+/* ==============================
    絞り込みタグカラー設定
-   ============================= */
+   ============================== */
 .filter-tag-common,
 .filter-tag-user,
 .filter-tag-stock,
@@ -383,14 +450,13 @@ input[type="checkbox"],
     background-color: #888B9E !important;
 }
 
-/* === 絞り込みタグ === */
 .filter-tag-buytime {
     background-color: #C35656 !important;
 }
 
-/* =============================
+/* ==============================
    買い時バッジ・枠
-   ============================= */
+   ============================== */
 .badge.badge-warning {
     border: var(--bs-warning) !important;
     color: var(--bs-warning) !important;
@@ -410,9 +476,45 @@ input[type="checkbox"],
     box-shadow: 0 0 10px rgba(230, 138, 0, 0.35) !important;
 }
 
-/* ===============================
+/* ==========================================================
+   商品一覧レイアウト調整（row-cols強制上書き）
+   ========================================================== */
+
+/* XL（Full HD以上）では4列固定 */
+.product-list-wrapper .row.row-cols-xl-5 {
+    --bs-gutter-x: 20px !important;
+    --bs-gutter-y: 20px !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    justify-content: center !important;
+}
+
+/* 各カードの幅を均等に */
+.product-list-wrapper .row.row-cols-xl-5>* {
+    width: 100% !important;
+    flex: none !important;
+    max-width: none !important;
+}
+
+/* 商品一覧カードの情報エリアだけに背景を付ける */
+main .container .card-body.text-center {
+    background-color: #f8f9fa !important;
+    border-radius: 0 0 12px 12px;
+    padding: 16px 14px 0;
+}
+
+/* ==============================
+   商品一覧ページ限定：カード全体の内側余白
+   ============================== */
+main .card.product-card {
+    padding-bottom: 10px !important;
+
+}
+
+
+/* ==============================
    商品リスト全体ブロック
-   =============================== */
+   ============================== */
 .product-list-wrapper {
     background-color: #fff;
     border: 2px solid #ddd;
@@ -421,13 +523,16 @@ input[type="checkbox"],
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-body {
-    background-color: #f7f5f6;
+/* ✅ 買い時達成時の赤字を確実に適用 */
+.price-info .text-danger {
+    color: #C35656 !important;
+    /* プライマリカラーに統一 */
+    font-weight: 600;
 }
 
-/* =============================
+/* ==============================
    編集ボタン（黒ベース・反転ホバー）
-   ============================= */
+   ============================== */
 .btn-outline-primary.btn-sm {
     border-color: #696969 !important;
     color: #696969 !important;
@@ -442,9 +547,14 @@ body {
     border-color: #696969 !important;
 }
 
-/* =============================
+.card-footer {
+    padding-top: 10px !important;
+    padding-bottom: 0 !important;
+}
+
+/* ==============================
    ページネーション（メインカラー）
-   ============================= */
+   ============================== */
 .pagination .page-link {
     color: var(--primary) !important;
     border: 1px solid #ddd;
@@ -464,17 +574,137 @@ body {
     color: #fff !important;
 }
 
-/* =============================
-   カテゴリ管理（調整版）
-   ============================= */
-/* 説明文 */
+/* ============================== ============================== ============================== ==============================
+  　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品詳細(product_detail.html)
+   ==============================  ============================== ============================== ==============================*/
+.product-detail-image {
+    width: 60%;
+    /* 左カラムの60%サイズに拡大 */
+    height: auto;
+    /* 比率維持 */
+    object-fit: contain;
+    display: block;
+}
+
+
+body.product-detail-page .mb-4 {
+    margin-bottom: 15px !important;
+}
+
+/* --- 商品詳細グラフ領域調整 --- */
+.chart-wrap {
+    position: relative;
+    height: 400px;
+    /* グラフの縦幅（調整可） */
+    width: 100%;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+body.product-detail-page .card canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+body.product-detail-page .card.shadow-sm.p-4.mb-4 {
+    margin-bottom: 60px;
+    /* カード間余白を調整 */
+}
+
+/* ============================== ============================== ============================== ==============================
+  　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品編集(product_edit.html) 一部商品詳細と合同
+   ==============================  ============================== ============================== ==============================*/
+
+
+/* 親行（row）全体を中央揃えのflexコンテナ化 */
+.card .row.g-4 {
+    display: flex;
+    align-items: center;
+    /* 縦方向中央 */
+    justify-content: center;
+    /* 横方向中央（必要なら） */
+
+}
+
+/* ==============================
+   商品編集ページ：画像サイズを左カラムの75%に拡大配置
+   ============================== */
+.col-md-5 {
+    display: flex;
+    align-items: center;
+    /* 縦中央 */
+    justify-content: center;
+    /* 横中央 */
+    height: 100%;
+}
+
+.product-edit-image {
+    width: 70%;
+    /* 左カラムの70%サイズに拡大 */
+    height: auto;
+    /* 比率維持 */
+    object-fit: contain;
+    display: block;
+}
+
+/* ==============================
+   カテゴリ要素間の余白
+   ============================== */
+body.product-edit-page .cat-tag.user {
+    margin-top: 4px !important;
+}
+
+/* ==========================================================
+   商品編集：商品名・ショップ名を編集可能化
+   ========================================================== */
+body.product-edit-page input[id="id_product_name"],
+body.product-edit-page input[id="id_shop_name"] {
+    cursor: text !important;
+    background-color: #fff !important;
+    color: #333 !important;
+    border-color: #ccc !important;
+}
+
+/* ==============================
+   買い時価格/割引率　見た目
+   ============================== */
+body.product-edit-page #id_threshold_price,
+body.product-edit-page #id_flag_value,
+body.product-edit-page #id_threshold_price_unit,
+body.product-edit-page #id_flag_value_unit,
+body.product-edit-page .text-muted {
+    margin-top: 10px;
+    border-radius: 8px !important;
+}
+
+/* ==============================
+   下のカードの余白調整
+   ============================== */
+body.product-edit-page .card .row.g-4 {
+    min-height: unset !important;
+}
+
+body.product-edit-page .card {
+    margin-bottom: 5px !important;
+}
+
+/* ==============================
+   更新するボタンの列　余白調整
+   ============================== */
+body.product-edit-page .form-footer {
+    margin-top: 14px !important;
+}
+
+
+/* ============================== ============================== ============================== ==============================
+  　 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　カテゴリ管理（category_my.html）
+   ==============================  ============================== ============================== ==============================*/
 .category-header {
-    margin-top: 25px !important;
+    margin-top: 12px !important;
     display: flex;
     justify-content: space-between;
     align-items: flex-end !important;
-    ;
-    /* 下端で揃える */
     width: 66%;
     margin: 0 auto;
 }
@@ -483,20 +713,16 @@ body {
     margin-left: 1em;
 }
 
-
-/* テーブル全体 */
 .category-table-wrapper {
     background-color: #fff !important;
+    padding-top: 0 !important;
     border: 1px solid #f1dada;
     border-radius: 12px;
     width: 66%;
-    /* 🟡 横幅を約2/3に縮小 */
     margin: 0 auto;
-    /* 中央寄せ */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* テーブル */
 .category-table {
     width: 100%;
     border-collapse: collapse;
@@ -504,16 +730,13 @@ body {
     text-align: center;
 }
 
-/* ヘッダー */
 .table-header-row th {
     background-color: #fff !important;
-    /* color: #C35656; */
     font-weight: 600;
     border-bottom: 2px solid #f1dada;
-    padding: 10px 0;
+    padding-bottom: 3px !important;
 }
 
-/* 行 */
 .category-table tbody tr {
     background-color: #fff;
     border-bottom: 1px solid #f1dada;
@@ -524,15 +747,12 @@ body {
     background-color: #FFF5F5;
 }
 
-/* セル */
 .category-table th,
 .category-table td {
     padding: 10px 0;
     border-right: none;
-    /* 🟣 縦線削除 */
 }
 
-/* No列と登録数列をやや狭く */
 .category-table th:nth-child(1),
 .category-table td:nth-child(1),
 .category-table th:nth-child(3),
@@ -540,7 +760,6 @@ body {
     width: 12%;
 }
 
-/* 操作列を登録数と同幅に */
 .category-table th:nth-child(4),
 .category-table td:nth-child(4) {
     width: 15%;
@@ -563,20 +782,15 @@ body {
     color: #C35656;
     background-color: #fff;
     opacity: 0.7;
-    /* 全体を薄く */
     border-width: 1px;
-    /* 枠を細く */
     transition: all 0.2s ease;
-    /* ホバー時に滑らか変化 */
 }
 
 .btn-outline-danger:hover {
     background-color: #C35656;
     color: #fff;
     opacity: 1;
-    /* ホバーで元の濃さに */
     transform: scale(1.03);
-    /* ほんの少し拡大で反応感 */
 }
 
 .btn-outline-secondary {
@@ -590,42 +804,34 @@ body {
     color: #333;
 }
 
-/* 操作ボタン間の余白 */
 .category-table td .btn {
     margin: 0 3px;
 }
 
-/* table の影響を強制的に打ち消す */
-.category-table.table {
-    background-color: #fff !important;
-}
-
+/* table影響打消し */
+.category-table.table,
 .category-table.table> :not(caption)>*>* {
     background-color: #fff !important;
 }
 
-/* ✨ カテゴリ入力エラースタイル */
+/* ✨ 入力エラースタイル */
 .is-invalid {
     border: 2px solid #dc3545 !important;
     background-color: #fff5f5 !important;
 }
 
-/* ============================= */
-/* カテゴリ管理テーブルのUI調整  */
-/* ============================= */
-
-/* 行ホバー時の背景強調 */
+/* ==============================
+   カテゴリ管理テーブル調整
+   ============================== */
 .category-table tbody tr:hover {
     background-color: #fff7f7 !important;
     transition: background-color 0.2s ease-in-out;
 }
 
-/* 登録数ゼロ行を淡く */
 .category-table tbody tr[data-count="0"] {
     opacity: 0.45;
 }
 
-/* 編集ボタン強調 */
 .btn-outline-secondary {
     border-color: #bbb;
     color: #444;
@@ -636,7 +842,6 @@ body {
     color: #222;
 }
 
-/* 削除ボタンを控えめに */
 .btn-outline-danger {
     opacity: 0.7;
     border-color: #d08a8a;
@@ -649,44 +854,52 @@ body {
     color: #b00;
 }
 
-/* ================================================
-   商品登録・編集フォーム専用スタイル群（product_form.html）
-   ※ user.css に統合する場合、このブロック単位で管理
-   ================================================ */
+/* ================================================ =================================================== ================================================
+   　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　商品登録フォーム専用スタイル群（product_form.html）
+   ================================================　 ============== =====================================================================================
 
 /* --- カードデザイン（フォーム外枠） --- */
 .card {
-
     background-color: #fff !important;
-    /* border-radius: 16px;
+    padding: 1rem !important;
+    margin-top: 10px !important;
+}
 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+.form-label {
+    margin-bottom: 0.4rem;
+    margin-left: 0.8rem;
+}
 
-    border: 1px solid #eee; */
-
+.my-4 {
+    margin-top: 1rem !important;
+    margin-bottom: 1.5rem !important;
 }
 
 /* --- テキスト入力フォーム共通 --- */
 .form-control {
+    background-color: #fff !important;
     border-radius: 8px;
-    /* 丸みのある入力欄 */
     border: 1px solid #ddd;
-    /* 標準枠線 */
     transition: all .2s;
-    /* フォーカス時に滑らかに変化 */
+}
+
+/* ✅ 商品名・ショップ名・登録時価格：読み取り専用の見た目固定 */
+input[readonly][id="id_shop_name"],
+input[readonly][id="id_initial_price"],
+input[readonly][id="id_product_name"] {
+    background-color: #f8f8f8 !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    border-color: #ddd !important;
 }
 
 /* --- 入力欄フォーカス時の強調 --- */
 .form-control:focus {
     border-color: #C35656;
-    /* ブランドカラーの赤系 */
     box-shadow: 0 0 0 .2rem rgba(195, 86, 86, .15);
-    /* 薄い外枠の強調 */
 }
 
-/* グラフエリア */
-
-/* グラフ全体のラッパー（高さ固定 + レスポンシブ対応） */
+/* --- グラフ関連 --- */
 .chart-wrap {
     position: relative;
     height: 340px;
@@ -694,14 +907,12 @@ body {
     width: 100%;
 }
 
-/* Chart.js のキャンバス調整（スムーズなリサイズ） */
 #priceChart {
     width: 100%;
     height: 100%;
     display: block;
 }
 
-/* 「価格データがありません」メッセージ調整 */
 .chart-wrap+p.text-muted {
     margin-top: 1rem;
     font-size: 0.9rem;
@@ -709,14 +920,14 @@ body {
     color: #777;
 }
 
-/* 買い時バナー（#kaidoki-banner）の演出準備 */
+/* --- 買い時バナー演出 --- */
 #kaidoki-banner {
     opacity: 0;
     transform: scale(0.95);
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
 }
 
-/* --- トグルスイッチ（優先度切替など） --- */
+/* --- 優先度トグルスイッチ --- */
 .form-switch .form-check-input {
     cursor: pointer;
     width: 3.2rem;
@@ -728,52 +939,155 @@ body {
     margin-left: 0.5rem;
 }
 
-/* --- 楽天API 通信状態メッセージエリア（背景付き旧デザイン） --- */
-#api-status-message {
-    font-weight: 600;
-    padding: 8px 10px;
-    border-radius: 8px;
-    margin-top: 6px;
-    display: none;
-    /* 初期非表示 */
+/* =========================================
+   商品URL 入力欄 ＆ APIステータス表示
+   ========================================= */
+
+/* --- デフォルト見た目（太字＋淡い青背景） --- */
+body.product-form-page #id_product_url {
+    background-color: #eef4ff;
+    border-radius: 999px;
+    border: 1px solid #d3ddff;
+    padding: 10px 16px;
+    transition: all 0.25s ease;
 }
 
-/* 成功時（薄緑背景） */
-#api-status-message.success {
+/* --- フォーカス時（赤線禁止・自然な青トーン） --- */
+body.product-form-page #id_product_url:not(.url-success):not(.url-error):focus {
+    outline: none;
+    border-color: #c4cff8;
+    box-shadow: 0 0 0 0.15rem rgba(118, 135, 214, 0.25);
+    background-color: #f3f6ff;
+}
+
+/* --- API成功（緑トーン） --- */
+body.product-form-page #id_product_url.url-success {
+    background-color: #f5fff8;
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.25);
+}
+
+/* --- API失敗（赤トーン） --- */
+body.product-form-page #id_product_url.url-error {
+    background-color: #fff5f5;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.15rem rgba(220, 53, 69, 0.28);
+}
+
+/* --- Djangoフォームエラー（登録済みなど） --- */
+body.product-form-page .url-error-box {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #a94442;
+    background: #f2dede;
+    border: 1px solid #ebcccc;
+    border-radius: 8px;
+    padding: 6px 10px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* =========================================
+   楽天API 通信状態メッセージ
+   ========================================= */
+
+body.product-form-page #api-status-message {
+    font-weight: 600;
+    border-radius: 999px;
+    display: none;
+    max-width: 520px;
+    margin: 0 auto 0 auto;
+    padding: 6px 16px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+/* --- 共通アイコン設定 --- */
+body.product-form-page #api-status-message::before {
+    display: inline-block;
+    margin-right: 6px;
+    font-weight: 900;
+}
+
+/* --- 成功メッセージ --- */
+body.product-form-page #api-status-message.api-success {
     color: #155724;
-    background-color: #d4edda !important;
+    background-color: #d4edda;
     border: 1px solid #c3e6cb;
 }
 
-/* エラー時（薄赤背景） */
-#api-status-message.error {
+body.product-form-page #api-status-message.api-success::before {
+    content: "✓";
+}
+
+/* --- エラーメッセージ --- */
+body.product-form-page #api-status-message.api-error {
     color: #721c24;
-    background-color: #f8d7da !important;
+    background-color: #f8d7da;
     border: 1px solid #f5c6cb;
 }
 
-/* --- 商品画像プレビュー領域 --- */
+body.product-form-page #api-status-message.api-error::before {
+    content: "✕";
+}
+
+/* --- 情報/待機中メッセージ --- */
+body.product-form-page #api-status-message.api-info {
+    color: #555;
+    background-color: #f3f3f3;
+    border: 1px solid #e0e0e0;
+}
+
+body.product-form-page #api-status-message.api-info::before {
+    content: "…";
+}
+
+
+
+/* --- 商品画像プレビュー --- */
 #preview-image {
     width: 250px;
     height: 250px;
     object-fit: contain;
-    /* 画像比率を保ちつつフィット */
     background: #fff;
     border: 2px solid #eee;
     border-radius: 10px;
 }
 
-/* --- セクションタイトル（小見出し） --- */
+/* --- セクションタイトル --- */
 .section-title {
     font-weight: 700;
     margin-bottom: .35rem;
 }
 
-/* ============================================
-   ✅ 商品名・ショップ名・登録時価格（フォームUI調整）
-   ============================================ */
+/* --- カテゴリ選択 --- */
+.category-btn {
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 4px 12px;
+    cursor: pointer;
+    margin: 2px;
+    display: inline-block;
+    transition: all 0.2s;
+}
 
-/* 共通：横並びの円表記付き入力欄 */
+.category-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.category-btn.active {
+    background-color: #C35656;
+    color: #fff;
+    border-color: #C35656;
+}
+
+/* --- 円マーク付き入力欄 --- */
 .yen-group {
     display: flex;
     align-items: center;
@@ -785,23 +1099,7 @@ body {
     text-align: right;
 }
 
-/* ✅ 登録時価格（API専用・入力不可） */
-input[readonly] {
-    background-color: #f8f8f8 !important;
-    color: #666 !important;
-    cursor: not-allowed !important;
-    border-color: #ddd !important;
-}
-
-/* ✅ 編集可の通常フィールド（商品名・ショップ名） */
-#id_product_name,
-#id_shop_name {
-    background-color: #fff !important;
-    color: #222 !important;
-}
-
-
-/* --- 商品フォームページでは hover アニメを無効化 --- */
+/* --- 商品フォームページでは hover アニメ無効化 --- */
 body.product-form-page .card:hover,
 body.product-form-page .product-card:hover {
     transform: none !important;
@@ -811,7 +1109,6 @@ body.product-form-page .product-card:hover {
 /* --- 入力エラー文言 --- */
 .error-text {
     color: #d9534f;
-    /* 赤文字で警告 */
     font-size: 0.85rem;
     margin-top: 4px;
 }
@@ -824,34 +1121,378 @@ select.form-select {
 
 select.form-select option {
     padding: 6px;
-    /* 選択肢の縦余白を確保 */
 }
 
+/* --- 商品登録フォーム専用の背景色ルール --- */
+.product-form-page input[readonly] {
+    background-color: #f8f8f8 !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    border: 1px solid #ddd !important;
+}
+
+.product-form-page input.editable {
+    background-color: #fff !important;
+    color: #222 !important;
+    cursor: text !important;
+    border: 1px solid #ccc !important;
+}
+
+
+/* ==========================================================
+   カテゴリ .mb-4 だけ、中身を少し下に下げる
+   ========================================================== */
+.mb-4:has(.category-section) {
+    padding-top: 16px;
+    /* 上側の余白を増やして中身を下げる */
+    padding-bottom: 0;
+    /* 下側にも少し余白（お好みで調整） */
+    /* margin はいじらない */
+}
+
+/* ==========================================================
+    カテゴリ選択
+   ========================================================== */
+
+.cat-tag {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    color: #333;
+    margin: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+}
+
+
+.cat-tag.common.active,
+.cat-tag.user.active {
+    background: #C35656;
+    border-color: #C35656;
+    color: #fff;
+}
+
+.cat-tag:hover {
+    opacity: 0.85;
+}
+
+.cat-tag.user {
+    margin-top: -50px;
+}
+
+/* カテゴリの説明文だけは太字継承を打ち消す */
+.section-title .text-muted.small {
+    font-weight: 400 !important;
+}
+
+/* --- 商品登録フォーム下のボタン配置--- */
+.form-footer {
+    margin-top: 1em !important;
+}
+
+.px-5 {
+    padding: 6px 20px !important;
+}
+
+/* ==========================================================
+   優先度トグルスイッチ
+   ========================================================== */
+
+#prioritySwitch.form-check-input {
+    margin-left: -35px !important;
+    /* ← 左に10pxの余白を追加 */
+}
+
+/* ① トグルスイッチのサイズ拡大 */
+#prioritySwitch.form-check-input {
+    width: 3.5rem;
+    /* 横幅 */
+    height: 1.8rem;
+    /* 高さ */
+    transform: scale(1.05);
+}
+
+/* ② トグルとラベル（高／普通）の間隔拡大 */
+#priorityLabel {
+    margin-left: 0.8rem !important;
+    /* ←デフォルトより少し広く */
+    font-size: 1.1rem;
+    /* ←文字サイズを拡大 */
+}
+
+/* ③ 「普通」は太字にしない。ON時（高）のみ太字 */
+#prioritySwitch:not(:checked)+#priorityLabel {
+    font-weight: 400 !important;
+    /* 普通：細字 */
+}
+
+#prioritySwitch:checked+#priorityLabel {
+    font-weight: 700 !important;
+    /* 高：太字 */
+}
+
+/* ==========================================================
+   通知条件
+   ========================================================== */
+.flag-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    /* ボタン群を中央揃え */
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.flag-btn {
+    flex: 1 1 auto;
+    min-width: 120px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 8px 14px;
+    background-color: #fff;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.flag-btn:hover {
+    background-color: #f7f7f7;
+    border-color: #bbb;
+}
+
+.flag-btn.active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: #333;
+    font-weight: 700;
+    box-shadow: 0 0 4px rgba(247, 203, 110, 0.5);
+}
+
+/* 説明ボックス */
+.flag-desc-box {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #666;
+    background: none;
+    padding: 0;
+}
+
+/* ✅ 入力エリア（割引率・買い時価格・最安値） */
+.flag-input-area,
+.flag-input-block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.flag-input-area label {
+    font-weight: 700;
+    color: #333;
+}
+
+.flag-input-area input,
+.flag-input-area select {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 4px 8px;
+    width: 120px;
+    text-align: right;
+}
+
+.flag-input-area span {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+/* ✅ 「割引率」入力欄などの補助文 */
+.flag-input-hint {
+    font-size: 0.85rem;
+    color: #888;
+    margin-left: 4px;
+}
+
+/* ==========================================================
+   通知条件入力ブロック（上マージンを削除）
+   ========================================================== */
+.mb-4 .row.g-3.mt-3 {
+    margin-top: 0 !important;
+}
+
+#wrap_threshold.col-md-3,
+#wrap_percent.col-md-3 {
+    margin-top: 0 !important;
+}
+
+/* ==========================================================
+   ✅ 通知条件エリアの角丸調整（入力欄に統一）
+   ========================================================== */
+
+/* ボタン（買い時価格／割引率／最安値） */
+.flag-btn {
+    border-radius: 8px;
+    padding: 8px 14px;
+    transition: all 0.2s ease;
+}
+
+/* 選択時のボタン */
+.flag-btn.active {
+    border-radius: 8px;
+}
+
+/* 下段の入力欄も統一 */
+#wrap_threshold .form-control,
+#wrap_percent .form-select {
+    border-radius: 8px !important;
+}
+
+/* ==========================================================
+   買い時価格・割引率 入力欄 共通デザイン
+   ========================================================== */
+.yen-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 入力欄・セレクトボックス共通 */
+.yen-group input,
+.yen-group select {
+    flex: 1;
+    text-align: right;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background-color: #fff;
+    color: #333;
+    font-size: 15px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+/* フォーカス時 */
+.yen-group input:focus,
+.yen-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(247, 203, 110, 0.3);
+}
+
+/* 単位（円・％） */
+.yen-group span {
+    font-weight: 600;
+    color: #333;
+    margin-left: 4px;
+}
+
+/* 買い時価格の右横に出るエラーメッセージ */
+.error-text {
+    font-size: 13px;
+    color: #d9534f;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+/* ==========================================================
+   割引率セレクトボックスの見た目調整
+   ========================================================== */
+
+/* 矢印削除 */
+.yen-group select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: none !important;
+}
+
+/* IE対策 */
+.yen-group select::-ms-expand {
+    display: none !important;
+}
+
+/* スクロールバー非表示（Windows対策） */
+.yen-group select::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+/* 選択中のハイライト（selectの青を置き換え） */
+.yen-group select option:checked {
+    background-color: #F7CB6E !important;
+    /* アクセントカラー */
+    color: #333 !important;
+}
+
+/* ホバー中（薄めの黄色） */
+.yen-group select option:hover {
+    background-color: rgba(247, 203, 110, 0.5) !important;
+    color: #333 !important;
+}
+
+/* ==========================================================
+   フッターボタン：フォーム幅に合わせて左右端揃え
+   ========================================================== */
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    border-top: 1px solid #eee;
+    width: 100%;
+}
+
+/* コンテナと揃える（フォームと同じ横幅） */
+.container .form-footer {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+
+/* ==========================================================
+   数値入力スピンボタン削除
+   ========================================================== */
+#id_threshold_price::-webkit-outer-spin-button,
+#id_threshold_price::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#id_threshold_price[type="number"] {
+    -moz-appearance: textfield;
+}
+
+
 /* ================================================
-   ✅ 通知アイコン・バッジ統一（ヘッダー右上）
+   通知・優先度バッジ関連
    ================================================ */
-
-
-/* 通知数の赤丸（メインカラーに統一） */
 .notification-badge,
 .nav-link .badge {
     background-color: var(--primary) !important;
+    margin-top: 3px !important;
     color: #fff !important;
     border: 1px solid #fff !important;
     font-weight: 700 !important;
     font-size: 0.75rem !important;
     border-radius: 50% !important;
-    padding: 2px 4px !important;
-    min-width: 22px !important;
-    min-height: 22px !important;
+    padding: 1px 2px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
 }
-
-/* ================================================
-   ✅ 優先度バッジのカラー統一（商品カード内）
-   ================================================ */
 
 /* 優先度：高 → メインカラー */
 .badge-priority-high {
@@ -864,12 +1505,7 @@ select.form-select option {
 
 /* 優先度：普通 → アクセントカラー */
 .badge-priority-normal {
-    /* background-color: var(--accent) !important;
-    color: #fff !important;
-    border-radius: 10px !important;
-    padding: 0.35em 0.75em !important; */
     font-weight: 500 !important;
-
 }
 
 /* 共通hover */
@@ -878,10 +1514,37 @@ select.form-select option {
     opacity: 0.85;
 }
 
-/* ================================================
-   ✅ 在庫バッジ文字色を白に統一
-   ================================================ */
+/* 在庫バッジ白統一 */
 .badge.bg-secondary,
 .badge.bg-warning {
     color: #fff !important;
+}
+
+/* ================================================
+   ページ全体調整
+   ================================================ */
+main>.container.py-4 {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+
+/* カテゴリタグをクリック可能にする */
+.category-section {
+    position: relative;
+    z-index: 10 !important;
+}
+
+.cat-tag {
+    display: inline-block;
+    cursor: pointer;
+    pointer-events: auto !important;
+    user-select: none;
+    z-index: 11 !important;
+}
+
+.cat-tag.common.active,
+.cat-tag.user.active {
+    background-color: var(--primary);
+    color: #fff;
 }

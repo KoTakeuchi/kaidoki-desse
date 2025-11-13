@@ -1,43 +1,121 @@
 {% extends "admin_app/layout-admin.html" %}
 {% load static %}
 
-{% block title %}Kaidoki Desse 管理 | エラーログ一覧{% endblock %}
+{% block title %}Kaidoki Desse 管理 | エラー管理{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid py-4">
-  <h3 class="fw-bold text-dark mb-4">⚠ エラーログ一覧</h3>
+  <h2 class="fw-bold mb-4 text-dark">エラー管理</h2>
 
+  <!-- 🔍 検索フォーム -->
+  <form method="get" class="d-flex align-items-end justify-content-between flex-wrap mb-4" style="gap: 8px;">
+    <div style="width: 22%;">
+      <label class="form-label fw-semibold text-secondary">キーワード</label>
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="ユーザー名・発生箇所・内容">
+    </div>
+
+    <div style="width: 12%;">
+      <label class="form-label fw-semibold text-secondary">ステータス</label>
+      <select name="status" class="form-select">
+        <option value="">全て</option>
+        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済</option>
+        <option value="unresolved" {% if request.GET.status == "unresolved" %}selected{% endif %}>未対応</option>
+      </select>
+    </div>
+
+    <div style="width: 12%;">
+      <label class="form-label fw-semibold text-secondary">エラー種別</label>
+      <select name="type" class="form-select">
+        <option value="">全て</option>
+        <option value="TypeError" {% if request.GET.type == "TypeError" %}selected{% endif %}>TypeError</option>
+        <option value="ValueError" {% if request.GET.type == "ValueError" %}selected{% endif %}>ValueError</option>
+        <option value="NameError" {% if request.GET.type == "NameError" %}selected{% endif %}>NameError</option>
+      </select>
+    </div>
+
+    <div style="width: 12%;">
+      <label class="form-label fw-semibold text-secondary">開始日</label>
+      <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="form-control">
+    </div>
+
+    <div style="width: 12%;">
+      <label class="form-label fw-semibold text-secondary">終了日</label>
+      <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="form-control">
+    </div>
+
+    <div style="width: 20%; display: flex; gap: 4px; align-items: end;">
+      <button type="submit" class="btn text-white w-50" style="background-color:#3CA9A9;">検索</button>
+      <a href="{% url 'admin_app:admin_error_logs' %}" class="btn btn-outline-secondary w-50">クリア</a>
+    </div>
+  </form>
+
+  <!-- ▼ 表示件数切替 -->
+  <div class="text-end mb-2">
+    <form method="get" class="d-inline">
+      <input type="hidden" name="q" value="{{ query }}">
+      <select name="per_page" onchange="this.form.submit()" class="form-select form-select-sm w-auto d-inline">
+        <option value="20" {% if request.GET.per_page == '20' or not request.GET.per_page %}selected{% endif %}>20件</option>
+        <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50件</option>
+        <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100件</option>
+      </select>
+    </form>
+  </div>
+  <!-- ======================== -->
+  <!-- 📋 エラーログ一覧 -->
+  <!-- ======================== -->
   {% if logs %}
   <div class="table-responsive">
-    <table class="table align-middle mb-0 border-top" style="border-color:#b4e4e4;">
+    <table class="table table-hover align-middle border-top" style="border-color:#b4e4e4;">
       <thead class="table-light">
         <tr class="text-secondary">
-          <th>ID</th>
-          <th>ユーザー</th>
-          <th>発生箇所</th>
-          <th>エラー種類</th>
-          <th>内容</th>
-          <th>日時</th>
+          <th style="width:6%;">ID</th>
+          <th style="width:8%;">ステータス</th>
+          <th style="width:11%;">対応者</th>
+          <th style="width:11%;">ユーザー名</th>
+          <th style="width:14%;">エラー種別</th>
+          <th style="width:14%;">発生箇所</th>
+          <th style="width:12%;">内容</th>
+          <th style="width:14%;">発生日時</th>
+          <th style="width:10%;">操作</th>
         </tr>
       </thead>
-      <tbody>
-        {% for log in logs %}
-        <tr>
-          <td>{{ log.id }}</td>
-          <td>{{ log.user|default:"-" }}</td>
-          <td>{{ log.source }}</td>
-          <td>{{ log.type_name }}</td>
-          <td>
-            <pre class="small mb-0" style="white-space: pre-wrap; word-break: break-word;">{{ log.err }}</pre>
-          </td>
-          <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
+        <tbody>
+          {% for log in logs %}
+          <tr class="{% if log.status == 'resolved' %}resolved-row{% endif %}">
+            <td>{{ log.id }}</td>
+            <td>
+              {% if log.status == "unresolved" %}
+                未対応
+              {% elif log.status == "in_progress" %}
+                対応中
+              {% elif log.status == "resolved" %}
+                対応済み
+              {% endif %}
+            </td>
+            <td>{{ log.handled_by.username|default:"-" }}</td>
+            <td>{{ log.user.username|default:"-" }}</td>
+            <td>{{ log.type_name|default:"-" }}</td>
+            <td>{{ log.source|default:"-" }}</td>
+            <td class="text-truncate" style="max-width:300px;">
+              {{ log.message|default:"-" }}
+            </td>
+            <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+            <td>
+              <a href="{% url 'admin_app:admin_error_detail' log.id %}"
+                class="btn btn-sm text-white rounded-0"
+                style="background-color:#3CA9A9;">
+                詳細
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
     </table>
   </div>
+    {% include "components/pagination.html" with page_obj=page_obj paginator=paginator %}
   {% else %}
-  <p class="text-muted mt-3">エラーログはまだありません。</p>
+  <p class="text-muted mt-3">エラーログはまだ登録されていません。</p>
   {% endif %}
 </div>
 {% endblock %}
