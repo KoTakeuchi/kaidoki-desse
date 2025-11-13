@@ -363,41 +363,115 @@ def product_create(request):
                 if image_url:
                     product.image_url = image_url
 
-                # --- 通知条件設定 ---
-                flag_type = request.POST.get("flag_type")
-                flag_value = request.POST.get("flag_value")
-                product.flag_type = flag_type
+                # ======================================================
+                # ✅ 修正：initial_price が 0 または None の場合、
+                #    楽天APIから再取得して設定する
+                # ======================================================
+                if not product.initial_price or product.initial_price == 0:
+                    product_url = request.POST.get("product_url")
+                    if product_url:
+                        from main.utils.rakuten_api import fetch_rakuten_item
+                        api_result = fetch_rakuten_item(product_url)
 
-                if flag_type == "percent_off" and flag_value:
+                        if api_result and api_result.get("initial_price"):
+                            try:
+                                product.initial_price = decimal.Decimal(
+                                    str(api_result["initial_price"]))
+                                product.latest_price = product.initial_price
+                                print(
+                                    f"[product_create] ✅ API価格を設定: {product.initial_price}円")
+                            except (ValueError, TypeError, decimal.InvalidOperation) as e:
+                                print(f"[product_create] ⚠️ 価格変換エラー: {e}")
+
+                # ======================================================
+                # ✅ 修正：通知条件設定（flag_type を正しく保存）
+                # ======================================================
+                flag_type_raw = request.POST.get(
+                    "flag_type")  # ← "1", "2", "5" などの数値文字列
+                threshold_price_input = request.POST.get(
+                    "threshold_price", "").strip()
+                flag_value_input = request.POST.get("flag_value", "").strip()
+
+                print(f"[DEBUG] flag_type_raw: {flag_type_raw}")
+                print(
+                    f"[DEBUG] threshold_price_input: {threshold_price_input}")
+                print(f"[DEBUG] flag_value_input: {flag_value_input}")
+
+                # --- flag_type を文字列に変換してDBに保存 ---
+                flag_type_map = {
+                    "1": "lowest_price",
+                    "2": "percent_off",
+                    "5": "buy_price",
+                }
+                product.flag_type = flag_type_map.get(
+                    flag_type_raw, "lowest_price")
+                print(
+                    f"[DEBUG] product.flag_type (mapped): {product.flag_type}")
+
+                # --- 通知条件ごとの処理 ---
+                if flag_type_raw == "2" and flag_value_input:  # 割引率
                     try:
-                        product.flag_value = decimal.Decimal(flag_value).quantize(
+                        product.flag_value = decimal.Decimal(flag_value_input).quantize(
                             decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+
                         # 割引後価格の計算
                         if product.initial_price:
                             discounted_price = product.initial_price * \
                                 (1 - product.flag_value / 100)
-                            product.threshold_price = discounted_price
-                    except ValueError:
+                            product.threshold_price = discounted_price.quantize(
+                                decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP)
+                            print(
+                                f"[product_create] 割引率: {product.flag_value}% → 閾値: {product.threshold_price}円")
+                    except (ValueError, decimal.InvalidOperation):
                         product.flag_value = None
+                        product.threshold_price = None
 
-                elif flag_type == "buy_price" and flag_value:
+                elif flag_type_raw == "5" and threshold_price_input:  # 買い時価格
                     try:
-                        # 入力された値をそのまま買い時価格として設定
-                        product.threshold_price = decimal.Decimal(flag_value).quantize(
+                        product.threshold_price = decimal.Decimal(threshold_price_input).quantize(
                             decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP)
-
-                        # 通知条件に買い時価格を設定
-                        # flag_value は不要にする
-                        product.flag_type = "buy_price"  # 通知条件タイプを「買い時価格」に設定
-                        product.flag_value = None  # これ以降は flag_value を使用しない
-
-                    except ValueError:
-                        # エラーハンドリング：値が不正な場合は買い時価格を None に設定
+                        product.flag_value = None  # 買い時価格の場合は flag_value は不要
+                        print(
+                            f"[product_create] 買い時価格: {product.threshold_price}円")
+                    except (ValueError, decimal.InvalidOperation):
                         product.threshold_price = None
                         product.flag_value = None
 
+                elif flag_type_raw == "1":  # 最安値
+                    product.threshold_price = None
+                    product.flag_value = None
+                    print(f"[product_create] 最安値通知モード")
+
+                # ======================================================
+                # ✅ 重要：save() の直前に flag_type を確認
+                # ======================================================
+                print(f"[DEBUG] 保存直前の product.flag_type: {product.flag_type}")
+                print(
+                    f"[DEBUG] 保存直前の product.threshold_price: {product.threshold_price}")
+
                 # --- 保存 ---
                 product.save()
+
+                # ======================================================
+                # ✅ 保存後に値を確認
+                # ======================================================
+                product.refresh_from_db()
+                print(f"[DEBUG] 保存後の product.flag_type: {product.flag_type}")
+                print(
+                    f"[DEBUG] 保存後の product.threshold_price: {product.threshold_price}")
+
+                # ======================================================
+                # ✅ 修正：初回の価格履歴を PriceHistory に追加
+                # ======================================================
+                if product.initial_price and product.initial_price > 0:
+                    PriceHistory.objects.create(
+                        product=product,
+                        price=product.initial_price,
+                        stock_count=1,
+                        checked_at=timezone.now()
+                    )
+                    print(
+                        f"[product_create] ✅ 初回価格履歴を追加: {product.initial_price}円")
 
                 # --- 買い時フラグ更新 ---
                 from main.utils.flag_checker import update_flag_status
