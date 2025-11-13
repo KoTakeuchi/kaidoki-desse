@@ -249,38 +249,6 @@ def product_detail(request, pk):
         .order_by("checked_at")[:180]
     )
 
-    price_data = []
-    for h in histories:
-        # 価格と在庫のデータを整形と補完
-        price = float(h.price) if h.price is not None else 0.0
-        stock = int(h.stock_count) if h.stock_count is not None else 0
-
-        # price_data をテンプレートに渡す前にログを出力
-        print("=== DEBUG: price_data ===")
-        print(price_data)  # price_dataが配列であるか、確認
-
-        # その後にJSON化してテンプレートに渡す
-        price_data_json = json.dumps(price_data, ensure_ascii=False)
-
-        price_data.append({
-            "date": h.checked_at.strftime("%Y-%m-%d"),
-            "price": price,
-            "stock": stock,
-        })
-
-    # ======================================================
-    # デバッグ：price_dataの確認
-    # ======================================================
-    print("=== DEBUG: price_data ===")
-    print(price_data[:5])  # 先頭5件だけ出力
-
-    # ======================================================
-    # 価格データのJSON化
-    # ======================================================
-    price_data_json = json.dumps(price_data, ensure_ascii=False)
-    print("=== DEBUG: price_data_json ===")
-    print(price_data_json[:200])  # 先頭200文字だけ出力
-
     # ======================================================
     # 閾値ライン計算（通知条件に応じて）
     # ======================================================
@@ -295,6 +263,22 @@ def product_detail(request, pk):
         threshold_value = None
 
     # ======================================================
+    # 価格履歴データの整形
+    # ======================================================
+    price_data = []
+    for h in histories:
+        # 価格と在庫のデータを整形と補完
+        price = float(h.price) if h.price is not None else 0.0
+        stock = int(h.stock_count) if h.stock_count is not None else 0
+
+        price_data.append({
+            "date": h.checked_at.strftime("%Y-%m-%d"),
+            "price": price,
+            "stock": stock,
+            "threshold_value": threshold_value,
+        })
+
+    # ======================================================
     # データが存在しない場合（登録直後）
     # ======================================================
     if not price_data:
@@ -302,23 +286,24 @@ def product_detail(request, pk):
             "date": timezone.now().strftime("%Y-%m-%d"),
             "price": float(product.latest_price or product.initial_price or 0),
             "stock": int(product.is_in_stock) if product.is_in_stock is not None else 0,
+            "threshold_value": threshold_value,
         })
 
     # ======================================================
-    # JSON化してテンプレートに渡す
+    # デバッグ：price_dataの確認
     # ======================================================
-    price_data_json = json.dumps(price_data, ensure_ascii=False)
-    threshold_value_json = json.dumps(threshold_value, ensure_ascii=False)
+    print("=== DEBUG: price_data ===")
+    print(f"データ件数: {len(price_data)}")
+    print(f"先頭5件: {price_data[:5]}")
 
+    # ======================================================
+    # テンプレートに渡す（JSON化は不要！json_scriptが自動でやる）
+    # ======================================================
     context = {
         "product": product,
-        "price_data_json": price_data_json,
-        "threshold_value_json": threshold_value_json,
+        "price_data": price_data,  # ← json.dumps() を削除！
     }
     return render(request, "main/product_detail.html", context)
-
-
-# views_product.py
 
 
 def get_price_data(request, product_id):

@@ -96,8 +96,8 @@
   <div class="card shadow-sm p-4 mb-4">
     <h5 class="mb-3">価格 × 在庫推移グラフ</h5>
 
-    <!-- price_data_json を安全に JS に埋め込む -->
-    {{ price_data_json|json_script:"price-data-json" }}
+    <!-- price_data を安全に JS に埋め込む -->
+    {{ price_data|json_script:"price-data-json" }}
 
     <!-- Chart.js 描画用キャンバス -->
      <div class="chart-container" style="height: 400px;">
