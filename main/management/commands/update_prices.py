@@ -31,7 +31,7 @@ def update_prices():
         return
 
     for product in products:
-        base_price = float(product.initial_price or product.regular_price or 1000)
+        base_price = float(product.initial_price or product.latest_price or 1000)
         new_price = int(base_price * random.uniform(0.8, 1.2))
         PriceHistory.objects.create(
             product=product,

@@ -13,7 +13,7 @@ def create_restock_event(product, user):
             event_type="stock_restore",  # モデル内の選択肢に合わせて
             message=f"「{product.product_name}」が再入荷しました！",
             occurred_at=timezone.now(),
-            sent_flag=False,
+            is_read=False,
         )
         return True
     except Exception as e:

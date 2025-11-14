@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toggle.addEventListener("change", () => {
         if (toggle.checked) {
             label.textContent = "高";
-            desc.textContent = "6時間ごとに最新価格を取得。通知頻度が高めです。";
+            desc.textContent = "2時間ごとに最新価格を取得。通知頻度が高めです。";
             hidden.value = "高";
         } else {
             label.textContent = "普通";

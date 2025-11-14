@@ -546,21 +546,41 @@ def product_edit(request, pk):
             if form.is_valid():
                 product = form.save(commit=False)
 
-                flag_type = product.flag_type
+                # ✅ 修正：POSTデータから flag_type を取得
+                flag_type_raw = request.POST.get("flag_type", "").strip()
                 flag_value_raw = request.POST.get("flag_value", "").strip()
                 threshold_raw = request.POST.get("threshold_price", "").strip()
 
-                # --- 通知条件ごとのflag_value設定 ---
-                new_flag_value = None  # ←安全な代入前変数
+                # ✅ 修正：flag_type をマッピング
+                flag_type_map = {
+                    "1": "lowest_price",
+                    "2": "percent_off",
+                    "5": "buy_price",
+                }
 
-                if flag_type == "percent_off" and flag_value_raw:
+                # flag_type_raw が空でなければ更新、空なら既存値維持
+                if flag_type_raw:
+                    product.flag_type = flag_type_map.get(
+                        flag_type_raw, product.flag_type)
+
+                # --- 通知条件ごとのflag_value設定 ---
+                new_flag_value = None
+
+                if product.flag_type == "percent_off" and flag_value_raw:
                     try:
                         new_flag_value = Decimal(flag_value_raw).quantize(
                             Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+                        # ✅ 割引後価格を計算
+                        if product.initial_price:
+                            discounted_price = product.initial_price * \
+                                (1 - new_flag_value / 100)
+                            product.threshold_price = discounted_price.quantize(
+                                Decimal("1"), rounding=ROUND_HALF_UP)
                     except (InvalidOperation, ValueError):
                         form.add_error("flag_value", "割引率は数値で入力してください。")
 
-                elif flag_type == "buy_price" and threshold_raw:
+                elif product.flag_type == "buy_price" and threshold_raw:
                     try:
                         val = Decimal(threshold_raw).quantize(
                             Decimal("1"), rounding=ROUND_HALF_UP)
@@ -568,13 +588,18 @@ def product_edit(request, pk):
                             form.add_error("threshold_price",
                                            "登録時価格より大きい値は設定できません。")
                         else:
-                            new_flag_value = val
                             product.threshold_price = val
+                            product.flag_value = None  # ✅ 買い時価格の場合は flag_value は不要
                     except (InvalidOperation, ValueError):
                         form.add_error("threshold_price", "価格は数値で入力してください。")
 
-                # --- 正常値のみ反映 ---
-                if new_flag_value is not None:
+                elif product.flag_type == "lowest_price":
+                    # ✅ 最安値モードでは threshold_price, flag_value をクリア
+                    product.threshold_price = None
+                    product.flag_value = None
+
+                # --- flag_value の更新（割引率モードの場合のみ） ---
+                if product.flag_type == "percent_off" and new_flag_value is not None:
                     product.flag_value = new_flag_value
 
                 # --- 型保証：不正なDecimalを除外 ---

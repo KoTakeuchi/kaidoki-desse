@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     logger.error(msg)
                     ErrorLog.objects.create(
                         user=user,
-                        type="BatchStockError",
+                        type_name="BatchStockError",
                         source="check_stock_command",
                         detail=str(e),
                     )

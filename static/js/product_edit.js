@@ -67,11 +67,11 @@ document.addEventListener("DOMContentLoaded", () => {
         prioritySwitch.addEventListener("change", () => {
             if (prioritySwitch.checked) {
                 priorityLabel.textContent = "高";
-                priorityDesc.textContent = "6時間ごとに最新価格を取得。通知頻度が高めです。";
+                priorityDesc.textContent = "2時間ごとに最新価格と在庫数を取得。通知頻度が高めです。";
                 priorityHidden.value = "高";
             } else {
                 priorityLabel.textContent = "普通";
-                priorityDesc.textContent = "24時間ごとに最新価格を取得。アプリ通知・メール通知なし。";
+                priorityDesc.textContent = "24時間ごとに最新価格と在庫数を取得。アプリ通知・メール通知なし。";
                 priorityHidden.value = "普通";
             }
         });

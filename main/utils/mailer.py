@@ -64,7 +64,7 @@ def send_notification_summary(user, events, category):
         msg.send(fail_silently=False)
 
         # === 対象イベントを送信済みに更新 ===
-        events.update(sent_flag=True, sent_at=timezone.now())
+        events.update(is_read=True)
 
         # === ✅ 通知履歴を記録 ===
         for e in events:
