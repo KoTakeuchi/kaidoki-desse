@@ -1,10 +1,11 @@
+# main/utils/mailer.py
+from main.models import NotificationEvent, UserNotificationSetting, Product
+from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
-
-from main.models import NotificationEvent, UserNotificationSetting, NotificationLog
 
 
 def send_notification_summary(user, events, category):
@@ -12,7 +13,7 @@ def send_notification_summary(user, events, category):
     ✅ 通知イベントまとめ送信（在庫系／買い時系どちらにも対応）
     - category: "stock" または "price"
     - 各商品画像URLをHTMLテンプレート内で表示
-    - メール送信成功時に NotificationLog に履歴を記録
+    - メール送信成功時に NotificationEvent を既読にする
     """
     if not events.exists():
         return
@@ -66,14 +67,6 @@ def send_notification_summary(user, events, category):
         # === 対象イベントを送信済みに更新 ===
         events.update(is_read=True)
 
-        # === ✅ 通知履歴を記録 ===
-        for e in events:
-            NotificationLog.objects.create(
-                user=user,
-                product=e.product,
-                message=f"{e.product.product_name}（{e.get_event_type_display()}）通知メール送信済み",
-            )
-
         print(f"📩 {user.username} へ {category} 通知メール送信完了（{events.count()}件）")
 
     except Exception as e:
@@ -82,42 +75,82 @@ def send_notification_summary(user, events, category):
 
 def process_daily_notifications():
     """
-    ✅ 1日1回の定期実行（crontabやバッチで使用）
-    各ユーザーの未送信イベントを集約してメール送信
+    ✅ 日次通知バッチ：全ユーザーに対して未読通知をメール送信
+    - メール通知ONのユーザーのみ
+    - 優先度「高」の商品の未読通知をまとめて送信
+    - 1日1回、設定された時刻に実行
     """
-    from django.contrib.auth.models import User
+    # 通知設定でメール通知を有効にしているユーザーを取得
+    settings_list = UserNotificationSetting.objects.filter(enabled=True)
 
-    users = User.objects.all()
-    total_sent = 0
+    for setting in settings_list:
+        user = setting.user
 
-    for user in users:
-        # --- 通知設定の有効ユーザーのみ ---
-        setting = UserNotificationSetting.objects.filter(
-            user=user, enabled=True, email__isnull=False
-        ).first()
-        if not setting:
+        # 未読の通知イベントを取得（優先度「高」のみ）
+        unread_events = NotificationEvent.objects.filter(
+            user=user,
+            is_read=False,
+            product__priority="高"
+        ).order_by("-occurred_at")
+
+        if not unread_events.exists():
             continue
 
-        # --- 通知イベント抽出 ---
-        stock_events = NotificationEvent.objects.filter(
-            user=user,
-            event_type__in=["restock", "stock_restore"],
-            sent_flag=False,
+        # メール本文を生成
+        subject = f"【買い時でっせ】{unread_events.count()}件の通知があります"
+
+        # テキストメール
+        message = f"{user.username} 様\n\n"
+        message += f"現在、{unread_events.count()}件の未読通知があります。\n\n"
+
+        for event in unread_events[:10]:  # 最大10件
+            message += f"・{event.product.product_name}\n"
+            message += f"  {event.message}\n\n"
+
+        if unread_events.count() > 10:
+            message += f"他 {unread_events.count() - 10} 件\n\n"
+
+        message += "詳細はアプリでご確認ください。\n"
+
+        # メール送信
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[setting.email or user.email],
+                fail_silently=False,
+            )
+            print(f"✅ {user.username} にメール送信完了（{unread_events.count()}件）")
+        except Exception as e:
+            print(f"❌ {user.username} へのメール送信失敗: {e}")
+        except Exception as e:
+            print(f"❌ {user.username} へのメール送信失敗: {e}")
+
+
+def send_notification_email(user, product, message):
+    """
+    ✅ 個別通知メール送信（買い時検知時）
+    """
+    try:
+        setting = UserNotificationSetting.objects.get(user=user)
+        if not setting.enabled:
+            return
+
+        subject = f"【買い時でっせ】{product.product_name} が買い時です！"
+
+        email_message = f"{user.username} 様\n\n"
+        email_message += f"{product.product_name}\n"
+        email_message += f"{message}\n\n"
+        # email_message += f"詳細: {settings.SITE_URL}/main/product/detail/{product.id}/\n"  # SITE_URLが未定義のため一時的にコメントアウト
+
+        send_mail(
+            subject=subject,
+            message=email_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[setting.email or user.email],
+            fail_silently=False,
         )
-
-        price_events = NotificationEvent.objects.filter(
-            user=user,
-            event_type__in=["threshold_hit", "discount_over", "lowest_price"],
-            sent_flag=False,
-        )
-
-        # --- カテゴリ別送信 ---
-        if stock_events.exists():
-            send_notification_summary(user, stock_events, "stock")
-            total_sent += 1
-
-        if price_events.exists():
-            send_notification_summary(user, price_events, "price")
-            total_sent += 1
-
-    print(f"✅ 全ユーザー通知完了（合計 {total_sent} 件送信）")
+        print(f"✅ {user.username} に通知メール送信完了: {product.product_name}")
+    except Exception as e:
+        print(f"❌ 通知メール送信失敗: {e}")

@@ -10,7 +10,7 @@ from django.db.models import Count
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Product, PriceHistory, NotificationEvent
+from .models import Product, PriceHistory, NotificationEvent, UserNotificationSetting
 
 
 # ======================================================
@@ -74,17 +74,60 @@ def dashboard_view(request):
 # ======================================================
 @login_required
 def notification_history(request):
-    """通知履歴ページ"""
+    """通知履歴ページ（優先度「高」の商品のみ）"""
     user = request.user
-    logs = NotificationEvent.objects.filter(user=user).order_by("-occurred_at")
-    products = Product.objects.filter(user=user)  # ✅ 全商品を取得してテンプレートに渡す
 
-    return render(request, "main/notifications.html", {"logs": logs, "products": products})
+    # ユーザーの通知設定を取得
+    try:
+        setting = UserNotificationSetting.objects.get(user=user)
+    except UserNotificationSetting.DoesNotExist:
+        setting = None
 
+    # ✅ 基本クエリ：未読 + 優先度「高」のみ
+    logs = NotificationEvent.objects.filter(
+        user=user,
+        is_read=False,
+        product__priority="高"  # ✅ 優先度「高」のみ
+    )
 
+    # ✅ アプリ内通知がOFFの場合は空にする
+    if setting and not setting.app_notification_enabled:
+        logs = logs.none()
+
+    # ✅ 通知のまとめ方：商品ごとに最新の通知のみ（買い時通知と在庫通知は区別）
+    from django.db.models import OuterRef, Subquery, Q
+
+    # 買い時通知の最新
+    latest_buy_time = NotificationEvent.objects.filter(
+        product=OuterRef('product'),
+        event_type__in=["threshold_hit", "discount_over", "lowest_price"],
+        is_read=False
+    ).order_by('-occurred_at').values('id')[:1]
+
+    # 在庫通知の最新
+    latest_stock = NotificationEvent.objects.filter(
+        product=OuterRef('product'),
+        event_type__in=["stock_restore", "stock_few"],
+        is_read=False
+    ).order_by('-occurred_at').values('id')[:1]
+
+    # 最新の通知のみを取得
+    logs = logs.filter(
+        Q(id__in=Subquery(latest_buy_time)) | Q(id__in=Subquery(latest_stock))
+    ).order_by("-occurred_at")
+
+    products = Product.objects.filter(user=user)
+
+    return render(request, "main/notifications.html", {
+        "logs": logs,
+        "products": products,
+        "setting": setting,
+    })
 # ======================================================
 # 通知既読化処理
 # ======================================================
+
+
 @login_required
 def mark_notification_read(request, pk):
     """通知を既読にする"""
@@ -138,4 +181,20 @@ def unread_notification_count(request):
     return JsonResponse({"unread_count": count})
 
 
-# --- END: main/views_dashboard.py ---
+# 一括既読APIを追加する関数
+
+@login_required
+def mark_all_read_api(request):
+    """一括既読API"""
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        notification_ids = data.get('notification_ids', [])
+
+        NotificationEvent.objects.filter(
+            id__in=notification_ids,
+            user=request.user
+        ).update(is_read=True)
+
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=400)

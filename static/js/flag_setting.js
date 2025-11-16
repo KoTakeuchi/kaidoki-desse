@@ -1,3 +1,27 @@
+// static/js/flag_setting.js
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ flag_setting.js loaded");
+
+  // ============================
+  // メール通知のON/OFF切替
+  // ============================
+  const enabledCheckbox = document.getElementById("id_enabled");
+  const emailNotifyTime = document.getElementById("email-notify-time");
+
+  if (enabledCheckbox && emailNotifyTime) {
+    const toggleEmailTime = () => {
+      if (enabledCheckbox.checked) {
+        emailNotifyTime.style.display = "block";
+      } else {
+        emailNotifyTime.style.display = "none";
+      }
+    };
+
+    toggleEmailTime(); // 初期表示
+    enabledCheckbox.addEventListener("change", toggleEmailTime);
+  }
+});
+
 
 // =============================================================
 // 通知設定ページ：フラグ設定の同期＆保存

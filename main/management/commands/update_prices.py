@@ -1,56 +1,139 @@
-# 実行ディレクトリ: C:\Users\takeuchi\Desktop\kaidoki-desse\auto_update_prices.py
-import os
-import sys
-import time
-import random
-import schedule
-from datetime import datetime
-
-# === プロジェクトルートをパスに追加 ===
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
-
-# ✅ 正しい Django 設定モジュール（manage.py と同じ）
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "kaidoki.settings")
-
-# ✅ Django の初期化（models より先に必ず実行）
-import django
-django.setup()
-
-# ✅ setup 完了後にモデルを import（順番が最重要）
-from main.models import Product, PriceHistory
+# main/management/commands/update_prices.py
+from django.core.management.base import BaseCommand
 from django.utils import timezone
+from main.models import Product, PriceHistory
+from main.utils.rakuten_api import fetch_rakuten_item
+from main.utils.flag_checker import update_flag_status
+from main.utils.notify_events import create_restock_event
+import time
 
 
-def update_prices():
-    """登録済み商品の価格履歴を自動更新（ランダム生成）"""
-    products = Product.objects.all()
-    if not products.exists():
-        print("⚠ 商品データが存在しません。")
-        return
+class Command(BaseCommand):
+    """
+    ✅ 楽天APIから実際の価格・在庫を取得して更新
+    実行例: python manage.py update_prices
+    実行例（優先度指定）: python manage.py update_prices --priority=高
+    """
 
-    for product in products:
-        base_price = float(product.initial_price or product.latest_price or 1000)
-        new_price = int(base_price * random.uniform(0.8, 1.2))
-        PriceHistory.objects.create(
-            product=product,
-            price=new_price,
-            checked_at=timezone.now(),
+    help = "楽天APIから最新価格・在庫を取得してDBに保存"
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--priority",
+            type=str,
+            default="all",
+            choices=["高", "普通", "all"],
+            help="更新対象の優先度（高/普通/all）",
         )
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] ✅ {product.product_name} に ¥{new_price} を追加")
 
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] 💾 全商品の価格履歴を更新しました\n")
+    def handle(self, *args, **options):
+        self.stdout.write(self.style.NOTICE("🔄 価格更新バッチを開始します..."))
 
+        priority = options["priority"]
 
-# === 定期スケジュール設定 ===
-schedule.every(1).hours.do(update_prices)
-# schedule.every(10).minutes.do(update_prices)  # ← テスト用にコメント解除OK
+        # 対象商品を取得
+        queryset = Product.objects.filter(is_deleted=False)
+        if priority != "all":
+            queryset = queryset.filter(priority=priority)
 
-print("🕒 自動価格更新スケジュールを開始しました...")
-update_prices()  # 起動時に一度実行
+        total_count = queryset.count()
+        self.stdout.write(f"📊 対象商品数: {total_count}件")
 
-# === 永続ループ ===
-while True:
-    schedule.run_pending()
-    time.sleep(30)
+        if total_count == 0:
+            self.stdout.write(self.style.WARNING("⚠️ 更新対象の商品がありません"))
+            return
+
+        success_count = 0
+        error_count = 0
+
+        for index, product in enumerate(queryset, 1):
+            try:
+                self.stdout.write(
+                    f"\n[{index}/{total_count}] {product.product_name}")
+
+                # ✅ テストデータをスキップ
+                if "example.com" in product.product_url or "test" in product.product_url.lower():
+                    self.stdout.write(
+                        self.style.WARNING(f"  ⚠️ テストデータのためスキップ"))
+                    continue
+
+                # ✅ レート制限対策（2秒待機）
+                if index > 1:
+                    time.sleep(2)
+
+                # 楽天APIから取得
+                data = fetch_rakuten_item(product.product_url)
+
+                if data.get("error"):
+                    self.stdout.write(self.style.ERROR(
+                        f"  ❌ API取得失敗: {data['error']}"))
+                    error_count += 1
+                    continue
+
+                # 価格・在庫の取得
+                new_price = data.get("initial_price", 0)
+                new_stock = self._parse_stock(data.get("stock_status", "在庫あり"))
+
+                if not new_price or new_price == 0:
+                    self.stdout.write(self.style.WARNING(
+                        f"  ⚠️ 価格情報が取得できませんでした"))
+                    error_count += 1
+                    continue
+
+                # 前回の在庫状態を取得
+                previous_history = PriceHistory.objects.filter(
+                    product=product).order_by("-checked_at").first()
+                previous_stock = previous_history.stock_count if previous_history else 0
+
+                # PriceHistoryに保存
+                PriceHistory.objects.create(
+                    product=product,
+                    price=new_price,
+                    stock_count=new_stock,
+                    checked_at=timezone.now()
+                )
+
+                # 最新価格・在庫を更新
+                product.latest_price = new_price
+                product.latest_stock_count = new_stock
+                product.is_in_stock = new_stock > 0
+                product.save(update_fields=[
+                             "latest_price", "latest_stock_count", "is_in_stock"])
+
+                # 買い時フラグ更新
+                update_flag_status(product)
+
+                # 在庫復活通知（優先度「高」のみ）
+                if product.priority == "高" and previous_stock == 0 and new_stock > 0:
+                    create_restock_event(product, product.user)
+                    self.stdout.write(self.style.SUCCESS(f"  🔔 在庫復活通知を作成しました"))
+
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f"  ✅ 更新完了: ¥{new_price:,} / 在庫 {new_stock}個")
+                )
+                success_count += 1
+
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f"  ❌ エラー: {e}"))
+                error_count += 1
+
+        # 結果サマリー
+        self.stdout.write("\n" + "="*50)
+        self.stdout.write(self.style.SUCCESS(f"✅ 成功: {success_count}件"))
+        if error_count > 0:
+            self.stdout.write(self.style.ERROR(f"❌ エラー: {error_count}件"))
+        self.stdout.write("="*50)
+
+    def _parse_stock(self, stock_status):
+        """在庫状態のテキストを数値に変換"""
+        stock_status = str(stock_status).lower()
+
+        if "売り切れ" in stock_status or "在庫なし" in stock_status:
+            return 0
+        elif "わずか" in stock_status or "残り少" in stock_status:
+            return 2
+        elif "在庫あり" in stock_status:
+            return 10
+        else:
+            return 5  # デフォルト

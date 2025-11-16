@@ -4,6 +4,10 @@ from dotenv import load_dotenv
 from datetime import timedelta
 import logging
 
+# サイトURL設定
+SITE_URL = "http://127.0.0.1:8000"  # 開発環境
+# SITE_URL = "https://kaidoki.example.com"  # 本番環境
+
 
 # --- ここで確実に .env を読み込む ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,7 +87,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                # "main.context_processors.unread_count",
+                "main.context_processors.common_context",  # ✅ この行を追加
             ],
         },
     },

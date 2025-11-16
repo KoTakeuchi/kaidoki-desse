@@ -27,6 +27,25 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
     }
 
+    // ---- モーダルを完全に閉じる ----
+    function closeModal(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+        }
+
+        // backdrop（灰色の背景）を強制削除
+        setTimeout(() => {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }, 100);
+    }
+
     // ---- 行番号振り直し ----
     function renumberCategoryRows() {
         tableBody.querySelectorAll("tr").forEach((tr, idx) => {
@@ -158,8 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 attachDeleteEvents();
                 disableUncategorizedButtons();
 
-                const createModalEl = document.getElementById("createModal");
-                if (createModalEl) bootstrap.Modal.getInstance(createModalEl)?.hide();
+                // モーダルを完全に閉じる
+                closeModal("createModal");
                 createInput.value = "";
             } catch (e) {
                 console.error(e);
@@ -198,8 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (deleteButton) deleteButton.setAttribute("data-name", data.category_name);
                 }
 
-                const editModalEl = document.getElementById("editModal");
-                if (editModalEl) bootstrap.Modal.getInstance(editModalEl)?.hide();
+                // モーダルを完全に閉じる
+                closeModal("editModal");
             } catch (e) {
                 console.error(e);
                 alert("通信エラーが発生しました。");
@@ -234,7 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (row) row.remove();
                 renumberCategoryRows();
 
-                bootstrap.Modal.getInstance(deleteModalEl)?.hide();
+                // モーダルを完全に閉じる
+                closeModal("deleteModal");
                 deleteId = null;
             } catch (e) {
                 console.error(e);

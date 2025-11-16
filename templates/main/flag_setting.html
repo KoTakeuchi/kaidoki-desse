@@ -12,16 +12,9 @@
 
 <div class="container py-4">
   <div class="card shadow-sm p-4 mb-4">
-    <h5 class="mb-3">🔔 通知設定</h5>
+    <h5 class="mb-3">🔔 メール通知設定</h5>
 
-    <!-- ✅ メッセージ表示 -->
-    {% if messages %}
-      {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} mb-3">{{ message }}</div>
-      {% endfor %}
-    {% endif %}
-
-    <!-- ✅ フォームエラー全体表示 -->
+    {# ✅ フォームエラー全体表示 #}
     {% if form.non_field_errors %}
       <div class="alert alert-danger mb-3">
         {% for error in form.non_field_errors %}
@@ -31,13 +24,12 @@
     {% endif %}
 
     <form method="post" novalidate>
-      {% csrf_token %}  
+      {% csrf_token %}
 
       <!-- ✅ メール通知 -->
       <div class="form-check form-switch mb-3">
-        <input class="form-check-input" type="checkbox" id="id_enabled" name="enabled"
-               {% if form.instance.enabled %}checked{% endif %}>
-        <label class="form-check-label fw-semibold" for="id_enabled">
+        {{ form.enabled }}
+        <label class="form-check-label fw-semibold" for="{{ form.enabled.id_for_label }}">
           メール通知を有効にする
         </label>
         <div class="form-text text-muted">
@@ -45,21 +37,25 @@
         </div>
       </div>
 
-      <!-- ✅ メール通知時刻設定 -->
-      <div id="email-notify-time" class="row mb-3">
-        <div class="col-auto">
-          {{ form.notify_hour.label_tag }}
-          {{ form.notify_hour }}
-          {% for error in form.notify_hour.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <div class="col-auto">
-          {{ form.notify_minute.label_tag }}
-          {{ form.notify_minute }}
-          {% for error in form.notify_minute.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
+      <!-- ✅ メール通知時刻設定（1行で横並び） -->
+      <div id="email-notify-time" class="mb-3">
+        <label class="form-label fw-semibold">メール通知時刻</label>
+        <div class="row g-2">
+          <div class="col-auto">
+            {{ form.notify_hour }}
+            {% for error in form.notify_hour.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-auto d-flex align-items-center">
+            <span>:</span>
+          </div>
+          <div class="col-auto">
+            {{ form.notify_minute }}
+            {% for error in form.notify_minute.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
         </div>
       </div>
 
@@ -81,34 +77,37 @@
       <!-- ✅ アプリ内通知設定 -->
       <h5 class="mb-3">📱 アプリ内通知設定</h5>
 
-      <!-- 通知頻度 -->
+      <!-- アプリ内通知ON/OFF（トグルスイッチ） -->
+      <div class="form-check form-switch mb-3">
+        {{ form.app_notification_enabled }}
+        <label class="form-check-label fw-semibold" for="{{ form.app_notification_enabled.id_for_label }}">
+          アプリ内通知を有効にする
+        </label>
+        <div class="form-text text-muted">
+          優先度「高」の商品の買い時通知・在庫通知を受け取ります
+        </div>
+        {% for error in form.app_notification_enabled.errors %}
+          <div class="text-danger small">{{ error }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- 通知の保持期間 -->
       <div class="mb-3">
-        {{ form.app_notify_frequency.label_tag }}
-        {{ form.app_notify_frequency }}
-        {% for error in form.app_notify_frequency.errors %}
+        {{ form.notification_retention_days.label_tag }}
+        {{ form.notification_retention_days }}
+        {% for error in form.notification_retention_days.errors %}
           <div class="text-danger small">{{ error }}</div>
         {% endfor %}
         <div class="form-text text-muted">
-          「多め」は買い時検知のたびに通知、「少なめ」は指定時刻に1回まとめて通知されます。
+          指定した日数を過ぎた通知は自動的に既読になります。
         </div>
       </div>
 
-      <!-- 通知時刻 -->
-      <div id="app-notify-time" class="row mb-4">
-        <div class="col-auto">
-          {{ form.app_notify_hour.label_tag }}
-          {{ form.app_notify_hour }}
-          {% for error in form.app_notify_hour.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
-        <div class="col-auto">
-          {{ form.app_notify_minute.label_tag }}
-          {{ form.app_notify_minute }}
-          {% for error in form.app_notify_minute.errors %}
-            <div class="text-danger small">{{ error }}</div>
-          {% endfor %}
-        </div>
+      <!-- 通知のまとめ方（固定） -->
+      <div class="alert alert-info mb-3">
+        <strong>📋 通知のまとめ方</strong><br>
+        同じ商品の最新の通知のみ表示されます。<br>
+        <small class="text-muted">※ただし「買い時通知」と「在庫通知」は区別されます。</small>
       </div>
 
       <!-- 保存ボタン -->

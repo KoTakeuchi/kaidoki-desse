@@ -11,6 +11,7 @@ from . import (
     views_product,
     views_category,
     views_dashboard,
+    views_notification,  # ✅ 追加
 )
 
 app_name = "main"
@@ -81,7 +82,6 @@ urlpatterns = [
          name="fetch_rakuten_item"),
     path("api/proxy_image/", views_api.proxy_image, name="proxy_image"),
 
-
     # ============================================================
     # 商品価格履歴API（新規）
     # ============================================================
@@ -90,7 +90,6 @@ urlpatterns = [
          name="api_price_history"),
     path('api/get_price_data/<int:product_id>/',
          views_product.get_price_data, name='get_price_data'),
-
 
     # ============================================================
     # カテゴリAPI関連
@@ -110,27 +109,24 @@ urlpatterns = [
     path("categories/my/", views_category.category_my, name="category_my"),
 
     # ============================================================
-    # 通知設定・通知関連（Dashboard統合版）
+    # 通知設定・通知関連
     # ============================================================
     path("flag_setting/", views_flag.flag_setting, name="flag_setting"),
 
-    # --- 通知（一般ユーザー） ---
-    path("notifications/", views_dashboard.notification_history, name="notifications"),
-    path("notifications/read/<int:pk>/",
-         views_dashboard.mark_notification_read, name="notification_read"),
-    path("notifications/open/<int:pk>/",
-         views_dashboard.notification_redirect, name="notification_redirect"),
+    # ✅ 通知関連（ユーザー用）- views_notification に変更
+    path("notifications/", views_notification.notifications, name="notifications"),
+    path("notifications/<int:pk>/redirect/",
+         views_notification.notification_redirect, name="notification_redirect"),
+    path("notifications/<int:pk>/read/",
+         views_notification.mark_notification_read, name="notification_read"),
+    path("notifications/<int:pk>/delete/",
+         views_notification.delete_notification, name="notification_delete"),
 
+    # ✅ 通知API
+    path("api/unread_count/", views_notification.unread_count_api, name="unread_count"),
 
-    # --- 通知ログ ---
-    path("notifications/log/", views_dashboard.notification_history,
-         name="notification_log"),
-
-    # --- ダッシュボード ---
+    # ============================================================
+    # ダッシュボード
+    # ============================================================
     path("dashboard/", views_dashboard.dashboard_view, name="dashboard"),
-
-    # --- 未読通知件数 ---
-    path("api/unread_count/", views_dashboard.unread_notification_count,
-         name="unread_count"),
-
 ]

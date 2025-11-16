@@ -298,13 +298,35 @@ class ErrorLog(models.Model):
 # ======================================================
 # ユーザー通知設定
 # ======================================================
+
+# main/models.py
 class UserNotificationSetting(models.Model):
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, related_name="notification_setting")
+
+    # メール通知
     enabled = models.BooleanField("メール通知を有効にする", default=True)
     notify_hour = models.PositiveIntegerField("通知時刻（時）", default=9)
     notify_minute = models.PositiveIntegerField("通知時刻（分）", default=0)
     email = models.EmailField("通知メールアドレス", blank=True, null=True)
+
+    # ✅ アプリ内通知設定（シンプル版）
+    app_notification_enabled = models.BooleanField(
+        "アプリ内通知を有効にする",
+        default=True,
+        help_text="優先度「高」の商品の買い時通知・在庫通知を受け取ります"
+    )
+
+    notification_retention_days = models.PositiveIntegerField(
+        "通知の保持期間（日）",
+        default=7,
+        choices=[
+            (7, "7日間"),
+            (30, "30日間"),
+            (365, "無制限"),
+        ],
+        help_text="指定日数を過ぎた通知は自動的に既読になります"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -315,7 +337,6 @@ class UserNotificationSetting(models.Model):
 
     def __str__(self):
         return f"{self.user.username} 通知設定"
-
 # ======================================================
 # 管理者　ユーザー画面用
 # ======================================================

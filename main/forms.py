@@ -1,4 +1,5 @@
 # --- START(1/2): main/forms.py ---
+from django.contrib.auth.models import User
 from .models import Product, Category
 from django.contrib.auth.forms import PasswordChangeForm
 from django import forms
@@ -197,109 +198,104 @@ class ThresholdPriceForm(forms.ModelForm):
             ),
         }
 
-# ======================================================
-# ユーザー情報編集フォーム
-# ======================================================
+
+# main/forms.py（追加）
 
 
-class ProfileForm(forms.ModelForm):
-    """ユーザー情報編集フォーム（ユーザー名・メール・パスワード）"""
-
-    current_password = forms.CharField(
-        label="現在のパスワード",
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "autocomplete": "current-password"}),
-        required=True,
-    )
-    new_password1 = forms.CharField(
-        label="新しいパスワード",
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "autocomplete": "new-password"}),
-        required=False,
-        help_text="変更しない場合は空欄のままでOKです。",
-    )
-    new_password2 = forms.CharField(
-        label="新しいパスワード（確認用）",
-        widget=forms.PasswordInput(
-            attrs={"class": "form-control", "autocomplete": "new-password"}),
-        required=False,
-    )
+class UserProfileForm(forms.ModelForm):
+    """ユーザー情報編集フォーム"""
 
     class Meta:
         model = User
-        fields = ["username", "email"]
-        labels = {"username": "ユーザー名", "email": "メールアドレス"}
+        fields = ["username", "email", "first_name", "last_name"]
+        labels = {
+            "username": "ユーザー名",
+            "email": "メールアドレス",
+            "first_name": "名",
+            "last_name": "姓",
+        }
         widgets = {
             "username": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
         }
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.get("instance")
-        super().__init__(*args, **kwargs)
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("このメールアドレスは既に使用されています。")
+        return email
 
-    def clean_current_password(self):
-        password = self.cleaned_data.get("current_password")
-        if not self.user.check_password(password):
-            raise forms.ValidationError("現在のパスワードが正しくありません。")
-        return password
-
-    def clean(self):
-        cleaned = super().clean()
-        pw1 = cleaned.get("new_password1")
-        pw2 = cleaned.get("new_password2")
-
-        # どちらか入力されていれば一致チェック
-        if pw1 or pw2:
-            if pw1 != pw2:
-                raise forms.ValidationError("新しいパスワードが一致しません。")
-        return cleaned
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        pw1 = self.cleaned_data.get("new_password1")
-
-        if pw1:
-            user.set_password(pw1)
-
-        if commit:
-            user.save()
-        return user
-
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("このユーザー名は既に使用されています。")
+        return username
 # ======================================================
 # ユーザー通知設定フォーム
 # ======================================================
+# main/forms.py
 
 
 class UserNotificationSettingForm(forms.ModelForm):
-    """通知設定フォーム（メール通知設定のみ）"""
+    """通知設定フォーム（メール通知＋アプリ内通知）"""
 
     HOUR_CHOICES = [(h, f"{h:02d}時") for h in range(24)]
     MINUTE_CHOICES = [(m, f"{m:02d}分") for m in range(0, 60, 5)]
 
-    notify_hour = forms.ChoiceField(choices=HOUR_CHOICES, label="メール通知時刻（時）")
+    notify_hour = forms.ChoiceField(
+        choices=HOUR_CHOICES,
+        label="時",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
     notify_minute = forms.ChoiceField(
-        choices=MINUTE_CHOICES, label="メール通知時刻（分）")
+        choices=MINUTE_CHOICES,
+        label="分",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
 
     class Meta:
         model = UserNotificationSetting
-        fields = ["enabled", "notify_hour", "notify_minute", "email"]
-        labels = {"enabled": "メール通知を有効にする"}
-        widgets = {"email": forms.EmailInput(attrs={"class": "form-control"})}
+        fields = [
+            "enabled",
+            "notify_hour",
+            "notify_minute",
+            "email",
+            "app_notification_enabled",      # ✅ アプリ内通知ON/OFF
+            "notification_retention_days",   # ✅ 保持期間
+        ]
+        labels = {
+            "enabled": "メール通知を有効にする",
+            "email": "通知メールアドレス",
+            "app_notification_enabled": "アプリ内通知を有効にする",
+            "notification_retention_days": "通知の保持期間",
+        }
+        widgets = {
+            "email": forms.EmailInput(attrs={
+                "class": "form-control",
+                "readonly": "readonly",
+            }),
+            "app_notification_enabled": forms.CheckboxInput(attrs={
+                "class": "form-check-input"
+            }),
+            "notification_retention_days": forms.Select(attrs={
+                "class": "form-select"
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if not isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.update(
-                    {"class": "form-select" if isinstance(
-                        field.widget, forms.Select) else "form-control"}
-                )
 
+        # ✅ メールアドレスをユーザーのメールアドレスで初期化
+        if self.instance and self.instance.user:
+            self.fields["email"].initial = self.instance.user.email
 
 # ======================================================
 # ユーザー登録フォーム
 # ======================================================
+
+
 class CustomUserCreationForm(UserCreationForm):
     """サインアップ用フォーム（日本語化）"""
 
