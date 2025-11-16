@@ -3,3 +3,9 @@ __pycache__/
 *.sqlite3
 *.log
 /staticfiles/
+
+staticfiles/
+__pycache__/
+*.pyc
+*.log
+db.sqlite3
