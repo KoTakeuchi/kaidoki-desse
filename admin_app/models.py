@@ -5,39 +5,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class CommonCategory(models.Model):
-    """共通カテゴリ（全ユーザー共通で管理されるカテゴリ）"""
-    category_name = models.CharField(
-        max_length=100,
-        unique=True,
-        verbose_name="カテゴリ名"
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="作成日時"
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="更新日時"
-    )
-    updated_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="最終更新者",
-        related_name="updated_categories"
-    )
-
-    def __str__(self):
-        return self.category_name
-
-    class Meta:
-        verbose_name = "共通カテゴリ"
-        verbose_name_plural = "共通カテゴリ"
-        ordering = ["id"]
-
-
 class ErrorLog(models.Model):
     """管理用エラーログ（対応ステータス付き）"""
     user = models.ForeignKey(

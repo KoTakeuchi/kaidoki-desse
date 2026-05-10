@@ -56,9 +56,14 @@ def api_category_create(request):
         if current_count >= 5:
             return JsonResponse({"error": "登録できるカテゴリは最大5件までです。"}, status=400)
 
-        # 重複チェック
+        # 修正後
+        # 重複チェック（独自カテゴリ内）
         if Category.objects.filter(user=user, category_name=name, is_global=False).exists():
             return JsonResponse({"error": f"「{name}」はすでに登録済みです。"}, status=400)
+
+        # 重複チェック（共通カテゴリと同名）
+        if Category.objects.filter(category_name=name, is_global=True, user__isnull=True).exists():
+            return JsonResponse({"error": f"「{name}」は共通カテゴリに存在するため登録できません。"}, status=400)
 
         category = Category.objects.create(
             user=user,
@@ -100,11 +105,16 @@ def api_category_update(request, category_id):
         if category.category_name == "未分類":
             return JsonResponse({"error": "「未分類」は編集できません。"}, status=400)
 
+        # 修正後
         exists = Category.objects.filter(
             user=request.user, category_name=new_name, is_global=False
         ).exclude(id=category_id).exists()
         if exists:
             return JsonResponse({"error": f"「{new_name}」はすでに登録されています。"}, status=400)
+
+        # 共通カテゴリとの重複チェック
+        if Category.objects.filter(category_name=new_name, is_global=True, user__isnull=True).exists():
+            return JsonResponse({"error": f"「{new_name}」は共通カテゴリに存在するため使用できません。"}, status=400)
 
         category.category_name = new_name
         category.save()

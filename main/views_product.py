@@ -66,6 +66,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
         stock = request.GET.get("stock", "all")
         priority = request.GET.get("priority", "all")
         sort = request.GET.get("sort", "newest")
+        buy_flag = request.GET.get("buy_flag", "0")
 
         # --- ベースクエリ ---
         qs = Product.objects.filter(user=user).prefetch_related(
@@ -119,6 +120,10 @@ def product_list(request: HttpRequest) -> HttpResponse:
         elif stock == "none":
             qs = qs.filter(is_in_stock=False)
 
+        # --- 買い時フィルタ ---  ← 追加
+        if buy_flag == "1":
+            qs = qs.filter(flag_reached=True)
+
         # --- 優先度フィルタ ---
         if priority in ["高", "普通"]:
             qs = qs.filter(priority=priority)
@@ -148,6 +153,9 @@ def product_list(request: HttpRequest) -> HttpResponse:
         if keyword:
             filter_tags.append(
                 ("keyword", f"キーワード：{keyword}", "filter-tag-sort"))
+        if buy_flag == "1":
+            filter_tags.append(
+                ("buy_flag", "買い時のみ", "filter-tag-buytime"))
 
         if selected_cats:
             try:

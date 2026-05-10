@@ -180,15 +180,6 @@ class Product(models.Model):
         Category, related_name="products", blank=True
     )
 
-    # ✅ 共通カテゴリを追加（管理用マスタ）
-    common_categories = models.ManyToManyField(
-        "admin_app.CommonCategory",
-        related_name="products",
-        blank=True,
-        verbose_name="共通カテゴリ",
-        help_text="共通カテゴリマスタとの紐付け",
-    )
-
     # 作成・更新
     created_at = models.DateTimeField("作成日時", auto_now_add=True)
     updated_at = models.DateTimeField("更新日時", auto_now=True)

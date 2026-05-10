@@ -11,8 +11,9 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from datetime import timedelta
 
+# 修正後
 from main.models import Product, NotificationEvent, ErrorLog, User, Category
-from admin_app.models import CommonCategory, NotificationLog
+from admin_app.models import NotificationLog
 from main.utils.pagination_helper import paginate_queryset
 
 
@@ -206,15 +207,17 @@ def admin_product_list(request):
 # =============================
 #  カテゴリ管理
 # =============================
-
+# 修正後
 @user_passes_test(is_admin)
 def admin_category(request):
     """共通カテゴリ管理（追加・編集・削除）"""
-    categories = CommonCategory.objects.all().order_by("id")
+    categories = Category.objects.filter(
+        is_global=True, user__isnull=True
+    ).order_by("id")
 
     for cat in categories:
         qs = Product.objects.filter(
-            categories__category_name=cat.category_name,
+            categories=cat,
             is_deleted=False,
         )
         cat.product_count = qs.distinct().count()
@@ -227,34 +230,40 @@ def admin_category(request):
         delete_id = request.POST.get("delete_id")
 
         if add_name:
-            if CommonCategory.objects.filter(category_name=add_name).exists():
+            if Category.objects.filter(
+                category_name=add_name, is_global=True, user__isnull=True
+            ).exists():
                 messages.warning(request, "同名のカテゴリが既に存在します。")
             else:
-                CommonCategory.objects.create(
+                Category.objects.create(
                     category_name=add_name,
-                    updated_by=request.user,
+                    is_global=True,
+                    user=None,
                 )
                 messages.success(request, f"カテゴリ「{add_name}」を追加しました。")
             return redirect("admin_app:admin_category")
 
         elif edit_id and new_name:
             try:
-                cat = CommonCategory.objects.get(id=edit_id)
+                cat = Category.objects.get(
+                    id=edit_id, is_global=True, user__isnull=True
+                )
                 cat.category_name = new_name
-                cat.updated_by = request.user
                 cat.save()
                 messages.success(request, f"カテゴリ名を「{new_name}」に変更しました。")
-            except CommonCategory.DoesNotExist:
+            except Category.DoesNotExist:
                 messages.error(request, "指定されたカテゴリが見つかりません。")
             return redirect("admin_app:admin_category")
 
         elif delete_id:
             try:
-                cat = CommonCategory.objects.get(id=delete_id)
+                cat = Category.objects.get(
+                    id=delete_id, is_global=True, user__isnull=True
+                )
                 name = cat.category_name
                 cat.delete()
                 messages.info(request, f"カテゴリ「{name}」を削除しました。")
-            except CommonCategory.DoesNotExist:
+            except Category.DoesNotExist:
                 messages.error(request, "削除対象が見つかりません。")
             return redirect("admin_app:admin_category")
 

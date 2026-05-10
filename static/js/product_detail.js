@@ -51,29 +51,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
-    let yMin, yMax;
+    const allValues = threshold ? [...prices, threshold] : prices;
+    const dataMin = Math.min(...allValues);
+    const dataMax = Math.max(...allValues);
+    const margin = Math.max((dataMax - dataMin) * 0.2, 500);
 
-    if (threshold) {
-        const priceRange = maxPrice - minPrice;
-        const margin = Math.max(priceRange * 0.8, 500);
-
-        const rangeBelow = margin / 0.6;
-        const rangeAbove = margin / 0.4;
-
-        yMin = threshold - rangeBelow;
-        yMax = threshold + rangeAbove;
-
-        if (yMin < 0) {
-            yMin = 0;
-            yMax = threshold * 2;
-        }
-
-        yMin = Math.floor(yMin / 500) * 500;
-        yMax = Math.ceil(yMax / 500) * 500;
-    } else {
-        yMin = 0;
-        yMax = Math.ceil(maxPrice * 1.2 / 500) * 500;
-    }
+    const yMin = Math.max(0, Math.floor((dataMin - margin) / 500) * 500);
+    const yMax = Math.ceil((dataMax + margin) / 500) * 500;
 
     console.log("📊 Y軸範囲:", yMin, "～", yMax);
     console.log("📊 買い時価格:", threshold);
