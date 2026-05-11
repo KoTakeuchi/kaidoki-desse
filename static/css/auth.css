@@ -21,7 +21,7 @@
     justify-content: center;
     align-items: flex-start;
     min-height: calc(100vh - 180px);
-    padding-top: 4rem;
+    padding-top: 6rem;
     background: none;
 }
 
@@ -283,7 +283,7 @@
 /* --- 1920px以下（フルHD含む）で距離を少し詰める --- */
 @media screen and (max-width: 1920px) {
     .auth-wrapper {
-        padding-top: 1.4rem !important;
+        padding-top: 5rem !important;
         /* 4rem → 詰めたバランス値 */
     }
 
@@ -298,7 +298,7 @@
 /* --- 1921px以上（2K・4Kなど）では詰めすぎを防ぎ、フルHDと同じ余白を固定 --- */
 @media screen and (min-width: 1921px) {
     .auth-wrapper {
-        padding-top: 1.4rem !important;
+        padding-top: 5rem !important;
         /* フルHDと同値で固定 */
     }
 
