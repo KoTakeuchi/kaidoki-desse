@@ -35,5 +35,6 @@
     },
     "prettier.disableLanguages": [
         "python"
-    ]
+    ],
+    "djlint.showInstallError": false
 }

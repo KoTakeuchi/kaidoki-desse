@@ -1,5 +1,11 @@
+// 修正後
 document.addEventListener("DOMContentLoaded", function () {
     console.log("🚀 DOMContentLoaded - スクリプト開始");
+
+    // zoom プラグイン登録
+    if (typeof ChartZoom !== 'undefined') {
+        Chart.register(ChartZoom);
+    }
 
     // ========================================
     // Canvas要素取得
@@ -136,30 +142,32 @@ document.addEventListener("DOMContentLoaded", function () {
                         autoSkip: true,  // ✅ 自動スキップに変更（30日分表示）
                         maxTicksLimit: 30,
                         font: { size: 9 },
+                        // 修正後
                         callback: function (value, index) {
-                            const dateStr = labels[value];  // ✅ value を使用
+                            const dateStr = labels[value];
                             if (!dateStr) return '';
 
-                            const [year, month, day] = dateStr.split('-');
+                            // YYYY-MM-DD HH:MM:SS or YYYY-MM-DD 形式に対応
+                            const datePart = dateStr.split(' ')[0];
+                            const timePart = dateStr.split(' ')[1];
+                            const [year, month, day] = datePart.split('-');
+                            const hour = timePart ? timePart.slice(0, 2) : null;
 
-                            // 最初の日付は年号付き
-                            if (value === 0) {
-                                return [year, `${month}-${day}`];
-                            }
+                            const display = hour ? `${month}/${day} ${hour}時` : `${month}/${day}`;
 
-                            // 年が変わったときだけ年号表示
+                            // 年またぎの場合のみ年を表示
                             if (value > 0) {
                                 const prevDateStr = labels[value - 1];
                                 if (prevDateStr) {
                                     const prevYear = prevDateStr.split('-')[0];
                                     if (year !== prevYear) {
-                                        return [year, `${month}-${day}`];
+                                        const shortYear = year.slice(2);
+                                        return [`${shortYear}年`, display];
                                     }
                                 }
                             }
 
-                            // 通常は月と日を2行で表示
-                            return [month, day];
+                            return display;
                         }
                     },
                     grid: {
@@ -174,9 +182,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     max: yMax,
                     position: "left",
                 },
+                // 修正後
                 y2: {
                     title: { display: true, text: "在庫数" },
                     beginAtZero: true,
+                    max: Math.max(Math.ceil(Math.max(...stocks.filter(s => s > 0), 1) * 1.5), 5),
                     position: "right",
                     grid: { drawOnChartArea: false },
                     ticks: {
