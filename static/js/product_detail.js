@@ -1,6 +1,4 @@
-// 修正後
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("🚀 DOMContentLoaded - スクリプト開始");
 
     // zoom プラグイン登録
     if (typeof ChartZoom !== 'undefined') {
@@ -8,23 +6,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ========================================
-    // Canvas要素取得
+    // 要素取得
     // ========================================
     const ctx = document.getElementById("priceChart");
-    if (!ctx) {
-        console.error("❌ Canvas要素が見つかりません");
-        return;
-    }
-    console.log("✅ Canvas要素取得成功:", ctx);
+    if (!ctx) { console.error("❌ Canvas要素が見つかりません"); return; }
 
-    // ========================================
-    // JSONデータ取得
-    // ========================================
     const jsonEl = document.getElementById("price-data-json");
-    if (!jsonEl) {
-        console.error("❌ JSON要素が見つかりません");
-        return;
-    }
+    if (!jsonEl) { console.error("❌ JSON要素が見つかりません"); return; }
+
+    const priorityEl = document.getElementById("product-priority");
+    const priority = priorityEl ? JSON.parse(priorityEl.textContent) : "普通";
 
     // ========================================
     // JSONパース
@@ -32,7 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let priceData;
     try {
         priceData = JSON.parse(jsonEl.textContent);
-        console.log("✅ JSON解析成功");
     } catch (e) {
         console.error("❌ JSON解析エラー:", e);
         return;
@@ -43,206 +33,243 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    console.log("✅ データ検証成功 - データ件数:", priceData.length);
-
-    // ========================================
-    // グラフデータ準備
-    // ========================================
-    const labels = priceData.map(d => d.date);
-    const prices = priceData.map(d => parseFloat(d.price));
-    const stocks = priceData.map(d => d.stock === 0 ? 0 : d.stock);
     const threshold = priceData[0]?.threshold_value || null;
 
-    // ✅ Y軸範囲の計算：買い時価格を下から40%の位置に
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    // ========================================
+    // データ集約関数
+    // ========================================
 
-    const allValues = threshold ? [...prices, threshold] : prices;
-    const dataMin = Math.min(...allValues);
-    const dataMax = Math.max(...allValues);
-    const margin = Math.max((dataMax - dataMin) * 0.2, 500);
+    // 日次集約（最安値）
+    function aggregateByDay(data) {
+        const map = {};
+        data.forEach(d => {
+            const day = d.date.split(' ')[0]; // YYYY-MM-DD
+            if (!map[day] || d.price < map[day].price) {
+                map[day] = { ...d, date: day };
+            }
+        });
+        return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+    }
 
-    const yMin = Math.max(0, Math.floor((dataMin - margin) / 500) * 500);
-    const yMax = Math.ceil((dataMax + margin) / 500) * 500;
+    // 週次集約（最安値）
+    function aggregateByWeek(data) {
+        const map = {};
+        data.forEach(d => {
+            const date = new Date(d.date.split(' ')[0]);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(date.setDate(diff));
+            const key = monday.toISOString().split('T')[0];
+            if (!map[key] || d.price < map[key].price) {
+                map[key] = { ...d, date: key };
+            }
+        });
+        return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
+    }
 
-    console.log("📊 Y軸範囲:", yMin, "～", yMax);
-    console.log("📊 買い時価格:", threshold);
+    // 期間フィルタ
+    function filterByDays(data, days) {
+        if (days === null) return data;
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        return data.filter(d => new Date(d.date.split(' ')[0]) >= cutoff);
+    }
 
     // ========================================
-    // データセット構築
+    // 表示データ生成（期間＋粒度を連動）
     // ========================================
-    const datasets = [
-        {
-            type: "bar",
-            label: "在庫数",
-            data: stocks,
-            backgroundColor: "rgba(60, 169, 169, 0.5)",
-            borderWidth: 0,
-            yAxisID: "y2",
-            order: 3,
-        },
-        {
-            type: "line",
-            label: "価格（円）",
-            data: prices,
-            borderColor: "#C35656",
-            backgroundColor: "rgba(195, 86, 86, 0.1)",
-            borderWidth: 2,
-            tension: 0.3,
-            yAxisID: "y",
-            order: 2,
-            pointBackgroundColor: prices.map(p =>
-                threshold && p <= threshold ? '#FF3333' : '#C35656'
-            ),
-            pointRadius: prices.map(p =>
-                threshold && p <= threshold ? 5 : 3
-            ),
-            pointHoverRadius: 7,
-        },
-    ];
+    function buildDisplayData(mode) {
+        // mode: '7d' | '30d' | 'all'
+        let data;
 
-    if (threshold !== null && threshold !== undefined) {
-        datasets.push({
-            type: "line",
-            label: "買い時価格",
-            data: Array(labels.length).fill(threshold),
-            borderColor: "#F7CB6E",
-            borderWidth: 3,
-            borderDash: [8, 4],
-            pointRadius: 0,
-            yAxisID: "y",
-            order: 1,
+        if (mode === '7d') {
+            const filtered = filterByDays(priceData, 7);
+            if (priority === '高') {
+                // 優先度高：2時間毎・全件
+                data = filtered;
+            } else {
+                // 優先度普通：1日1件
+                data = aggregateByDay(filtered);
+            }
+        } else if (mode === '30d') {
+            // 共通：日次・最安値
+            data = aggregateByDay(filterByDays(priceData, 30));
+        } else {
+            // 全期間：週次・最安値
+            data = aggregateByWeek(priceData);
+        }
+
+        return data.length > 0 ? data : priceData.slice(-1);
+    }
+
+    // ========================================
+    // Y軸範囲計算
+    // ========================================
+    function calcYRange(prices) {
+        const allValues = threshold ? [...prices, threshold] : prices;
+        const dataMin = Math.min(...allValues);
+        const dataMax = Math.max(...allValues);
+        const margin = Math.max((dataMax - dataMin) * 0.2, 500);
+        return {
+            yMin: Math.max(0, Math.floor((dataMin - margin) / 500) * 500),
+            yMax: Math.ceil((dataMax + margin) / 500) * 500,
+        };
+    }
+
+    // ========================================
+    // グラフ初期化
+    // ========================================
+    function buildChart(displayData) {
+        const labels = displayData.map(d => d.date);
+        const prices = displayData.map(d => parseFloat(d.price));
+        const stocks = displayData.map(d => d.stock === 0 ? 0 : d.stock);
+        const { yMin, yMax } = calcYRange(prices);
+        const y2Max = Math.max(Math.ceil(Math.max(...stocks.filter(s => s > 0), 1) * 1.5), 5);
+
+        const datasets = [
+            {
+                type: "bar",
+                label: "在庫数",
+                data: stocks,
+                backgroundColor: "rgba(60, 169, 169, 0.5)",
+                borderWidth: 0,
+                yAxisID: "y2",
+                order: 3,
+            },
+            {
+                type: "line",
+                label: "価格（円）",
+                data: prices,
+                borderColor: "#C35656",
+                backgroundColor: "rgba(195, 86, 86, 0.1)",
+                borderWidth: 2,
+                tension: 0.3,
+                yAxisID: "y",
+                order: 2,
+                pointBackgroundColor: prices.map(p =>
+                    threshold && p <= threshold ? '#FF3333' : '#C35656'
+                ),
+                pointRadius: prices.map(p =>
+                    threshold && p <= threshold ? 5 : 3
+                ),
+                pointHoverRadius: 7,
+            },
+        ];
+
+        if (threshold !== null) {
+            datasets.push({
+                type: "line",
+                label: "買い時価格",
+                data: Array(labels.length).fill(threshold),
+                borderColor: "#F7CB6E",
+                borderWidth: 3,
+                borderDash: [8, 4],
+                pointRadius: 0,
+                yAxisID: "y",
+                order: 1,
+            });
+        }
+
+        return new Chart(ctx, {
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: { display: true, text: "日付" },
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 30,
+                            font: { size: 9 },
+                            callback: function (value) {
+                                const dateStr = labels[value];
+                                if (!dateStr) return '';
+                                const datePart = dateStr.split(' ')[0];
+                                const timePart = dateStr.split(' ')[1];
+                                const [year, month, day] = datePart.split('-');
+                                const hour = timePart ? timePart.slice(0, 2) : null;
+                                const display = hour ? `${month}/${day} ${hour}時` : `${month}/${day}`;
+                                if (value > 0) {
+                                    const prevDateStr = labels[value - 1];
+                                    if (prevDateStr) {
+                                        const prevYear = prevDateStr.split('-')[0];
+                                        if (year !== prevYear) {
+                                            return [`${year.slice(2)}年`, display];
+                                        }
+                                    }
+                                }
+                                return display;
+                            }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    y: {
+                        title: { display: true, text: "価格（円）" },
+                        min: yMin,
+                        max: yMax,
+                        position: "left",
+                    },
+                    y2: {
+                        title: { display: true, text: "在庫数" },
+                        beginAtZero: true,
+                        max: y2Max,
+                        position: "right",
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            callback: v => Math.floor(v),
+                            stepSize: 1,
+                            autoSkip: true,
+                        }
+                    },
+                },
+                plugins: {
+                    legend: { position: "bottom" },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.dataset.yAxisID === 'y2') {
+                                    label += Math.floor(context.parsed.y);
+                                } else {
+                                    label += context.parsed.y.toLocaleString() + '円';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    zoom: {
+                        pan: { enabled: true, mode: 'x', modifierKey: null },
+                        zoom: {
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
+                            mode: 'x',
+                        },
+                        limits: { x: { min: 0, max: labels.length - 1 } }
+                    }
+                },
+            },
         });
     }
 
     // ========================================
-    // Chart.js描画
+    // 初期表示（直近30日）
     // ========================================
-    console.log("🎨 Chart.js描画開始");
+    let currentMode = '30d';
+    let chart = buildChart(buildDisplayData(currentMode));
 
-    // ✅ 最初は最新30日のみ表示
-    const displayStart = Math.max(0, labels.length - 30);
-
-    new Chart(ctx, {
-        data: {
-            labels: labels,
-            datasets: datasets,
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    title: { display: true, text: "日付（← スクロールで過去表示）" },
-                    // ✅ 最初は最新30日のみ
-                    min: displayStart,
-                    max: labels.length - 1,
-                    ticks: {
-                        maxRotation: 0,
-                        autoSkip: true,  // ✅ 自動スキップに変更（30日分表示）
-                        maxTicksLimit: 30,
-                        font: { size: 9 },
-                        // 修正後
-                        callback: function (value, index) {
-                            const dateStr = labels[value];
-                            if (!dateStr) return '';
-
-                            // YYYY-MM-DD HH:MM:SS or YYYY-MM-DD 形式に対応
-                            const datePart = dateStr.split(' ')[0];
-                            const timePart = dateStr.split(' ')[1];
-                            const [year, month, day] = datePart.split('-');
-                            const hour = timePart ? timePart.slice(0, 2) : null;
-
-                            const display = hour ? `${month}/${day} ${hour}時` : `${month}/${day}`;
-
-                            // 年またぎの場合のみ年を表示
-                            if (value > 0) {
-                                const prevDateStr = labels[value - 1];
-                                if (prevDateStr) {
-                                    const prevYear = prevDateStr.split('-')[0];
-                                    if (year !== prevYear) {
-                                        const shortYear = year.slice(2);
-                                        return [`${shortYear}年`, display];
-                                    }
-                                }
-                            }
-
-                            return display;
-                        }
-                    },
-                    grid: {
-                        display: true,
-                        drawOnChartArea: true,
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                y: {
-                    title: { display: true, text: "価格（円）" },
-                    min: yMin,
-                    max: yMax,
-                    position: "left",
-                },
-                // 修正後
-                y2: {
-                    title: { display: true, text: "在庫数" },
-                    beginAtZero: true,
-                    max: Math.max(Math.ceil(Math.max(...stocks.filter(s => s > 0), 1) * 1.5), 5),
-                    position: "right",
-                    grid: { drawOnChartArea: false },
-                    ticks: {
-                        callback: function (value) {
-                            return Math.floor(value);
-                        },
-                        stepSize: 1,
-                        autoSkip: true,
-                    }
-                },
-            },
-            plugins: {
-                legend: { position: "bottom" },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.dataset.yAxisID === 'y2') {
-                                label += Math.floor(context.parsed.y);
-                            } else {
-                                label += context.parsed.y.toLocaleString() + '円';
-                            }
-                            return label;
-                        }
-                    }
-                },
-                // ✅ 追加：Zoom/Pan機能
-                zoom: {
-                    pan: {
-                        enabled: true,
-                        mode: 'x',              // 横方向のみ
-                        modifierKey: null,      // 修飾キー不要
-                    },
-                    zoom: {
-                        wheel: {
-                            enabled: true,      // マウスホイールでズーム
-                        },
-                        pinch: {
-                            enabled: true,      // ピンチジェスチャー（タッチ）
-                        },
-                        mode: 'x',              // 横方向のみ
-                    },
-                    limits: {
-                        x: {
-                            min: 0,
-                            max: labels.length - 1,
-                        }
-                    }
-                }
-            },
-        },
+    // ========================================
+    // ボタン切替
+    // ========================================
+    document.querySelectorAll('.chart-range-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentMode = this.dataset.range;
+            chart.destroy();
+            chart = buildChart(buildDisplayData(currentMode));
+        });
     });
-
-    console.log("✅ Chart.js描画完了");
-    console.log("💡 操作方法：ドラッグで左右スクロール、マウスホイールでズーム");
 });
