@@ -1,0 +1,115 @@
+{% extends "layout-user.html" %}
+{% load static %}
+{% block title %}ユーザー情報編集{% endblock %}
+
+{% block body_class %}profile-edit-page{% endblock %}
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}?v={{ STATIC_VERSION }}">
+{% endblock %}
+{% block page_content %}
+
+<div class="page-header">
+  <h1 class="page-title">
+    <span class="title-inner">ユーザー情報編集</span>
+  </h1>
+</div>
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+
+      <!-- メールアドレス変更 -->
+      <div class="card shadow-sm p-4 mb-4">
+        <h6 class="fw-bold mb-3">メールアドレス変更</h6>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="email">
+          <div class="mb-3">
+            <label class="form-label text-muted small">現在のメールアドレス</label>
+            <input type="email" class="form-control bg-light" value="{{ request.user.email|default:'未設定' }}" disabled>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">新しいメールアドレス</label>
+            {{ email_form.email }}
+            {% if email_form.email.errors %}
+              <div class="text-danger small mt-1">{{ email_form.email.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="text-end">
+            <button type="submit" class="btn btn-danger rounded-pill px-4">保存する</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- パスワード変更 -->
+      <div class="card shadow-sm p-4 mb-4">
+        <h6 class="fw-bold mb-3">パスワード変更</h6>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="password">
+          <div class="mb-3">
+            <label class="form-label">現在のパスワード</label>
+            <div class="input-wrapper password-wrapper">
+              {{ password_form.old_password }}
+              <button type="button" class="toggle-password" aria-label="パスワード表示切替">
+                <i class="fa-solid fa-eye-slash"></i>
+              </button>
+            </div>
+            {% if password_form.old_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.old_password.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">新しいパスワード</label>
+            <div class="input-wrapper password-wrapper">
+              {{ password_form.new_password1 }}
+              <button type="button" class="toggle-password" aria-label="パスワード表示切替">
+                <i class="fa-solid fa-eye-slash"></i>
+              </button>
+            </div>
+            {% if password_form.new_password1.errors %}
+              <div class="text-danger small mt-1">{{ password_form.new_password1.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">新しいパスワード（確認）</label>
+            <div class="input-wrapper password-wrapper">
+              {{ password_form.new_password2 }}
+              <button type="button" class="toggle-password" aria-label="パスワード表示切替">
+                <i class="fa-solid fa-eye-slash"></i>
+              </button>
+            </div>
+            {% if password_form.new_password2.errors %}
+              <div class="text-danger small mt-1">{{ password_form.new_password2.errors }}</div>
+            {% endif %}
+          </div>
+          <div class="text-end">
+            <button type="submit" class="btn btn-danger rounded-pill px-4">変更する</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- アカウント削除 -->
+      <div class="card shadow-sm p-4 mb-4">
+        <h6 class="fw-bold text-danger mb-3">アカウント削除</h6>
+        <p class="text-muted small mb-3">アカウントを削除すると、登録済みの商品・通知データもすべて削除されます。</p>
+        <a href="{% url 'main:account_delete' %}" class="btn btn-outline-danger btn-sm rounded-pill">
+          アカウントを削除する
+        </a>
+      </div>
+
+<div class="mb-4">
+        <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+          ← 戻る
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}

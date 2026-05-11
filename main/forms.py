@@ -202,23 +202,17 @@ class ThresholdPriceForm(forms.ModelForm):
 # main/forms.py（追加）
 
 
+# 修正後
 class UserProfileForm(forms.ModelForm):
-    """ユーザー情報編集フォーム"""
-
+    """メールアドレス編集フォーム"""
     class Meta:
         model = User
-        fields = ["username", "email", "first_name", "last_name"]
+        fields = ["email"]
         labels = {
-            "username": "ユーザー名",
             "email": "メールアドレス",
-            "first_name": "名",
-            "last_name": "姓",
         }
         widgets = {
-            "username": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
-            "first_name": forms.TextInput(attrs={"class": "form-control"}),
-            "last_name": forms.TextInput(attrs={"class": "form-control"}),
         }
 
     def clean_email(self):
@@ -227,11 +221,24 @@ class UserProfileForm(forms.ModelForm):
             raise forms.ValidationError("このメールアドレスは既に使用されています。")
         return email
 
-    def clean_username(self):
-        username = self.cleaned_data.get("username")
-        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError("このユーザー名は既に使用されています。")
-        return username
+
+class PasswordChangeCustomForm(PasswordChangeForm):
+    """パスワード変更フォーム"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["old_password"].widget = forms.PasswordInput(
+            attrs={"class": "form-control"}
+        )
+        self.fields["new_password1"].widget = forms.PasswordInput(
+            attrs={"class": "form-control"}
+        )
+        self.fields["new_password2"].widget = forms.PasswordInput(
+            attrs={"class": "form-control"}
+        )
+        self.fields["old_password"].label = "現在のパスワード"
+        self.fields["new_password1"].label = "新しいパスワード"
+        self.fields["new_password2"].label = "新しいパスワード（確認）"
 # ======================================================
 # ユーザー通知設定フォーム
 # ======================================================
