@@ -33,12 +33,21 @@ body {
   padding: 0;
   font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', system-ui, sans-serif;
   color: var(--text);
-  background-color: #f7f8f9;
+  background-color: #f8f2f2;
+  position: relative;
+  min-height: 90vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
   background-image: url("/static/images/paper-fibers_header-background-lightpink.png");
   background-repeat: repeat;
   background-size: cover;
-  background-attachment: fixed;
-  min-height: 90vh;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* コンテナ */

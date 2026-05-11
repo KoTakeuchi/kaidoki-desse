@@ -12,7 +12,7 @@ body {
     margin: 0;
     padding: 0;
     color: var(--text);
-    background-color: #f7f5f6;
+    background-color: #fff2f2;
     font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
     /* ヘッダー高さ分の余白を確保 */
     padding-top: 1rem !important;
@@ -209,9 +209,10 @@ body {
 
 /* 絞り込みフォーム枠 */
 .filter-card {
-    background-color: #f2d9d9;
+    /* 修正後 */
+    background-color: #f7eaea;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     margin-top: 12px !important;
     padding-bottom: 3rem;
     /* タグぶんの空間を常時確保 */
