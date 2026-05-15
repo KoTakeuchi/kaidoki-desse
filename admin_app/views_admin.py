@@ -12,7 +12,7 @@ from django.core.paginator import Paginator
 from datetime import timedelta
 
 # 修正後
-from main.models import Product, NotificationEvent, ErrorLog, User, Category
+from main.models import Product, NotificationEvent, User, Category, ErrorLog
 from admin_app.models import NotificationLog
 from main.utils.pagination_helper import paginate_queryset
 

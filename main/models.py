@@ -267,14 +267,35 @@ class NotificationEvent(models.Model):
 
 # ======================================================
 # エラーログ
-# ======================================================
+# ======================================================# 修正後
 class ErrorLog(models.Model):
+    STATUS_CHOICES = [
+        ("unresolved", "未対応"),
+        ("in_progress", "対応中"),
+        ("resolved", "対応済み"),
+    ]
+
     user = models.ForeignKey(
         User, on_delete=models.SET_NULL, null=True, blank=True)
     type_name = models.CharField("例外名", max_length=100)
     source = models.CharField("発生箇所", max_length=100)
     message = models.TextField("エラーメッセージ")
     created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        "対応ステータス",
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="unresolved",
+    )
+    handled_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="handled_errors",
+        verbose_name="対応者",
+    )
+    note = models.TextField("対応メモ", blank=True, null=True)
 
     class Meta:
         verbose_name = "エラーログ"

@@ -12,7 +12,7 @@ body {
     margin: 0;
     padding: 0;
     color: var(--text);
-    background-color: #fff2f2;
+    background-color: transparent;
     font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
     /* ヘッダー高さ分の余白を確保 */
     padding-top: 1rem !important;

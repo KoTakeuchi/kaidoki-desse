@@ -16,20 +16,23 @@
 
     <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">ステータス</label>
+      <!-- 修正後 -->
       <select name="status" class="form-select">
         <option value="">全て</option>
-        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済</option>
         <option value="unresolved" {% if request.GET.status == "unresolved" %}selected{% endif %}>未対応</option>
+        <option value="in_progress" {% if request.GET.status == "in_progress" %}selected{% endif %}>対応中</option>
+        <option value="resolved" {% if request.GET.status == "resolved" %}selected{% endif %}>対応済み</option>
       </select>
     </div>
 
     <div style="width: 12%;">
       <label class="form-label fw-semibold text-secondary">エラー種別</label>
-      <select name="type" class="form-select">
+      <!-- 修正後 -->
+      <select name="type_name" class="form-select">
         <option value="">全て</option>
-        <option value="TypeError" {% if request.GET.type == "TypeError" %}selected{% endif %}>TypeError</option>
-        <option value="ValueError" {% if request.GET.type == "ValueError" %}selected{% endif %}>ValueError</option>
-        <option value="NameError" {% if request.GET.type == "NameError" %}selected{% endif %}>NameError</option>
+        {% for type in type_list %}
+          <option value="{{ type }}" {% if request.GET.type_name == type %}selected{% endif %}>{{ type }}</option>
+        {% endfor %}
       </select>
     </div>
 
