@@ -125,15 +125,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"❌ エラー: {error_count}件"))
         self.stdout.write("="*50)
 
+    # 修正後
     def _parse_stock(self, stock_status):
-        """在庫状態のテキストを数値に変換"""
-        stock_status = str(stock_status).lower()
-
-        if "売り切れ" in stock_status or "在庫なし" in stock_status:
+        stock_status = str(stock_status)
+        if "売り切れ" in stock_status or "在庫なし" in stock_status or "0" == stock_status:
             return 0
         elif "わずか" in stock_status or "残り少" in stock_status:
-            return 2
-        elif "在庫あり" in stock_status:
-            return 10
+            return 1
         else:
-            return 5  # デフォルト
+            return 3

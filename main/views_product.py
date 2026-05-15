@@ -115,10 +115,11 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 pass
 
         # --- 在庫フィルタ ---
+        # 修正後
         if stock == "low":
-            qs = qs.filter(latest_stock_count__lte=3, latest_stock_count__gt=0)
+            qs = qs.filter(latest_stock_count=1)
         elif stock == "none":
-            qs = qs.filter(is_in_stock=False)
+            qs = qs.filter(latest_stock_count=0)
 
         # --- 買い時フィルタ ---  ← 追加
         if buy_flag == "1":
@@ -407,6 +408,9 @@ def product_create(request):
 
                 # --- flag_type を文字列に変換してDBに保存 ---
                 flag_type_map = {
+                    "buy_price": "buy_price",
+                    "percent_off": "percent_off",
+                    "lowest_price": "lowest_price",
                     "1": "lowest_price",
                     "2": "percent_off",
                     "5": "buy_price",
@@ -472,10 +476,11 @@ def product_create(request):
                 # ✅ 修正：初回の価格履歴を PriceHistory に追加
                 # ======================================================
                 if product.initial_price and product.initial_price > 0:
+                    # 修正後
                     PriceHistory.objects.create(
                         product=product,
                         price=product.initial_price,
-                        stock_count=1,
+                        stock_count=3,
                         checked_at=timezone.now()
                     )
                     print(
@@ -561,6 +566,9 @@ def product_edit(request, pk):
 
                 # ✅ 修正：flag_type をマッピング
                 flag_type_map = {
+                    "buy_price": "buy_price",
+                    "percent_off": "percent_off",
+                    "lowest_price": "lowest_price",
                     "1": "lowest_price",
                     "2": "percent_off",
                     "5": "buy_price",

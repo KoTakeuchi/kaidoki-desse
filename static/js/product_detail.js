@@ -124,17 +124,22 @@ document.addEventListener("DOMContentLoaded", function () {
         const prices = displayData.map(d => parseFloat(d.price));
         const stocks = displayData.map(d => d.stock === 0 ? 0 : d.stock);
         const { yMin, yMax } = calcYRange(prices);
-        const y2Max = Math.max(Math.ceil(Math.max(...stocks.filter(s => s > 0), 1) * 1.5), 5);
+        const y2Max = 3;
 
         const datasets = [
+            // 修正後
             {
-                type: "bar",
-                label: "在庫数",
-                data: stocks,
-                backgroundColor: "rgba(60, 169, 169, 0.5)",
-                borderWidth: 0,
+                type: "scatter",
+                label: "在庫状況",
+                data: stocks.map((s, i) => ({ x: i, y: s === 0 ? 0 : s === 1 ? 1 : 3 })),
+                pointStyle: stocks.map(s => s === 0 ? 'crossRot' : s === 1 ? 'triangle' : 'circle'),
+                pointBackgroundColor: stocks.map(s => s === 0 ? 'rgba(200,50,50,0.8)' : s === 1 ? 'rgba(255,165,0,0.8)' : 'rgba(100,180,100,0.8)'),
+                pointBorderColor: stocks.map(s => s === 0 ? '#c83232' : s === 1 ? '#ffa500' : '#64b464'),
+                pointRadius: 8,
+                pointHoverRadius: 10,
                 yAxisID: "y2",
                 order: 3,
+                showLine: false,
             },
             {
                 type: "line",
@@ -217,10 +222,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         max: y2Max,
                         position: "right",
                         grid: { drawOnChartArea: false },
+                        // 修正後（y2のticks）
                         ticks: {
-                            callback: v => Math.floor(v),
+                            callback: v => {
+                                if (v === 0) return '売切';
+                                if (v === 1) return 'わずか';
+                                if (v === 3) return '在庫あり';
+                                return '';
+                            },
                             stepSize: 1,
-                            autoSkip: true,
                         }
                     },
                 },
@@ -231,8 +241,12 @@ document.addEventListener("DOMContentLoaded", function () {
                             label: function (context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
+                                // 修正後
                                 if (context.dataset.yAxisID === 'y2') {
-                                    label += Math.floor(context.parsed.y);
+                                    const val = Math.floor(context.parsed.y);
+                                    if (val === 0) label += '売り切れ';
+                                    else if (val === 1) label += 'わずか';
+                                    else label += '在庫あり';
                                 } else {
                                     label += context.parsed.y.toLocaleString() + '円';
                                 }

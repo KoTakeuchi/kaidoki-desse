@@ -187,7 +187,7 @@
                   {% endif %}
                   {% if not p.is_in_stock %}
                     <span class="badge bg-secondary border border-3 me-1">在庫なし</span>
-                  {% elif p.latest_stock_count and p.latest_stock_count <= 3 %}
+                  {% elif p.latest_stock_count == 1 %}
                     <span class="badge bg-warning border border-3 me-1">在庫わずか</span>
                   {% endif %}
                 </div>
