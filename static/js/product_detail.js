@@ -129,17 +129,18 @@ document.addEventListener("DOMContentLoaded", function () {
         const datasets = [
             // 修正後
             {
-                type: "scatter",
+                type: "line",
                 label: "在庫状況",
-                data: stocks.map((s, i) => ({ x: i, y: s === 0 ? 0 : s === 1 ? 1 : 3 })),
+                data: stocks.map(s => s === 0 ? 0 : s === 1 ? 1 : 3),
                 pointStyle: stocks.map(s => s === 0 ? 'crossRot' : s === 1 ? 'triangle' : 'circle'),
                 pointBackgroundColor: stocks.map(s => s === 0 ? 'rgba(200,50,50,0.8)' : s === 1 ? 'rgba(255,165,0,0.8)' : 'rgba(100,180,100,0.8)'),
                 pointBorderColor: stocks.map(s => s === 0 ? '#c83232' : s === 1 ? '#ffa500' : '#64b464'),
                 pointRadius: 8,
                 pointHoverRadius: 10,
+                borderWidth: 0,
+                showLine: false,
                 yAxisID: "y2",
                 order: 3,
-                showLine: false,
             },
             {
                 type: "line",
