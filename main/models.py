@@ -255,6 +255,7 @@ class NotificationEvent(models.Model):
     message = models.TextField("通知内容", blank=True)
     occurred_at = models.DateTimeField("発生日時", auto_now_add=True)
     is_read = models.BooleanField("既読", default=False)
+    sent_flag = models.BooleanField("メール送信済み", default=False)  # ✅ 追加
 
     class Meta:
         verbose_name = "通知イベント"

@@ -7,12 +7,11 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm, PasswordResetForm
-from main.models import Product, Category, UserNotificationSetting  # ✅ Profile削除
+from main.models import Product, Category, UserNotificationSetting
 from django.contrib.auth.forms import PasswordChangeForm
 User = get_user_model()
 
 
-# --- START: main/forms.py ---
 # ======================================================
 # 商品登録・編集フォーム
 # ======================================================
@@ -80,7 +79,6 @@ class ProductForm(forms.ModelForm):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        # --- カテゴリ選択肢設定 ---
         if self.user and self.user.is_authenticated:
             self.fields["categories"].queryset = Category.objects.filter(
                 Q(is_global=True, user__isnull=True)
@@ -90,26 +88,17 @@ class ProductForm(forms.ModelForm):
             self.fields["categories"].queryset = Category.objects.filter(
                 is_global=True)
 
-        # --- 編集時カテゴリ初期値 ---
         if self.instance and self.instance.pk:
             self.initial["categories"] = self.instance.categories.values_list(
                 "id", flat=True)
-
-            # ✅ 編集画面時は商品名・ショップ名を編集可
             self.fields["product_name"].widget.attrs.pop("readonly", None)
             self.fields["shop_name"].widget.attrs.pop("readonly", None)
-
-            # ✅ 編集時は product_url を必須から除外（変更不要なため）
             self.fields["product_url"].required = False
-
-            # flag_type は固定表示
             self.fields["flag_type"].widget = forms.HiddenInput()
         else:
-            # ✅ 新規登録時は編集不可（API入力用）
             self.fields["product_name"].widget.attrs["readonly"] = "readonly"
             self.fields["shop_name"].widget.attrs["readonly"] = "readonly"
 
-        # --- flag_type に応じた flag_value のプレースホルダを設定 ---
         if self.instance.flag_type == "buy_price":
             self.fields["flag_value"].widget.attrs.update(
                 {"placeholder": "例：15000（円）"})
@@ -118,16 +107,11 @@ class ProductForm(forms.ModelForm):
                 {"placeholder": "例：10（％）"})
 
     def clean_product_url(self):
-        """楽天URL＋重複防止"""
         url = self.cleaned_data.get("product_url", "")
-
-        # ✅ 編集時（既存インスタンスあり）でURL未入力ならスキップ
         if not url and self.instance and self.instance.pk:
             return self.instance.product_url
-
         if not url.startswith("https://item.rakuten.co.jp/"):
             raise ValidationError("楽天市場の商品URLを入力してください。")
-
         if self.user:
             qs = Product.objects.filter(user=self.user, product_url=url)
             if self.instance.pk:
@@ -137,30 +121,23 @@ class ProductForm(forms.ModelForm):
         return url
 
     def clean_categories(self):
-        """カテゴリは最大2件まで"""
         cats = self.cleaned_data.get("categories")
         if cats and len(cats) > 2:
             raise ValidationError("カテゴリは最大2件まで選択できます。")
         return cats
 
     def clean_flag_type(self):
-        """通知条件の選択必須チェック（編集時は既存値を維持）"""
         flag_type = self.cleaned_data.get("flag_type")
-
         if not flag_type and self.instance and self.instance.pk:
             return self.instance.flag_type
-
         if not flag_type or flag_type == "None":
             raise ValidationError("通知条件を選択してください。")
-
         valid_choices = ["buy_price", "percent_off", "lowest_price"]
         if flag_type not in valid_choices:
             raise ValidationError("通知条件を選択してください。")
-
         return flag_type
 
     def clean(self):
-        """通知条件と価格の整合チェック"""
         cleaned_data = super().clean()
         flag_type = cleaned_data.get("flag_type")
         initial_price = cleaned_data.get("initial_price")
@@ -176,7 +153,6 @@ class ProductForm(forms.ModelForm):
                 self.add_error("flag_value", "割引率は100%以下で入力してください。")
 
         return cleaned_data
-# --- END: main/forms.py ---
 
 
 # ======================================================
@@ -199,10 +175,9 @@ class ThresholdPriceForm(forms.ModelForm):
         }
 
 
-# main/forms.py（追加）
-
-
-# 修正後
+# ======================================================
+# ユーザープロフィールフォーム
+# ======================================================
 class UserProfileForm(forms.ModelForm):
     """メールアドレス編集フォーム"""
     class Meta:
@@ -222,6 +197,9 @@ class UserProfileForm(forms.ModelForm):
         return email
 
 
+# ======================================================
+# パスワード変更フォーム
+# ======================================================
 class PasswordChangeCustomForm(PasswordChangeForm):
     """パスワード変更フォーム"""
 
@@ -239,12 +217,11 @@ class PasswordChangeCustomForm(PasswordChangeForm):
         self.fields["old_password"].label = "現在のパスワード"
         self.fields["new_password1"].label = "新しいパスワード"
         self.fields["new_password2"].label = "新しいパスワード（確認）"
+
+
 # ======================================================
 # ユーザー通知設定フォーム
 # ======================================================
-# main/forms.py
-
-
 class UserNotificationSettingForm(forms.ModelForm):
     """通知設定フォーム（メール通知＋アプリ内通知）"""
 
@@ -269,8 +246,8 @@ class UserNotificationSettingForm(forms.ModelForm):
             "notify_hour",
             "notify_minute",
             "email",
-            "app_notification_enabled",      # ✅ アプリ内通知ON/OFF
-            "notification_retention_days",   # ✅ 保持期間
+            "app_notification_enabled",
+            "notification_retention_days",
         ]
         labels = {
             "enabled": "メール通知を有効にする",
@@ -293,22 +270,19 @@ class UserNotificationSettingForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # ✅ メールアドレスをユーザーのメールアドレスで初期化
         if self.instance and self.instance.user:
             self.fields["email"].initial = self.instance.user.email
+
 
 # ======================================================
 # ユーザー登録フォーム
 # ======================================================
-
-
 class CustomUserCreationForm(UserCreationForm):
     """サインアップ用フォーム（日本語化）"""
 
     email = forms.EmailField(
         label="メールアドレス",
-        required=True,
+        required=False,                                        # ✅ 任意に変更
         widget=forms.EmailInput(attrs={"class": "form-control"}),
         help_text="通知やパスワード再設定に使用されます。",
     )
@@ -331,7 +305,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if User.objects.filter(email=email).exists():
+        if email and User.objects.filter(email=email).exists():  # ✅ 空ならスキップ
             raise forms.ValidationError("このメールアドレスは既に登録されています。")
         return email
 
