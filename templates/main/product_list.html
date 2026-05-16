@@ -172,9 +172,12 @@
           {% for p in products %}
             <div class="col">
               <div class="card product-card h-100 shadow-sm
-                          {% if p.flag_reached %}border-buytime{% elif not p.is_in_stock %}border-secondary{% elif p.latest_stock_count and p.latest_stock_count <= 3 %}border-warning{% endif %}
+                          {% if p.flag_reached %}border-buytime
+                          {% elif not p.is_in_stock %}border-secondary
+                          {% elif p.latest_stock_count == 1 %}border-warning
+                          {% endif %}
                           rounded position-relative {% if not p.is_in_stock %}out-of-stock{% endif %}"
-                   data-url="{% url 'main:product_detail' p.id %}">
+                  data-url="{% url 'main:product_detail' p.id %}">
                 <!-- チェックボックス -->
                 <div class="position-absolute top-0 start-0 m-2">
                   <input class="form-check-input bulk-check" type="checkbox" name="selected" value="{{ p.id }}">
