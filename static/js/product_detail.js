@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    // zoom プラグイン登録
     if (typeof ChartZoom !== 'undefined') {
         Chart.register(ChartZoom);
     }
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const threshold = priceData[0]?.threshold_value || null;
 
-    // 日次集約（最安値）
     function aggregateByDay(data) {
         const map = {};
         data.forEach(d => {
@@ -41,7 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
     }
 
-    // 週次集約（最安値）
     function aggregateByWeek(data) {
         const map = {};
         data.forEach(d => {
@@ -57,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
     }
 
-    // 期間フィルタ
     function filterByDays(data, days) {
         if (days === null) return data;
         const cutoff = new Date();
@@ -65,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return data.filter(d => new Date(d.date.split(' ')[0]) >= cutoff);
     }
 
-    // 表示データ生成
     function buildDisplayData(mode) {
         let data;
         if (mode === '7d') {
@@ -79,7 +74,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return data.length > 0 ? data : priceData.slice(-1);
     }
 
-    // Y軸範囲計算
     function calcYRange(prices) {
         const allValues = threshold ? [...prices, threshold] : prices;
         const dataMin = Math.min(...allValues);
@@ -91,10 +85,9 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
-    // グラフ初期化
     function buildChart(displayData) {
         const labels = displayData.map(d => d.date);
-        const safeLabels = labels.length === 1 ? [...labels, labels[0]] : labels;  // ✅ 追加
+        const safeLabels = labels.length === 1 ? [...labels, labels[0]] : labels;
         const prices = displayData.map(d => parseFloat(d.price));
         const stocks = displayData.map(d => d.stock === 0 ? 0 : d.stock);
         const { yMin, yMax } = calcYRange(prices);
@@ -103,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
             {
                 type: "line",
                 label: "価格（円）",
-                data: prices.length === 1 ? [...prices, prices[0]] : prices,  // ✅ 修正
+                data: prices.length === 1 ? [...prices, prices[0]] : prices,
                 borderColor: "#C35656",
                 backgroundColor: "rgba(195, 86, 86, 0.1)",
                 borderWidth: 2,
@@ -111,9 +104,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 yAxisID: "y",
                 order: 2,
                 pointStyle: stocks.map(s => s === 0 ? 'crossRot' : s === 1 ? 'triangle' : 'circle'),
-                pointBackgroundColor: stocks.map(s => {
-                    if (threshold && prices[stocks.indexOf(s)] <= threshold) return '#FF3333';
-                    return s === 3 ? '#C35656' : '#ffffff';
+                pointBackgroundColor: stocks.map((s, i) => {
+                    if (threshold && prices[i] <= threshold) return '#FF3333';
+                    return s === 0 ? '#ffffff' : s === 1 ? '#ffffff' : '#C35656';
                 }),
                 pointBorderColor: '#C35656',
                 pointBorderWidth: 2,
@@ -126,7 +119,7 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets.push({
                 type: "line",
                 label: "買い時価格",
-                data: Array(safeLabels.length).fill(threshold),  // ✅ safeLabels使用
+                data: Array(safeLabels.length).fill(threshold),
                 borderColor: "#F7CB6E",
                 borderWidth: 3,
                 borderDash: [8, 4],
@@ -138,8 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         return new Chart(ctx, {
-            data: { labels: safeLabels, datasets },  // ✅ safeLabels使用
-            // ...以下変更なし
+            data: { labels: safeLabels, datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -151,16 +143,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             autoSkip: true,
                             maxTicksLimit: 30,
                             font: { size: 13 },
-                            callback: function (value) {
-                                const dateStr = labels[value];
+                            callback: function (value, index) {          // ✅ index追加
+                                const dateStr = labels[index];           // ✅ value→index
                                 if (!dateStr) return '';
                                 const datePart = dateStr.split(' ')[0];
                                 const timePart = dateStr.split(' ')[1];
                                 const [year, month, day] = datePart.split('-');
                                 const hour = timePart ? timePart.slice(0, 2) : null;
                                 const display = hour ? `${month}/${day} ${hour}時` : `${month}/${day}`;
-                                if (value > 0) {
-                                    const prevDateStr = labels[value - 1];
+                                if (index > 0) {                         // ✅ value→index
+                                    const prevDateStr = labels[index - 1]; // ✅ value→index
                                     if (prevDateStr) {
                                         const prevYear = prevDateStr.split('-')[0];
                                         if (year !== prevYear) {
