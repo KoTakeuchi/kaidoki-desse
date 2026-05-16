@@ -94,24 +94,45 @@
 
   <!-- 価格 × 在庫推移グラフ -->
   <div class="card shadow-sm p-4 mb-4">
-    <!-- 修正後 -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">価格 × 在庫推移グラフ</h5>
-        <div>
-            <button class="chart-range-btn btn btn-sm btn-outline-secondary me-1" data-range="7d">直近7日</button>
-            <button class="chart-range-btn btn btn-sm btn-outline-secondary me-1 active" data-range="30d">直近30日</button>
-            <button class="chart-range-btn btn btn-sm btn-outline-secondary" data-range="all">全期間</button>
-        </div>
+      <h5 class="mb-0">価格 × 在庫推移グラフ</h5>
+      <div>
+        <button class="chart-range-btn btn btn-sm btn-outline-secondary me-1" data-range="7d">直近7日</button>
+        <button class="chart-range-btn btn btn-sm btn-outline-secondary me-1 active" data-range="30d">直近30日</button>
+        <button class="chart-range-btn btn btn-sm btn-outline-secondary" data-range="all">全期間</button>
+      </div>
     </div>
 
-    <!-- price_data を安全に JS に埋め込む -->
-    <!-- 修正後 -->
     {{ price_data|json_script:"price-data-json" }}
     <script id="product-priority" type="application/json">"{{ product.priority }}"</script>
 
-    <!-- Chart.js 描画用キャンバス -->
-     <div class="chart-container" style="height: 400px;">
+    <div class="chart-container" style="height: 400px;">
       <canvas id="priceChart"></canvas>
+    </div>
+
+    <!-- 凡例 -->
+    <div class="d-flex justify-content-center gap-4 mt-3" style="font-size: 0.85rem; color: #555;">
+      <span>
+        <svg width="14" height="14" style="vertical-align:middle;margin-right:4px;">
+          <circle cx="7" cy="7" r="6" fill="#C35656" stroke="#C35656" stroke-width="2"/>
+        </svg>在庫あり
+      </span>
+      <span>
+        <svg width="14" height="14" style="vertical-align:middle;margin-right:4px;">
+          <polygon points="7,1 13,13 1,13" fill="white" stroke="#C35656" stroke-width="2"/>
+        </svg>在庫わずか
+      </span>
+      <span>
+        <svg width="14" height="14" style="vertical-align:middle;margin-right:4px;">
+          <line x1="2" y1="2" x2="12" y2="12" stroke="#C35656" stroke-width="2"/>
+          <line x1="12" y1="2" x2="2" y2="12" stroke="#C35656" stroke-width="2"/>
+        </svg>売り切れ
+      </span>
+      <span>
+        <svg width="20" height="14" style="vertical-align:middle;margin-right:4px;">
+          <line x1="0" y1="7" x2="20" y2="7" stroke="#F7CB6E" stroke-width="2" stroke-dasharray="5,3"/>
+        </svg>買い時価格
+      </span>
     </div>
   </div>
 
@@ -126,7 +147,6 @@
   </div>
 </div>
 
-<!-- 修正後 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>

@@ -281,7 +281,7 @@ def product_detail(request, pk):
         stock = int(h.stock_count) if h.stock_count is not None else 0
 
         price_data.append({
-            "date": h.checked_at.strftime("%Y-%m-%d"),
+            "date": h.checked_at.strftime("%Y-%m-%d %H:%M"),
             "price": price,
             "stock": stock,
             "threshold_value": threshold_value,

@@ -5,9 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
         Chart.register(ChartZoom);
     }
 
-    // ========================================
-    // 要素取得
-    // ========================================
     const ctx = document.getElementById("priceChart");
     if (!ctx) { console.error("❌ Canvas要素が見つかりません"); return; }
 
@@ -17,9 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const priorityEl = document.getElementById("product-priority");
     const priority = priorityEl ? JSON.parse(priorityEl.textContent) : "普通";
 
-    // ========================================
-    // JSONパース
-    // ========================================
     let priceData;
     try {
         priceData = JSON.parse(jsonEl.textContent);
@@ -35,15 +29,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const threshold = priceData[0]?.threshold_value || null;
 
-    // ========================================
-    // データ集約関数
-    // ========================================
-
     // 日次集約（最安値）
     function aggregateByDay(data) {
         const map = {};
         data.forEach(d => {
-            const day = d.date.split(' ')[0]; // YYYY-MM-DD
+            const day = d.date.split(' ')[0];
             if (!map[day] || d.price < map[day].price) {
                 map[day] = { ...d, date: day };
             }
@@ -75,36 +65,21 @@ document.addEventListener("DOMContentLoaded", function () {
         return data.filter(d => new Date(d.date.split(' ')[0]) >= cutoff);
     }
 
-    // ========================================
-    // 表示データ生成（期間＋粒度を連動）
-    // ========================================
+    // 表示データ生成
     function buildDisplayData(mode) {
-        // mode: '7d' | '30d' | 'all'
         let data;
-
         if (mode === '7d') {
             const filtered = filterByDays(priceData, 7);
-            if (priority === '高') {
-                // 優先度高：2時間毎・全件
-                data = filtered;
-            } else {
-                // 優先度普通：1日1件
-                data = aggregateByDay(filtered);
-            }
+            data = priority === '高' ? filtered : aggregateByDay(filtered);
         } else if (mode === '30d') {
-            // 共通：日次・最安値
             data = aggregateByDay(filterByDays(priceData, 30));
         } else {
-            // 全期間：週次・最安値
             data = aggregateByWeek(priceData);
         }
-
         return data.length > 0 ? data : priceData.slice(-1);
     }
 
-    // ========================================
     // Y軸範囲計算
-    // ========================================
     function calcYRange(prices) {
         const allValues = threshold ? [...prices, threshold] : prices;
         const dataMin = Math.min(...allValues);
@@ -116,49 +91,34 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     }
 
-    // ========================================
     // グラフ初期化
-    // ========================================
     function buildChart(displayData) {
         const labels = displayData.map(d => d.date);
+        const safeLabels = labels.length === 1 ? [...labels, labels[0]] : labels;  // ✅ 追加
         const prices = displayData.map(d => parseFloat(d.price));
         const stocks = displayData.map(d => d.stock === 0 ? 0 : d.stock);
         const { yMin, yMax } = calcYRange(prices);
-        const y2Max = 3;
 
         const datasets = [
-            // 修正後
-            {
-                type: "line",
-                label: "在庫状況",
-                data: stocks.map(s => s === 0 ? 0 : s === 1 ? 1 : 3),
-                pointStyle: stocks.map(s => s === 0 ? 'crossRot' : s === 1 ? 'triangle' : 'circle'),
-                pointBackgroundColor: stocks.map(s => s === 0 ? 'rgba(200,50,50,0.8)' : s === 1 ? 'rgba(255,165,0,0.8)' : 'rgba(100,180,100,0.8)'),
-                pointBorderColor: stocks.map(s => s === 0 ? '#c83232' : s === 1 ? '#ffa500' : '#64b464'),
-                pointRadius: 8,
-                pointHoverRadius: 10,
-                borderWidth: 0,
-                showLine: false,
-                yAxisID: "y2",
-                order: 3,
-            },
             {
                 type: "line",
                 label: "価格（円）",
-                data: prices,
+                data: prices.length === 1 ? [...prices, prices[0]] : prices,  // ✅ 修正
                 borderColor: "#C35656",
                 backgroundColor: "rgba(195, 86, 86, 0.1)",
                 borderWidth: 2,
                 tension: 0.3,
                 yAxisID: "y",
                 order: 2,
-                pointBackgroundColor: prices.map(p =>
-                    threshold && p <= threshold ? '#FF3333' : '#C35656'
-                ),
-                pointRadius: prices.map(p =>
-                    threshold && p <= threshold ? 5 : 3
-                ),
-                pointHoverRadius: 7,
+                pointStyle: stocks.map(s => s === 0 ? 'crossRot' : s === 1 ? 'triangle' : 'circle'),
+                pointBackgroundColor: stocks.map(s => {
+                    if (threshold && prices[stocks.indexOf(s)] <= threshold) return '#FF3333';
+                    return s === 3 ? '#C35656' : '#ffffff';
+                }),
+                pointBorderColor: '#C35656',
+                pointBorderWidth: 2,
+                pointRadius: stocks.map(s => s === 0 ? 8 : s === 1 ? 8 : 5),
+                pointHoverRadius: 10,
             },
         ];
 
@@ -166,18 +126,20 @@ document.addEventListener("DOMContentLoaded", function () {
             datasets.push({
                 type: "line",
                 label: "買い時価格",
-                data: Array(labels.length).fill(threshold),
+                data: Array(safeLabels.length).fill(threshold),  // ✅ safeLabels使用
                 borderColor: "#F7CB6E",
                 borderWidth: 3,
                 borderDash: [8, 4],
                 pointRadius: 0,
+                tension: 0,
                 yAxisID: "y",
                 order: 1,
             });
         }
 
         return new Chart(ctx, {
-            data: { labels, datasets },
+            data: { labels: safeLabels, datasets },  // ✅ safeLabels使用
+            // ...以下変更なし
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -188,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             maxRotation: 0,
                             autoSkip: true,
                             maxTicksLimit: 30,
-                            font: { size: 9 },
+                            font: { size: 13 },
                             callback: function (value) {
                                 const dateStr = labels[value];
                                 if (!dateStr) return '';
@@ -217,41 +179,24 @@ document.addEventListener("DOMContentLoaded", function () {
                         max: yMax,
                         position: "left",
                     },
-                    y2: {
-                        title: { display: true, text: "在庫数" },
-                        beginAtZero: true,
-                        max: y2Max,
-                        position: "right",
-                        grid: { drawOnChartArea: false },
-                        // 修正後（y2のticks）
-                        ticks: {
-                            callback: v => {
-                                if (v === 0) return '売切';
-                                if (v === 1) return 'わずか';
-                                if (v === 3) return '在庫あり';
-                                return '';
-                            },
-                            stepSize: 1,
-                        }
-                    },
                 },
                 plugins: {
-                    legend: { position: "bottom" },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function (context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
-                                // 修正後
-                                if (context.dataset.yAxisID === 'y2') {
-                                    const val = Math.floor(context.parsed.y);
-                                    if (val === 0) label += '売り切れ';
-                                    else if (val === 1) label += 'わずか';
-                                    else label += '在庫あり';
-                                } else {
-                                    label += context.parsed.y.toLocaleString() + '円';
-                                }
+                                label += context.parsed.y.toLocaleString() + '円';
                                 return label;
+                            },
+                            afterLabel: function (context) {
+                                if (context.dataset.label === '価格（円）') {
+                                    const s = stocks[context.dataIndex];
+                                    if (s === 0) return '在庫: 売り切れ';
+                                    if (s === 1) return '在庫: わずか';
+                                    return '在庫: あり';
+                                }
                             }
                         }
                     },
@@ -269,15 +214,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ========================================
-    // 初期表示（直近30日）
-    // ========================================
     let currentMode = '30d';
     let chart = buildChart(buildDisplayData(currentMode));
 
-    // ========================================
-    // ボタン切替
-    // ========================================
     document.querySelectorAll('.chart-range-btn').forEach(btn => {
         btn.addEventListener('click', function () {
             document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
