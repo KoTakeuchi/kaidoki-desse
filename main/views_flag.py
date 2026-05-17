@@ -35,7 +35,14 @@ def flag_setting(request):
         if request.method == "POST":
             form = UserNotificationSettingForm(request.POST, instance=setting)
             if form.is_valid():
-                form.save()
+                instance = form.save(commit=False)
+
+                # ✅ メール通知OFFの時は時刻を現在の値で維持
+                if not instance.enabled:
+                    instance.notify_hour = setting.notify_hour
+                    instance.notify_minute = setting.notify_minute
+
+                instance.save()
                 messages.success(request, "通知設定を保存しました。")
                 return redirect("main:flag_setting")
             else:
