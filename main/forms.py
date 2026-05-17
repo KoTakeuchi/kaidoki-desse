@@ -184,14 +184,26 @@ class UserProfileForm(forms.ModelForm):
         model = User
         fields = ["email"]
         labels = {
-            "email": "メールアドレス",
+            "email": "新しいメールアドレス",
         }
         widgets = {
-            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={
+                "class": "form-control",
+                "placeholder": "新しいメールアドレスを入力",
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ✅ instanceの値より優先してブランクにする
+        self.initial["email"] = ""
+        self.fields["email"].initial = ""
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
+        if not email:
+            # ✅ 未入力なら現在のメールアドレスを維持
+            return self.instance.email
         if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("このメールアドレスは既に使用されています。")
         return email
@@ -258,7 +270,7 @@ class UserNotificationSettingForm(forms.ModelForm):
         widgets = {
             "email": forms.EmailInput(attrs={
                 "class": "form-control",
-                "readonly": "readonly",
+                "readonly": "readonly",  # ✅ 参照のみ
             }),
             "app_notification_enabled": forms.CheckboxInput(attrs={
                 "class": "form-check-input"

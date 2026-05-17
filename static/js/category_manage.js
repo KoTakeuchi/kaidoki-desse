@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let editId = null;
     let deleteId = null;
 
-    // ---- CSRF ----
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -27,26 +26,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
     }
 
-    // ---- モーダルを完全に閉じる ----
+    // ✅ 修正：hidden.bs.modal イベントで確実にbackdrop削除
     function closeModal(modalId) {
         const modalEl = document.getElementById(modalId);
         if (!modalEl) return;
 
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) {
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }, { once: true });
+
             modal.hide();
         }
-
-        // backdrop（灰色の背景）を強制削除
-        setTimeout(() => {
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
-        }, 100);
     }
 
-    // ---- 行番号振り直し ----
     function renumberCategoryRows() {
         tableBody.querySelectorAll("tr").forEach((tr, idx) => {
             const cell = tr.querySelector("td:first-child");
@@ -54,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ---- 追加ボタン制御（最大5件） ----
     function updateAddButtonState() {
         if (!addButton) return;
         const rowCount = tableBody.querySelectorAll("tr").length;
@@ -67,7 +63,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAddButtonState();
     new MutationObserver(updateAddButtonState).observe(tableBody, { childList: true });
 
-    // ---- 未分類は編集・削除不可 ----
     function disableUncategorizedButtons() {
         document.querySelectorAll(".category-table tbody tr").forEach(row => {
             const nameCell = row.querySelector("td:nth-child(2)");
@@ -83,7 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     disableUncategorizedButtons();
 
-    // ---- 入力バリデーション（追加/編集） ----
     function setupLiveValidation(input, button) {
         if (!input || !button) return;
         input.addEventListener("input", () => {
@@ -101,7 +95,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setupLiveValidation(createInput, createBtn);
     setupLiveValidation(editInput, editBtn);
 
-    // ---- 編集モーダル開いたとき ----
     function attachEditEvents() {
         document.querySelectorAll("[data-bs-target='#editModal']").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -113,7 +106,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     attachEditEvents();
 
-    // ---- 削除モーダル開いたとき（idだけ保持） ----
     function attachDeleteEvents() {
         document.querySelectorAll("[data-bs-target='#deleteModal']").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -123,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     attachDeleteEvents();
 
-    // ---- カテゴリ追加 ----
     if (createBtn && createInput) {
         createBtn.addEventListener("click", async () => {
             const name = createInput.value.trim();
@@ -177,7 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 attachDeleteEvents();
                 disableUncategorizedButtons();
 
-                // モーダルを完全に閉じる
                 closeModal("createModal");
                 createInput.value = "";
             } catch (e) {
@@ -187,7 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ---- カテゴリ編集 ----
     if (editBtn && editInput) {
         editBtn.addEventListener("click", async () => {
             const newName = editInput.value.trim();
@@ -217,7 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (deleteButton) deleteButton.setAttribute("data-name", data.category_name);
                 }
 
-                // モーダルを完全に閉じる
                 closeModal("editModal");
             } catch (e) {
                 console.error(e);
@@ -226,7 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ---- カテゴリ削除（入力確認なし） ----
     if (deleteBtn && deleteModalEl) {
         deleteBtn.addEventListener("click", async () => {
             if (!deleteId) return;
@@ -253,7 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (row) row.remove();
                 renumberCategoryRows();
 
-                // モーダルを完全に閉じる
                 closeModal("deleteModal");
                 deleteId = null;
             } catch (e) {

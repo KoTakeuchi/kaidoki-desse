@@ -8,19 +8,6 @@ from main.forms import UserNotificationSettingForm
 from main.utils.error_logger import log_error
 from django.contrib import messages
 
-# ======================================================
-# 通知設定ページ（GET表示＋AJAX保存対応）
-# ======================================================
-
-
-# main/views_flag.py
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from main.models import UserNotificationSetting
-from main.forms import UserNotificationSettingForm
-from main.utils.error_logger import log_error
-
 
 @login_required
 def flag_setting(request):
@@ -30,19 +17,20 @@ def flag_setting(request):
     - POST: 通知設定を更新（フォーム対応）
     """
     try:
-        # 設定の取得（存在しない場合は作成）
         setting, _ = UserNotificationSetting.objects.get_or_create(
             user=request.user,
             defaults={
                 "enabled": True,
                 "notify_hour": 9,
                 "notify_minute": 0,
-                "email": request.user.email,
-                "app_notify_frequency": "多め",
-                "app_notify_hour": 9,
-                "app_notify_minute": 0,
+                "email": request.user.email or None,
             }
         )
+
+        # ✅ user.emailをsetting.emailに同期（未設定の場合のみ）
+        if not setting.email and request.user.email:
+            setting.email = request.user.email
+            setting.save(update_fields=["email"])
 
         if request.method == "POST":
             form = UserNotificationSettingForm(request.POST, instance=setting)
@@ -71,10 +59,6 @@ def flag_setting(request):
         messages.error(request, "設定の読み込み中にエラーが発生しました。")
         return redirect("main:product_list")
 
-# ======================================================
-# API: 通知設定の取得（AJAX用）
-# ======================================================
-
 
 @login_required
 @require_http_methods(["GET"])
@@ -84,9 +68,7 @@ def api_get_flag_setting(request):
         setting, _ = UserNotificationSetting.objects.get_or_create(
             user=request.user)
         return JsonResponse({
-            "email_notify": setting.email_notify,
-            "price_notify": setting.price_notify,
-            "stock_notify": setting.stock_notify,
+            "enabled": setting.enabled,
         })
     except Exception as e:
         log_error(user=request.user, type_name=type(e).__name__,
@@ -94,9 +76,6 @@ def api_get_flag_setting(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# ======================================================
-# API: 通知設定の更新（AJAX用）
-# ======================================================
 @login_required
 @require_http_methods(["POST"])
 def api_update_flag_setting(request):
@@ -104,9 +83,7 @@ def api_update_flag_setting(request):
     try:
         setting, _ = UserNotificationSetting.objects.get_or_create(
             user=request.user)
-        setting.email_notify = request.POST.get("email_notify") == "true"
-        setting.price_notify = request.POST.get("price_notify") == "true"
-        setting.stock_notify = request.POST.get("stock_notify") == "true"
+        setting.enabled = request.POST.get("email_notify") == "true"
         setting.save()
         return JsonResponse({"success": True})
     except Exception as e:
