@@ -1,0 +1,225 @@
+{% comment %} templates/emails/daily_notification.html {% endcomment %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>【買い時でっせ】本日の商品情報</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Kaku Gothic Pro", "Meiryo", sans-serif;
+      background-color: #fdf6f0;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e0d6cc;
+    }
+    .header {
+      background-color: #C35656;
+      padding: 20px;
+      text-align: center;
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+    .header p {
+      color: #fce8e8;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .body {
+      padding: 24px 20px;
+    }
+    .greeting {
+      font-size: 14px;
+      margin-bottom: 20px;
+      color: #555;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #C35656;
+      border-left: 4px solid #F7CB6E;
+      padding-left: 10px;
+      margin-bottom: 12px;
+    }
+    .product-card {
+      display: flex;
+      align-items: flex-start;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .product-card img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    .product-card .no-image {
+      width: 72px;
+      height: 72px;
+      background: #eee;
+      border-radius: 6px;
+      margin-right: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #999;
+    }
+    .product-info {
+      flex: 1;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .product-name {
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .price-info {
+      color: #C35656;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .stock-info {
+      color: #E68A00;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .links {
+      margin-top: 6px;
+    }
+    .links a {
+      display: inline-block;
+      font-size: 12px;
+      color: #C35656;
+      text-decoration: none;
+      margin-right: 12px;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 20px 0;
+    }
+    .footer {
+      background: #f5f5f5;
+      padding: 16px 20px;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+      line-height: 1.8;
+    }
+    .footer a {
+      color: #C35656;
+      text-decoration: none;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 4px;
+    }
+    .badge-buytime {
+      background: #F7CB6E;
+      color: #7a5c00;
+    }
+    .badge-stock {
+      background: #e8f4e8;
+      color: #2d6a2d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- ヘッダー -->
+    <div class="header">
+      <h1>🛒 買い時でっせ</h1>
+      <p>本日の商品情報（{{ send_date }}）</p>
+    </div>
+
+    <div class="body">
+      <p class="greeting">{{ user.username }} さん、お知らせがあります。</p>
+
+      <!-- 買い時商品セクション -->
+      {% if price_events %}
+      <p class="section-title">💰 買い時商品</p>
+      {% for e in price_events %}
+      <div class="product-card">
+        {% if e.product.image_url %}
+          <img src="{{ e.product.image_url }}" alt="{{ e.product.product_name }}">
+        {% else %}
+          <div class="no-image">NO IMAGE</div>
+        {% endif %}
+        <div class="product-info">
+          <div class="badge badge-buytime">買い時</div>
+          <div class="product-name">{{ e.product.product_name }}</div>
+          <div class="price-info">{{ e.message }}</div>
+          <div class="links">
+            <a href="{{ site_url }}/main/product/detail/{{ e.product.id }}/">▶ 商品詳細</a>
+            <a href="{{ e.product.product_url }}">🛒 楽天市場で見る</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+      {% if price_events and stock_events %}
+      <hr class="divider">
+      {% endif %}
+
+      <!-- 在庫セクション -->
+      {% if stock_events %}
+      <p class="section-title">📦 在庫情報</p>
+      {% for e in stock_events %}
+      <div class="product-card">
+        {% if e.product.image_url %}
+          <img src="{{ e.product.image_url }}" alt="{{ e.product.product_name }}">
+        {% else %}
+          <div class="no-image">NO IMAGE</div>
+        {% endif %}
+        <div class="product-info">
+          <div class="badge badge-stock">在庫変動</div>
+          <div class="product-name">{{ e.product.product_name }}</div>
+          <div class="stock-info">{{ e.message }}</div>
+          <div class="links">
+            <a href="{{ site_url }}/main/product/detail/{{ e.product.id }}/">▶ 商品詳細</a>
+            <a href="{{ e.product.product_url }}">🛒 楽天市場で見る</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+
+    </div>
+
+    <!-- フッター -->
+    <div class="footer">
+      このメールは「買い時でっせ」から自動送信されています。<br>
+      通知設定の変更は <a href="{{ site_url }}/main/flag_setting/">こちら</a> から。<br>
+      © 買い時でっせ
+    </div>
+
+  </div>
+</body>
+</html>
