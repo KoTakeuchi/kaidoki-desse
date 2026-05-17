@@ -103,6 +103,8 @@
     /* ← テキスト分×1.5 の幅を確保 */
     border: none;
     border-radius: 1.5rem;
+    text-decoration: none;
+    /* ✅ 追加 */
     margin-top: 2.5rem;
     transition: all 0.2s ease;
     white-space: nowrap;

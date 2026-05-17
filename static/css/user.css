@@ -1659,7 +1659,7 @@ select.form-select option {
     justify-content: space-between;
     align-items: center;
     margin-top: 24px;
-    border-top: 1px solid #eee;
+    border-top: none;
     width: 100%;
 }
 

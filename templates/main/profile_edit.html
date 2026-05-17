@@ -26,8 +26,8 @@
           {% csrf_token %}
           <input type="hidden" name="action" value="email">
           <div class="mb-3">
-            <label class="form-label text-muted small">現在のメールアドレス</label>
-            <input type="email" class="form-control bg-light" value="{{ request.user.email|default:'未設定' }}" disabled>
+            <label class="form-label">現在のメールアドレス</label>  <!-- ✅ 修正 -->
+            <input type="email" class="form-control" value="{{ request.user.email|default:'未設定' }}" readonly>  <!-- ✅ 修正 -->
           </div>
           <div class="mb-3">
             <label class="form-label">新しいメールアドレス</label>
@@ -36,8 +36,8 @@
               <div class="text-danger small mt-1">{{ email_form.email.errors }}</div>
             {% endif %}
           </div>
-          <div class="text-end">
-            <button type="submit" class="btn btn-danger rounded-pill px-4">保存する</button>
+          <div class="text-center">  <!-- ✅ 修正 -->
+            <button type="submit" class="auth-btn rounded-pill px-4 mt-0">保存する</button>
           </div>
         </form>
       </div>
@@ -84,8 +84,8 @@
               <div class="text-danger small mt-1">{{ password_form.new_password2.errors }}</div>
             {% endif %}
           </div>
-          <div class="text-end">
-            <button type="submit" class="btn btn-danger rounded-pill px-4">変更する</button>
+          <div class="text-center">  <!-- ✅ 修正 -->
+            <button type="submit" class="auth-btn rounded-pill px-4 mt-0">変更する</button>
           </div>
         </form>
       </div>
@@ -93,17 +93,18 @@
       <!-- アカウント削除 -->
       <div class="card shadow-sm p-4 mb-4">
         <h6 class="fw-bold text-danger mb-3">アカウント削除</h6>
-        <p class="text-muted small mb-3">アカウントを削除すると、登録済みの商品・通知データもすべて削除されます。</p>
+        <p class="text-muted small mb-3">アカウントを削除すると、録済み商品・通知データも全て削除されます。</p>
         <a href="{% url 'main:account_delete' %}" class="btn btn-outline-danger btn-sm rounded-pill">
           アカウントを削除する
         </a>
       </div>
 
-<div class="mb-4">
+      <div class="mb-4">
         <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
-          ← 戻る
+          ← 一覧へ戻る
         </a>
       </div>
+
     </div>
   </div>
 </div>
