@@ -91,7 +91,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- ✅ 条件を削除して常に読み込む -->
 <script src="{% static 'js/unread_badge.js' %}?v={{ STATIC_VERSION }}"></script>
 <script src="{% static 'js/notification_read.js' %}?v={{ STATIC_VERSION }}"></script>
+<script src="{% static 'js/scrolltop.js' %}" defer></script>  {# ✅ 追加 #}
 {% endblock %}
