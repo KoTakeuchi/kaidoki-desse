@@ -270,10 +270,15 @@ class UserNotificationSettingForm(forms.ModelForm):
         widgets = {
             "email": forms.EmailInput(attrs={
                 "class": "form-control",
-                "readonly": "readonly",  # ✅ 参照のみ
+                "readonly": "readonly",
+            }),
+            "enabled": forms.CheckboxInput(attrs={        # ✅ 追加
+                "class": "form-check-input",
+                "role": "switch",
             }),
             "app_notification_enabled": forms.CheckboxInput(attrs={
-                "class": "form-check-input"
+                "class": "form-check-input",
+                "role": "switch",                          # ✅ 追加
             }),
             "notification_retention_days": forms.Select(attrs={
                 "class": "form-select"
