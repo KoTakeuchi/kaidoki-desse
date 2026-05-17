@@ -6,15 +6,22 @@ from django.conf import settings
 from django.utils import timezone
 
 
-def process_daily_notifications():
+def process_daily_notifications(target_users=None):  # ✅ target_users引数追加
     """
     日次通知バッチ：全ユーザーに対して未送信通知を1通にまとめてメール送信
+    - target_users: 対象ユーザーリスト（Noneの場合は全enabledユーザー）
     - メール通知ONのユーザーのみ
     - 優先度「高」の商品の未送信通知
     - 買い時・在庫を1通にまとめて送信
     - sent_flag=False で絞り込み（is_read とは独立）
     """
-    settings_list = UserNotificationSetting.objects.filter(enabled=True)
+    # ✅ target_usersが指定された場合はそのユーザーのみ対象
+    if target_users is not None:
+        settings_list = UserNotificationSetting.objects.filter(
+            user__in=target_users, enabled=True
+        )
+    else:
+        settings_list = UserNotificationSetting.objects.filter(enabled=True)
 
     for setting in settings_list:
         user = setting.user
@@ -57,7 +64,6 @@ def process_daily_notifications():
         html_content = render_to_string(
             "emails/daily_notification.html", context)
 
-        # テキスト版（シンプル）
         text_lines = [f"{user.username} 様\n"]
         if price_events.exists():
             text_lines.append("■ 買い時商品")
@@ -85,11 +91,10 @@ def process_daily_notifications():
         try:
             msg.send(fail_silently=False)
 
-            # 送信済みフラグを更新（is_read は触らない）
+            total = price_events.count() + stock_events.count()
             price_events.update(sent_flag=True)
             stock_events.update(sent_flag=True)
 
-            total = price_events.count() + stock_events.count()
             print(f"✅ {user.username} にメール送信完了（{total}件）")
 
         except Exception as e:
