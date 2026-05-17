@@ -265,9 +265,7 @@ def product_detail(request, pk):
     if product.flag_type == "buy_price" and product.threshold_price:
         threshold_value = float(product.threshold_price)
     elif product.flag_type == "percent_off" and product.threshold_price:
-        if product.initial_price:
-            threshold_value = float(product.initial_price) * \
-                (1 - float(product.threshold_price) / 100)
+        threshold_value = float(product.threshold_price)  # ✅ 割引後価格をそのまま使用
     elif product.flag_type == "lowest_price":
         threshold_value = None
 

@@ -774,7 +774,6 @@ body.product-edit-page .form-footer {
     padding: 4px 10px;
     background-color: #fff;
     border: 1px solid #ddd;
-    color: #333;
 }
 
 /* === ボタン（商品一覧と統一） === */
@@ -1719,6 +1718,8 @@ select.form-select option {
 /* 優先度：普通 → アクセントカラー */
 .badge-priority-normal {
     font-weight: 500 !important;
+    color: #333 !important;
+    /* ✅ 追加 */
 }
 
 /* 共通hover */
