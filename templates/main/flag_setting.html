@@ -12,6 +12,26 @@
 <div class="container py-4">
   <div class="card shadow-sm p-4 mb-4">
 
+    {# ✅ 保存成功メッセージ（最新1件・3秒で自動消去） #}
+    {% with messages=messages|slice:":1" %}
+      {% for message in messages %}
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert" id="saveSuccessMsg">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <script>
+      const msg = document.getElementById('saveSuccessMsg');
+      if (msg) {
+        setTimeout(() => {
+          msg.classList.remove('show');
+          msg.classList.add('fade');
+          setTimeout(() => msg.remove(), 500);
+        }, 3000);
+      }
+    </script>
+
     {% if form.non_field_errors %}
       <div class="alert alert-danger mb-3">
         {% for error in form.non_field_errors %}
@@ -20,7 +40,7 @@
       </div>
     {% endif %}
 
-    <form method="post" novalidate id="flagSettingForm">
+    <form method="post" novalidate id="flagSettingForm" action="{% url 'main:flag_setting' %}">
       {% csrf_token %}
 
       <!-- メール通知設定 -->
@@ -34,7 +54,7 @@
             <label class="form-check-label fw-semibold" for="{{ form.enabled.id_for_label }}">
               メール通知を有効にする
             </label>
-            <div class="form-text text-muted">※優先度「高」の商品のみ通知対象です。</div>
+            <div class="form-text text-muted">優先度[高]の商品の買い時通知・在庫通知を受け取ります。</div>
           </div>
           <div id="email-notify-time">
             <label class="form-label fw-semibold">メール通知時刻</label>
@@ -60,8 +80,8 @@
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
           <div class="form-text text-muted">
-            ※このメールアドレスに通知が送信されます。<br>
-            ※変更したい場合は「ユーザー編集」ページから行ってください。
+            このメールアドレスに通知が送信されます。<br>
+            変更したい場合は「ユーザー編集」ページから行ってください。
           </div>
         </div>
       </div>
@@ -80,7 +100,7 @@
               アプリ内通知を有効にする
             </label>
             <div class="form-text text-muted">
-              優先度「高」の商品の買い時通知・在庫通知を受け取ります。
+              優先度[高]の商品の買い時通知・在庫通知を受け取ります。
             </div>
           </div>
           {% for error in form.app_notification_enabled.errors %}
@@ -96,15 +116,14 @@
             <div class="text-danger small">{{ error }}</div>
           {% endfor %}
           <div class="form-text text-muted">
-            指定した日数を過ぎた通知は自動的に既読になります。
+            指定した日数を過ぎた通知は自動的に既読になり、通知一覧に表示されません。
           </div>
         </div>
       </div>
 
-
       <!-- 保存ボタン -->
       <div class="mt-3 text-center">
-          <button type="submit" class="btn btn-primary rounded-pill px-5">保存する</button>
+        <button type="submit" class="btn btn-primary rounded-pill px-5">保存する</button>
       </div>
     </form>
   </div>
@@ -119,9 +138,9 @@
   </div>
 
   <div class="mt-4 d-flex justify-content-start">
-      <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
-          ← 一覧へ戻る
-      </a>
+    <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+      ← 一覧へ戻る
+    </a>
   </div>
 </div>
 
