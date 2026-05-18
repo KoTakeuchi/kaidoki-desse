@@ -43,7 +43,9 @@ def process_daily_notifications(target_users=None):  # ✅ target_users引数追
             user=user,
             sent_flag=False,
             product__priority="高",
-            event_type__in=["stock_few", "stock_restore"],
+            # 修正後
+            event_type__in=["stock_few", "stock_restore",
+                            "stock_none"],  # ✅ stock_none追加
         ).order_by("-occurred_at").select_related("product")
 
         if not price_events.exists() and not stock_events.exists():

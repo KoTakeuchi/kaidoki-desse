@@ -17,7 +17,6 @@
 
 <div class="container py-4">
 
-  {# ✅ フィルターと全て既読ボタン #}
   <div class="notification-filter-bar">
     <div class="notification-filter-left">
       <select id="notificationFilter" class="form-select notification-filter-select">
@@ -34,25 +33,25 @@
     {% endif %}
   </div>
 
-  {# ✅ カード #}
   <div class="card shadow-sm p-0">
     {% if logs %}
     <ul class="list-group list-group-flush" id="notificationList">
       {% for n in logs %}
       <li class="list-group-item notification-item"
-        data-type="{% if n.event_type == 'stock_restore' or n.event_type == 'stock_few' %}stock{% else %}buy_time{% endif %}"
+        data-type="{% if n.event_type == 'stock_restore' or n.event_type == 'stock_few' or n.event_type == 'stock_none' %}stock{% else %}buy_time{% endif %}"
         data-id="{{ n.id }}">
 
         <a href="{% url 'main:notification_redirect' n.id %}" class="notification-link">
 
           <div class="notification-content">
 
-            {# ✅ 通知タグ（画像の左） #}
             <span class="notification-tag">
               {% if n.event_type == "stock_restore" %}
               <span class="badge bg-success">在庫復活</span>
               {% elif n.event_type == "stock_few" %}
-              <span class="badge bg-warning text-dark">在庫少</span>
+              <span class="badge bg-warning">在庫少</span>
+              {% elif n.event_type == "stock_none" %}
+              <span class="badge bg-secondary">売り切れ</span>  {# ✅ 追加 #}
               {% elif n.event_type == "threshold_hit" %}
               <span class="badge notification-badge-buytime">買い時</span>
               {% elif n.event_type == "lowest_price" %}
@@ -62,7 +61,6 @@
               {% endif %}
             </span>
 
-            {# ✅ 商品画像サムネイル #}
             {% if n.product.image_url %}
             <img src="{{ n.product.image_url }}" alt="{{ n.product.product_name }}" class="notification-thumbnail">
             {% else %}
@@ -71,9 +69,7 @@
             </div>
             {% endif %}
 
-            {# ✅ 商品名と詳細情報 #}
             <div class="notification-info">
-              {# 商品名 #}
               <div class="notification-product-name-wrap">
                 <h6 class="notification-product-name" title="{{ n.product.product_name }}">
                   {% if n.product.product_name|length > 50 %}
@@ -84,13 +80,14 @@
                 </h6>
               </div>
 
-              {# イベント内容 #}
               <div class="notification-event-wrap">
                 <p class="notification-event-name">
                   {% if n.event_type == "stock_restore" %}
                   在庫が復活しました
                   {% elif n.event_type == "stock_few" %}
                   在庫がわずかになりました
+                  {% elif n.event_type == "stock_none" %}
+                  売り切れました  {# ✅ 追加 #}
                   {% elif n.event_type == "threshold_hit" %}
                   買い時価格に到達しました
                   {% elif n.event_type == "lowest_price" %}
@@ -103,13 +100,8 @@
                 </p>
               </div>
 
-              {# 詳細情報（価格・在庫） #}
               <div class="notification-details">
-                {% if n.event_type == "stock_restore" or n.event_type == "stock_few" %}
-                  <span class="detail-item">
-                    <strong>在庫:</strong> {{ n.product.latest_stock|default:"不明" }}個
-                  </span>
-                  <span class="detail-separator">|</span>
+                {% if n.event_type == "stock_restore" or n.event_type == "stock_few" or n.event_type == "stock_none" %}  {# ✅ stock_none追加 #}
                   <span class="detail-item">
                     <strong>最新価格:</strong> ¥{{ n.product.latest_price|default:0|floatformat:0|intcomma }}
                   </span>
@@ -151,7 +143,6 @@
               </div>
             </div>
 
-            {# ✅ 日付（右側） #}
             <div class="notification-date">
               <small class="text-muted">{{ n.occurred_at|date:"n/j H:i" }}</small>
             </div>
@@ -167,7 +158,6 @@
     {% endif %}
   </div>
 
-  {# ✅ 一覧へ戻るボタン #}
   <div class="notification-back-btn-wrap">
     <a href="{% url 'main:product_list' %}" class="btn btn-outline-secondary notification-back-btn">
       ← 一覧へ戻る

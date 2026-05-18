@@ -240,6 +240,7 @@ class NotificationEvent(models.Model):
     EVENT_TYPE_CHOICES = [
         ("stock_few", "在庫少通知"),
         ("stock_restore", "在庫復活通知"),
+        ("stock_none", "売り切れ通知"),       # ✅ 追加
         ("threshold_hit", "買い時価格検知"),
         ("discount_over", "指定割引率下回り"),
         ("lowest_price", "過去最安値更新"),

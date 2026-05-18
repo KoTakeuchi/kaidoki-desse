@@ -4,7 +4,8 @@ from django.utils import timezone
 from main.models import Product, PriceHistory
 from main.utils.rakuten_api import fetch_rakuten_item
 from main.utils.flag_checker import update_flag_status
-from main.utils.notify_events import create_restock_event
+# 変更後
+from main.utils.notify_events import create_restock_event, create_stock_few_event, create_stock_none_event
 import time
 
 
@@ -103,10 +104,22 @@ class Command(BaseCommand):
                 # 買い時フラグ更新
                 update_flag_status(product)
 
-                # 在庫復活通知（優先度「高」のみ）
-                if product.priority == "高" and previous_stock == 0 and new_stock > 0:
-                    create_restock_event(product, product.user)
-                    self.stdout.write(self.style.SUCCESS(f"  🔔 在庫復活通知を作成しました"))
+                # ✅ 在庫変化通知（優先度「高」のみ）
+                if product.priority == "高":
+                    # 在庫なし → 在庫あり（復活）
+                    if previous_stock == 0 and new_stock > 0:
+                        create_restock_event(product, product.user)
+                        self.stdout.write(self.style.SUCCESS(f"  🔔 在庫復活通知"))
+
+                    # 在庫あり → 在庫わずか
+                    elif previous_stock > 1 and new_stock == 1:
+                        create_stock_few_event(product, product.user)
+                        self.stdout.write(self.style.SUCCESS(f"  🔔 在庫わずか通知"))
+
+                    # 在庫あり/わずか → 在庫なし
+                    elif previous_stock > 0 and new_stock == 0:
+                        create_stock_none_event(product, product.user)
+                        self.stdout.write(self.style.SUCCESS(f"  🔔 売り切れ通知"))
 
                 self.stdout.write(
                     self.style.SUCCESS(
