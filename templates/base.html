@@ -34,6 +34,28 @@
     {% block header %}{% endblock %}
 
     <main class="container-fluid p-0 flex-grow-1">
+    {# ✅ 全画面共通：アクションメッセージ（2秒で自動消去） #}
+    {% if messages %}
+      <div style="position:fixed; top:70px; right:20px; z-index:9999; min-width:250px; max-width:400px;">
+        {% with messages=messages|slice:":1" %}
+          {% for message in messages %}
+            <div class="alert alert-success fade show shadow" role="alert" id="globalMsg" style="opacity:0.75;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endwith %}
+      </div>
+      <script>
+        const globalMsg = document.getElementById('globalMsg');
+        if (globalMsg) {
+          setTimeout(() => {
+            globalMsg.classList.remove('show');
+            setTimeout(() => globalMsg.remove(), 500);
+          }, 2000);
+        }
+      </script>
+    {% endif %}
+
       {% block page_content %}{% endblock %}
       {% block admin_content %}{% endblock %}
     </main>

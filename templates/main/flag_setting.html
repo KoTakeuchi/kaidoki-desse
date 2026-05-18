@@ -12,26 +12,6 @@
 <div class="container py-4">
   <div class="card shadow-sm p-4 mb-4">
 
-    {# ✅ 保存成功メッセージ（最新1件・3秒で自動消去） #}
-    {% with messages=messages|slice:":1" %}
-      {% for message in messages %}
-        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert" id="saveSuccessMsg">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endwith %}
-
-    <script>
-      const msg = document.getElementById('saveSuccessMsg');
-      if (msg) {
-        setTimeout(() => {
-          msg.classList.remove('show');
-          msg.classList.add('fade');
-          setTimeout(() => msg.remove(), 500);
-        }, 3000);
-      }
-    </script>
-
     {% if form.non_field_errors %}
       <div class="alert alert-danger mb-3">
         {% for error in form.non_field_errors %}
