@@ -16,6 +16,13 @@
 
   <!-- 商品情報 -->
   <div class="card shadow-sm p-4 mb-4 {% if is_reached %}border-buytime{% endif %}">
+        <!-- ✅ 編集ボタン（右上） -->
+    <a href="{% url 'main:product_edit' pk=product.pk %}"
+       class="btn btn-outline-secondary btn-sm rounded-circle position-absolute"
+       style="top:12px; right:12px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;"
+       title="編集">
+      <i class="fa-solid fa-pen"></i>
+    </a>
     <div class="row g-4">
       <div class="col-md-5 text-center">
         <img
