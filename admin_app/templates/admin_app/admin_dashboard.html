@@ -182,11 +182,160 @@
   </div>
 
 
+<!-- ======================== -->
+  <!-- 📈 グラフ -->
   <!-- ======================== -->
-  <!-- 📈 チャート画像 -->
-  <!-- ======================== -->
-  <div class="chart-image-container mt-4">
-    <img src="{% static 'images/charts.png' %}" alt="統計チャート" class="img-fluid dashboard-chart">
+  <div class="row g-3 mt-2">
+
+    <!-- ①今週の通知数（日別折れ線） -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm p-3">
+        <h6 class="fw-bold text-dark mb-3">📈 今週の通知数（日別）</h6>
+        <canvas id="notificationDailyChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- ②通知タイプ別割合（ドーナツ） -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm p-3">
+        <h6 class="fw-bold text-dark mb-3">🍩 通知タイプ別割合</h6>
+        <div style="height:220px; position:relative;">
+          <canvas id="notificationTypeChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③エラー発生推移（日別棒グラフ） -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm p-3">
+        <h6 class="fw-bold text-dark mb-3">⚠️ エラー発生推移（日別）</h6>
+        <canvas id="errorDailyChart" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- ④ユーザー別商品登録数（横棒） -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm p-3">
+        <h6 class="fw-bold text-dark mb-3">👤 ユーザー別商品登録数</h6>
+        <canvas id="userProductChart" height="220"></canvas>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+const dailyLabels = {{ notification_daily_labels|safe }};
+const dailyData = {{ notification_daily|safe }};
+const typeLabels = {{ notification_type_labels|safe }};
+const typeData = {{ notification_type_data|safe }};
+const errorLabels = {{ error_daily_labels|safe }};
+const errorData = {{ error_daily|safe }};
+const userLabels = {{ user_product_labels|safe }};
+const userData = {{ user_product_data|safe }};
+
+// ①今週の通知数
+new Chart(document.getElementById('notificationDailyChart'), {
+    type: 'line',
+    data: {
+        labels: dailyLabels,
+        datasets: [{
+            label: '通知数',
+            data: dailyData,
+            borderColor: '#C35656',
+            backgroundColor: 'rgba(195,86,86,0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: {
+                ticks: {
+                    color: function(context) {
+                        const label = dailyLabels[context.index] || '';
+                        return label.includes('土') || label.includes('日') ? '#C35656' : '#666';
+                    }
+                }
+            },
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+
+// ②通知タイプ別割合
+new Chart(document.getElementById('notificationTypeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: typeLabels,
+        datasets: [{
+            data: typeData,
+            backgroundColor: [
+                '#C35656',   // 買い時価格：メインカラー赤
+                '#d47f7f',   // 割引率：薄赤
+                '#e8aaaa',   // 最安値：さらに薄赤
+                '#6dc4c4',   // 在庫復活：薄テール
+                '#3CA9A9',   // 在庫わずか：テール色
+                '#2a7a7a',   // 売り切れ：濃いテール
+            ],
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } }
+    }
+});
+
+// ③エラー発生推移
+new Chart(document.getElementById('errorDailyChart'), {
+    type: 'bar',
+    data: {
+        labels: errorLabels,
+        datasets: [{
+            label: 'エラー数',
+            data: errorData,
+            backgroundColor: 'rgba(195,86,86,0.7)',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: {
+                ticks: {
+                    color: function(context) {
+                        const label = errorLabels[context.index] || '';
+                        return label.includes('土') || label.includes('日') ? '#C35656' : '#666';
+                    }
+                }
+            },
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+
+// ④ユーザー別商品登録数
+new Chart(document.getElementById('userProductChart'), {
+    type: 'bar',
+    data: {
+        labels: userLabels,
+        datasets: [{
+            label: '商品数',
+            data: userData,
+            backgroundColor: 'rgba(60,169,169,0.7)',
+        }]
+    },
+    options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+</script>
 {% endblock %}

@@ -33,6 +33,8 @@ def is_admin(user):
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     """管理者ダッシュボード"""
+    today = timezone.localtime().date()
+
     # ---- 統計情報 ----
     stats = {
         "user_count": User.objects.count(),
@@ -57,10 +59,68 @@ def admin_dashboard(request):
         .order_by("-created_at")[:5]
     )
 
+    # 日本語曜日
+    weekday_ja = ["月", "火", "水", "木", "金", "土", "日"]
+
+    # ---- ①今週の通知数（日別） ----
+    notification_daily = []
+    notification_daily_labels = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        count = NotificationEvent.objects.filter(occurred_at__date=d).count()
+        notification_daily.append(count)
+        notification_daily_labels.append(
+            f"{d.month}/{d.day}({weekday_ja[d.weekday()]})")
+
+    # ---- ②通知タイプ別割合 ----
+    event_type_map = {
+        "threshold_hit": "買い時価格",
+        "discount_over": "割引率",
+        "lowest_price": "最安値",
+        "stock_few": "在庫わずか",
+        "stock_restore": "在庫復活",
+        "stock_none": "売り切れ",
+    }
+    notification_type_labels = []
+    notification_type_data = []
+    for key, label in event_type_map.items():
+        count = NotificationEvent.objects.filter(event_type=key).count()
+        if count > 0:
+            notification_type_labels.append(label)
+            notification_type_data.append(count)
+
+    # ---- ③エラー発生推移（日別） ----
+    error_daily = []
+    error_daily_labels = []
+    for i in range(6, -1, -1):
+        d = today - timedelta(days=i)
+        count = ErrorLog.objects.filter(created_at__date=d).count()
+        error_daily.append(count)
+        error_daily_labels.append(
+            f"{d.month}/{d.day}({weekday_ja[d.weekday()]})")
+
+    # ---- ④ユーザー別商品登録数 ----
+    user_product_labels = []
+    user_product_data = []
+    for user in User.objects.filter(is_staff=False).annotate(
+        product_count=Count('products')
+    ).order_by('-product_count')[:10]:
+        user_product_labels.append(user.username)
+        user_product_data.append(user.product_count)
+
     context = {
         "stats": stats,
         "latest_notifications": latest_notifications,
         "latest_errors": latest_errors,
+        # グラフ用データ
+        "notification_daily_labels": notification_daily_labels,
+        "notification_daily": notification_daily,
+        "notification_type_labels": notification_type_labels,
+        "notification_type_data": notification_type_data,
+        "error_daily_labels": error_daily_labels,
+        "error_daily": error_daily,
+        "user_product_labels": user_product_labels,
+        "user_product_data": user_product_data,
     }
     return render(request, "admin_app/admin_dashboard.html", context)
 
