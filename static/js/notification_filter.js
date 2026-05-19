@@ -14,7 +14,8 @@ document.addEventListener("DOMContentLoaded", function () {
             { value: "threshold_hit", label: "買い時価格" },
             { value: "discount_over", label: "割引率" },
             { value: "lowest_price", label: "最安値" },
-            { value: "stock_few", label: "在庫少" },
+            { value: "stock_few", label: "在庫わずか" },
+            { value: "stock_none", label: "売り切れ" },
             { value: "stock_restore", label: "在庫復活" }
         ]
     };

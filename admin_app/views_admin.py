@@ -370,8 +370,9 @@ def admin_notification_list(request):
             "買い時価格": "threshold_hit",
             "割引率": "discount_over",
             "最安値": "lowest_price",
-            "在庫少": "stock_few",
+            "在庫わずか": "stock_few",
             "在庫復活": "stock_restore",
+            "売り切れ": "stock_none",
         }
         ntype_key = type_map.get(ntype, ntype)
         logs = logs.filter(event_type=ntype_key)
@@ -388,13 +389,14 @@ def admin_notification_list(request):
     page_obj, paginator = paginate_queryset(request, logs, per_page=per_page)
 
     type_list = [
-        "mail_buy_timing",
-        "mail_stock",
-        "threshold_hit",
-        "discount_over",
-        "lowest_price",
-        "stock_few",
-        "stock_restore",
+        {"value": "mail_buy_timing", "label": "メール：買い時通知"},
+        {"value": "mail_stock",      "label": "メール：在庫通知"},
+        {"value": "threshold_hit",   "label": "買い時価格検知"},
+        {"value": "discount_over",   "label": "割引率検知"},
+        {"value": "lowest_price",    "label": "最安値更新"},
+        {"value": "stock_few",       "label": "在庫わずか"},
+        {"value": "stock_restore",   "label": "在庫復活"},
+        {"value": "stock_none",      "label": "売り切れ"},
     ]
 
     context = {

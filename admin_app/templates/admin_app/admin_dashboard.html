@@ -115,7 +115,8 @@
                   {% elif n.event_type == "lowest_price" %}最安値更新
                   {% elif n.event_type == "discount_over" %}割引率検知
                   {% elif n.event_type == "stock_restore" %}在庫復活
-                  {% elif n.event_type == "stock_few" %}在庫少
+                  {% elif n.event_type == "stock_few" %}在庫わずか
+                  {% elif n.event_type == "stock_none" %}売り切れ
                   {% else %}-{% endif %}
                 </td>
                 <td>{{ n.occurred_at|date:"Y/m/d H:i" }}</td>
