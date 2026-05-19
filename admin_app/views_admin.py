@@ -359,14 +359,12 @@ def admin_notification_list(request):
         )
 
     if method == "email":
-        logs = logs.filter(event_type__startswith="mail_")
+        logs = logs.filter(sent_flag=True)    # ✅ 修正
     elif method == "app":
-        logs = logs.exclude(event_type__startswith="mail_")
+        logs = logs.filter(sent_flag=False)   # ✅ 修正
 
     if ntype:
         type_map = {
-            "買い時お知らせ": "mail_buy_timing",
-            "在庫お知らせ": "mail_stock",
             "買い時価格": "threshold_hit",
             "割引率": "discount_over",
             "最安値": "lowest_price",
@@ -389,8 +387,6 @@ def admin_notification_list(request):
     page_obj, paginator = paginate_queryset(request, logs, per_page=per_page)
 
     type_list = [
-        {"value": "mail_buy_timing", "label": "メール：買い時通知"},
-        {"value": "mail_stock",      "label": "メール：在庫通知"},
         {"value": "threshold_hit",   "label": "買い時価格検知"},
         {"value": "discount_over",   "label": "割引率検知"},
         {"value": "lowest_price",    "label": "最安値更新"},
