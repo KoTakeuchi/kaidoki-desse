@@ -87,12 +87,13 @@
         </div>
 
         <!-- 在庫 -->
-        <div class="col-auto ms-auto d-flex justify-content-end">
-          <span class="filter-label me-2">在庫</span>
-          <label class="me-2"><input type="radio" name="stock" value="all" {% if stock == "all" %}checked{% endif %}>すべて</label>
-          <label class="me-2"><input type="radio" name="stock" value="low" {% if stock == "low" %}checked{% endif %}>わずか</label>
-          <label class="me-2"><input type="radio" name="stock" value="none" {% if stock == "none" %}checked{% endif %}>なし</label>
-        </div>
+      <div class="col-auto ms-auto d-flex justify-content-end">
+        <span class="filter-label me-2">在庫</span>
+        <label class="me-2"><input type="radio" name="stock" value="all" {% if stock == "all" %}checked{% endif %}>すべて</label>
+        <label class="me-2"><input type="radio" name="stock" value="in" {% if stock == "in" %}checked{% endif %}>あり</label>  {# ✅ 追加 #}
+        <label class="me-2"><input type="radio" name="stock" value="low" {% if stock == "low" %}checked{% endif %}>わずか</label>
+        <label class="me-2"><input type="radio" name="stock" value="none" {% if stock == "none" %}checked{% endif %}>なし</label>
+      </div>
 
         <!-- ボタン -->
         <div class="col-auto d-flex align-items-center ms-auto" style="white-space: nowrap;">

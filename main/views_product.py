@@ -115,11 +115,12 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 pass
 
         # --- 在庫フィルタ ---
-        # 修正後
         if stock == "low":
             qs = qs.filter(latest_stock_count=1)
         elif stock == "none":
             qs = qs.filter(latest_stock_count=0)
+        elif stock == "in":                          # ✅ 追加
+            qs = qs.filter(is_in_stock=True).exclude(latest_stock_count=1)
 
         # --- 買い時フィルタ ---  ← 追加
         if buy_flag == "1":
@@ -177,8 +178,8 @@ def product_list(request: HttpRequest) -> HttpResponse:
             except ValueError:
                 pass
 
-        if stock in ["low", "none"]:
-            label = "わずか" if stock == "low" else "なし"
+        if stock in ["low", "none", "in"]:          # ✅ "in" 追加
+            label = "わずか" if stock == "low" else "なし" if stock == "none" else "あり"
             filter_tags.append(("stock", f"在庫：{label}", "filter-tag-stock"))
 
         if priority in ["高", "普通"]:
