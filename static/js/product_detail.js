@@ -143,16 +143,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             autoSkip: true,
                             maxTicksLimit: 30,
                             font: { size: 13 },
-                            callback: function (value, index) {          // ✅ index追加
-                                const dateStr = labels[index];           // ✅ value→index
+                            callback: function (value, index) {
+                                const dateStr = labels[index];
                                 if (!dateStr) return '';
                                 const datePart = dateStr.split(' ')[0];
                                 const timePart = dateStr.split(' ')[1];
                                 const [year, month, day] = datePart.split('-');
                                 const hour = timePart ? timePart.slice(0, 2) : null;
                                 const display = hour ? `${month}/${day} ${hour}時` : `${month}/${day}`;
-                                if (index > 0) {                         // ✅ value→index
-                                    const prevDateStr = labels[index - 1]; // ✅ value→index
+                                if (index > 0) {
+                                    const prevDateStr = labels[index - 1];
                                     if (prevDateStr) {
                                         const prevYear = prevDateStr.split('-')[0];
                                         if (year !== prevYear) {
@@ -174,6 +174,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 plugins: {
                     legend: { display: false },
+                    // ✅ 追加：買い時価格ラベルを常時表示
+                    annotation: threshold !== null ? {
+                        annotations: {
+                            thresholdLabel: {
+                                type: 'line',
+                                yMin: threshold,
+                                yMax: threshold,
+                                borderColor: 'transparent',
+                                borderWidth: 0,
+                                label: {
+                                    display: true,
+                                    content: `買い時 ¥${threshold.toLocaleString()}`,
+                                    position: 'end',
+                                    backgroundColor: 'rgba(247, 203, 110, 0.9)',
+                                    color: '#7a5c00',
+                                    font: { size: 11, weight: 'bold' },
+                                    padding: 4,
+                                    borderRadius: 4,
+                                }
+                            }
+                        }
+                    } : {},
                     tooltip: {
                         callbacks: {
                             label: function (context) {
