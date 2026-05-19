@@ -1,7 +1,7 @@
 # main/management/commands/send_daily_notifications.py
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from main.models import UserNotificationSetting
+from main.models import UserNotificationSetting, NotificationEvent
 from main.utils.mailer import process_daily_notifications
 
 
@@ -24,16 +24,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE("📧 通知メール送信バッチを開始します..."))
         start_time = timezone.localtime()
         now = start_time
-
         force = options.get('force', False)
 
         try:
+            # ✅ Step1：保持期間を超えた通知を自動既読化（全ユーザー）
+            self._auto_read_expired_notifications()
+
             if force:
-                # ✅ --force オプション時は全ユーザーに即送信
                 self.stdout.write(self.style.WARNING("⚠️ 強制送信モード（時刻判定スキップ）"))
                 process_daily_notifications()
             else:
-                # ✅ ユーザーごとの設定時刻と現在時刻を照合
                 current_hour = now.hour
                 current_minute = now.minute
 
@@ -66,3 +66,33 @@ class Command(BaseCommand):
         end_time = timezone.localtime()
         duration = (end_time - start_time).total_seconds()
         self.stdout.write(self.style.HTTP_INFO(f"🕒 実行時間: {duration:.2f} 秒"))
+
+    def _auto_read_expired_notifications(self):
+        """✅ 保持期間を超えた通知を自動既読化"""
+        settings_list = UserNotificationSetting.objects.select_related(
+            'user').all()
+        total = 0
+
+        for setting in settings_list:
+            retention_days = setting.notification_retention_days
+
+            # 無制限（365日）はスキップしない
+            cutoff = timezone.now() - timezone.timedelta(days=retention_days)
+
+            updated = NotificationEvent.objects.filter(
+                user=setting.user,
+                is_read=False,
+                occurred_at__lt=cutoff,
+            ).update(is_read=True)
+
+            if updated > 0:
+                total += updated
+                self.stdout.write(
+                    self.style.HTTP_INFO(
+                        f"  📭 {setting.user.username}: {updated}件の期限切れ通知を既読化"
+                    )
+                )
+
+        self.stdout.write(
+            self.style.SUCCESS(f"✅ 自動既読化完了（合計 {total}件）")
+        )
