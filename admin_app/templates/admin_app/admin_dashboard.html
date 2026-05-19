@@ -192,9 +192,12 @@
     <div class="col-md-6">
       <div class="card border-0 shadow-sm p-3">
         <h6 class="fw-bold text-dark mb-3">📈 今週の通知数（日別）</h6>
-        <canvas id="notificationDailyChart" height="220"></canvas>
+        <div style="height:220px; position:relative;">
+          <canvas id="notificationDailyChart"></canvas>
+        </div>
       </div>
     </div>
+
 
     <!-- ②通知タイプ別割合（ドーナツ） -->
     <div class="col-md-6">
@@ -210,7 +213,9 @@
     <div class="col-md-6">
       <div class="card border-0 shadow-sm p-3">
         <h6 class="fw-bold text-dark mb-3">⚠️ エラー発生推移（日別）</h6>
-        <canvas id="errorDailyChart" height="220"></canvas>
+        <div style="height:220px; position:relative;">
+          <canvas id="errorDailyChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -218,7 +223,9 @@
     <div class="col-md-6">
       <div class="card border-0 shadow-sm p-3">
         <h6 class="fw-bold text-dark mb-3">👤 ユーザー別商品登録数</h6>
-        <canvas id="userProductChart" height="220"></canvas>
+        <div style="height:220px; position:relative;">
+          <canvas id="userProductChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -253,6 +260,7 @@ new Chart(document.getElementById('notificationDailyChart'), {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
             x: {
@@ -305,6 +313,7 @@ new Chart(document.getElementById('errorDailyChart'), {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
             x: {
@@ -333,6 +342,7 @@ new Chart(document.getElementById('userProductChart'), {
     },
     options: {
         responsive: true,
+        maintainAspectRatio: false,
         indexAxis: 'y',
         plugins: { legend: { display: false } },
         scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
