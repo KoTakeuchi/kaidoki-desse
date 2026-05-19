@@ -214,6 +214,11 @@ def product_list(request: HttpRequest) -> HttpResponse:
         # 一覧画面では特定の商品は選択されていないため空でOK
         selected_category_ids = []
 
+        # ✅ ページネーション用クエリ文字列（pageを除く）
+        query_params = request.GET.copy()
+        query_params.pop('page', None)
+        query_string = query_params.urlencode()
+
         # --- 表示 ---
         return render(
             request,
@@ -232,6 +237,7 @@ def product_list(request: HttpRequest) -> HttpResponse:
                 "filter_tags": filter_tags,
                 "is_filtered": _has_filter(keyword, selected_cats, stock, priority, sort),
                 "sort_options": sort_options,
+                "query_string": query_string,  # ✅ 追加
             },
         )
 
