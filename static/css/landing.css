@@ -45,9 +45,6 @@ body {
     background: #fff;
     overflow: visible;
 
-
-
-    /* ✅ ヘッダー直下から開始し、上下の余白を均等化 */
     margin-top: var(--header-h);
     margin-bottom: var(--header-h);
 
@@ -102,33 +99,27 @@ body {
 }
 
 /* === 自動・右ボタン（dir-next） ===================== */
-/* 次スライドは左（-100%）から入ってくる */
 #heroCarousel.custom-pan.dir-next .carousel-item-next {
     transform: translateX(-100%);
 }
 
-/* 現在スライドは右へ抜ける（0→+100%） */
 #heroCarousel.custom-pan.dir-next .active.carousel-item-start {
     transform: translateX(100%);
 }
 
-/* 次スライドは左から中央へ（-100%→0） */
 #heroCarousel.custom-pan.dir-next .carousel-item-next.carousel-item-start {
     transform: translateX(0);
 }
 
 /* === 左ボタン（dir-prev） ===================== */
-/* 次スライドは右（+100%）から入ってくる */
 #heroCarousel.custom-pan.dir-prev .carousel-item-prev {
     transform: translateX(100%);
 }
 
-/* 現在スライドは左へ抜ける（0→-100%） */
 #heroCarousel.custom-pan.dir-prev .active.carousel-item-end {
     transform: translateX(-100%);
 }
 
-/* 次スライドは右から中央へ（+100%→0） */
 #heroCarousel.custom-pan.dir-prev .carousel-item-prev.carousel-item-end {
     transform: translateX(0);
 }
@@ -157,7 +148,6 @@ body {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-
 }
 
 /* 背景画像（上下位置微調整） */
@@ -209,11 +199,9 @@ body {
     align-items: center;
     justify-content: center;
     transition: background 0.2s ease;
-    /* ← 反応を速める */
     pointer-events: auto;
 }
 
-/* アイコン */
 #heroCarousel .carousel-control-prev-icon,
 #heroCarousel .carousel-control-next-icon {
     width: 1.4rem;
@@ -221,7 +209,6 @@ body {
     background-size: 100% 100%;
 }
 
-/* 白枠外に配置 */
 #heroCarousel .carousel-control-prev {
     left: -1.4rem;
 }
@@ -230,13 +217,10 @@ body {
     right: -1.4rem;
 }
 
-/* ホバー */
 #heroCarousel .carousel-control-prev:hover,
 #heroCarousel .carousel-control-next:hover {
     background: rgba(195, 86, 86, 1);
 }
-
-
 
 /* モバイル対応 */
 @media (max-width:768px) {
@@ -330,8 +314,66 @@ body {
     opacity: 0.8;
 }
 
-/* 固定ヘッダーの高さぶんを補正 */
-.lp-section,
+/* ========================
+   セクション共通
+   ======================== */
 .section {
     scroll-margin-top: var(--header-h);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* ========================
+   LPカード共通
+   ======================== */
+.lp-card {
+    width: 50vw;
+    max-width: 50vw;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* display: flex;
+    flex-direction: column; */
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* テキスト部分：白透過ボックス */
+
+/* ========================
+   各セクション背景画像
+   ======================== */
+#section-features {
+    background-image: url('/static/images/LP_1cando.jpg');
+}
+
+#section-background {
+    background-image: url('/static/images/LP_2background.jpg');
+}
+
+#section-design {
+    background-image: url('/static/images/LP_3design.jpg');
+}
+
+#section-structure {
+    background-image: url('/static/images/LP_4composition.jpg');
+}
+
+#section-schedule {
+    background-image: url('/static/images/LP_5schedule.jpg');
+}
+
+#section-expansion {
+    background-image: url('/static/images/LP_6expansion.jpg');
 }

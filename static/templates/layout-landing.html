@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}買い時でっせ｜トップページ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}?v={{ STATIC_VERSION }}" />
+{% endblock %}
+
+{% block header %}
+<header class="header-bar">
+  <div class="header-inner px-3">
+    <a class="header-brand" href="#section-intro">
+      <div class="header-icon-wrapper">
+        <img src="{% static 'images/icon_kaidoki.png' %}" alt="買い時でっせ" />
+      </div>
+      <span class="header-title">買い時でっせ</span>
+    </a>
+    <nav class="header-nav">
+      <a class="header-link" href="#section-features">できること</a>｜
+      <a class="header-link" href="#section-background">背景</a>｜
+      <a class="header-link" href="#section-design">デザイン</a>｜
+      <a class="header-link" href="#section-structure">構成</a>｜
+      <a class="header-link" href="#section-schedule">工数</a>｜
+      <a class="header-link" href="#section-expansion">拡張</a>
+    </nav>
+    <div class="header-actions">
+      <a href="{% url 'signup' %}" class="btn btn-light btn-sm fw-bold">新規登録</a>
+      <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">ログイン</a>
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block page_content %}
+<div class="landing-page">
+
+  <!-- 🎯 ファーストビュー -->
+  <section id="section-intro" class="hero lp-section">
+    <div id="heroCarousel" class="carousel slide custom-pan">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_1.svg' %}" alt="買い時を、もっとスマートに。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>買い時を、もっとスマートに。</h1>
+              <p>あなたの「買いたい」をデータで応援するアプリ</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_2.svg' %}" alt="日常の買い物を、もっと楽しく。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>日常の買い物を、もっと楽しく。</h1>
+              <p>価格データから最適なタイミングをお知らせします。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_3.svg' %}" alt="買い時の見逃しをゼロに。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>買い時の見逃しをゼロに。</h1>
+              <p>商品ごとの買い時をデータで可視化。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-item">
+          <div class="hero-frame">
+            <img src="{% static 'images/firstview_4.svg' %}" alt="あなたの「買いたい」を、逃さない。" />
+          </div>
+          <div class="hero-layer">
+            <div class="hero-content">
+              <h1>あなたの「買いたい」を、逃さない。</h1>
+              <p>通知と履歴で、買い時を賢く管理。</p>
+              <div class="mt-3">
+                <a href="{% url 'signup' %}" class="btn btn-danger me-2">新規登録</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-danger">ログイン</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- ===== 💡 できること ===== -->
+<section id="section-features" class="section my-5">
+  <div class="lp-card">
+    <h2 class="text-center mb-4 fw-bold">💡 できること</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <h6 class="fw-bold text-primary mb-2 text-center">👤 ユーザー</h6>
+        <ul class="fs-6 mb-0">
+          <li>🛒 価格を自動追跡して買い時を通知</li>
+          <li>📈 価格×在庫のグラフで推移を確認</li>
+          <li>🏷️ 買い時価格・割引率・最安値 対応</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h6 class="fw-bold text-primary mb-2 text-center">🧭 管理者</h6>
+        <ul class="fs-6 mb-0">
+          <li>📊 ユーザー・商品・通知を一括管理</li>
+          <li>🗂 通知・エラーをリアルタイムで把握</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 💭 作成の背景 ===== -->
+<section id="section-background" class="section my-5">
+  <div class="lp-card">
+    <h2 class="fw-bold text-center mb-4">💭 作成の背景</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <h6 class="fw-bold mb-2 text-center">💭 きっかけ</h6>
+        <p class="fs-6 mb-0">安くなる？・売り切れた・いつ入荷？」<br>買い時を教えてくれるアプリ作りました。</p>
+      </div>
+      <div class="col-md-6">
+        <h6 class="fw-bold mb-2 text-center">💡 狙い</h6>
+        <ul class="fs-6 mb-0">
+          <li>🧠 データで「買い時」を判断をサポート</li>
+          <li>💻 Django＋API連携で実践的な開発訓練</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 🎨 デザインコンセプト ===== -->
+<section id="section-design" class="section my-5">
+  <div class="lp-card text-center">
+    <h2 class="fw-bold mb-4">🎨 デザインコンセプト</h2>
+    <p class="mb-3">「価格比較アプリ＝業務的」を脱して、日常に馴染む"やわらかさ"を意識。</p>
+    <div class="row justify-content-center g-3">
+      <div class="col-md-5 p-3 rounded-4 shadow-sm bg-white bg-opacity-50 text-start">
+        <h6 class="fw-bold text-primary mb-1 text-center">ユーザー側</h6>
+        <p class="small mb-0">丸ゴシック＋和紙テクスチャで安心感と温かみを演出。</p>
+      </div>
+      <div class="col-md-5 p-3 rounded-4 shadow-sm bg-white bg-opacity-50 text-start">
+        <h6 class="fw-bold text-secondary mb-1 text-center">管理者側</h6>
+        <p class="small mb-0">直線的・論理的な構成で情報密度の高い画面に対応。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ⚙️ 開発構成 ===== -->
+<section id="section-structure" class="section my-5">
+  <div class="lp-card">
+    <h2 class="fw-bold text-center mb-4">⚙️ 開発構成</h2>
+    <div class="row g-3 justify-content-center">
+      <div class="col-md-6">
+        <h6 class="fw-bold mb-2 text-center">🧩 使用技術</h6>
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+          <span class="badge rounded-pill bg-danger px-3 py-2">Django 5.x</span>
+          <span class="badge rounded-pill bg-secondary px-3 py-2">Python 3.12</span>
+          <span class="badge rounded-pill bg-primary px-3 py-2">Bootstrap 5</span>
+          <span class="badge rounded-pill bg-warning text-dark px-3 py-2">Chart.js</span>
+          <span class="badge rounded-pill bg-success px-3 py-2">Rakuten API</span>
+          <span class="badge rounded-pill bg-info text-dark px-3 py-2">AWS EC2/RDS/S3</span>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h6 class="fw-bold mb-2 text-center">📦 構成（主要部）</h6>
+        <pre class="bg-white bg-opacity-50 rounded-3 p-2 small text-start border mb-0">kaidoki-desse/
+├─ main/       # ユーザー向け機能
+├─ admin_app/  # 管理者ダッシュボード
+└─ static/     # CSS / JS / 画像</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 🕒 スケジュール感 ===== -->
+<section id="section-schedule" class="section my-5">
+  <div class="lp-card text-center">
+    <h2 class="fw-bold mb-4">🕒 スケジュール感</h2>
+    <p class="mb-3">職業訓練期間（約4か月）で企画〜実装〜発表まで一貫して完遂。</p>
+    <div class="row justify-content-center g-2">
+      <div class="col-md-4 col-6">
+        <div class="p-2 rounded-4 bg-white bg-opacity-50 shadow-sm">
+          <div class="fw-bold text-primary small">1か月目</div>
+          <div class="small">環境構築・設計</div>
+        </div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="p-2 rounded-4 bg-white bg-opacity-50 shadow-sm">
+          <div class="fw-bold text-primary small">2か月目</div>
+          <div class="small">Django実装・API連携</div>
+        </div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="p-2 rounded-4 bg-white bg-opacity-50 shadow-sm">
+          <div class="fw-bold text-primary small">3か月目</div>
+          <div class="small">UIデザイン・テスト</div>
+        </div>
+      </div>
+      <div class="col-md-4 col-6">
+        <div class="p-2 rounded-4 bg-white bg-opacity-50 shadow-sm">
+          <div class="fw-bold text-primary small">4か月目</div>
+          <div class="small">ドキュメント・発表</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 🚀 今後の拡張 ===== -->
+<section id="section-expansion" class="section my-5">
+  <div class="lp-card text-center">
+    <h2 class="fw-bold mb-4">🚀 今後の拡張</h2>
+    <div class="row justify-content-center g-3">
+      <div class="col-md-4 p-3 rounded-4 shadow-sm bg-white bg-opacity-50">
+        <div class="fs-3 mb-1">🔔</div>
+        <h6 class="fw-bold mb-1">通知チャネル拡張</h6>
+        <p class="small mb-0">LINE・Slack連携</p>
+      </div>
+      <div class="col-md-4 p-3 rounded-4 shadow-sm bg-white bg-opacity-50">
+        <div class="fs-3 mb-1">🤖</div>
+        <h6 class="fw-bold mb-1">AI買い時予測</h6>
+        <p class="small mb-0">セール時期を予測</p>
+      </div>
+      <div class="col-md-4 p-3 rounded-4 shadow-sm bg-white bg-opacity-50">
+        <div class="fs-3 mb-1">🌍</div>
+        <h6 class="fw-bold mb-1">マルチEC対応</h6>
+        <p class="small mb-0">楽天・Amazon横断比較</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'js/landing.js' %}?v={{ STATIC_VERSION }}" defer></script>
+<script src="{% static 'js/scrolltop.js' %}" defer></script>
+{% endblock %}
