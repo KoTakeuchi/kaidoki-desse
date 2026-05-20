@@ -79,7 +79,7 @@ ROOT_URLCONF = "kaidoki.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # ← 共通テンプレートだけ指定
+        "DIRS": [BASE_DIR / "templates", BASE_DIR / "static" / "templates"],
         "APP_DIRS": True,  # ← 各アプリ(main等)配下は自動探索
         "OPTIONS": {
             "context_processors": [
