@@ -334,19 +334,40 @@ body {
 .lp-card {
     width: 50vw;
     max-width: 50vw;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(4px);
     border-radius: 1.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    /* display: flex;
-    flex-direction: column; */
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
+}
+
+.lp-card li,
+.lp-card p {
+    white-space: nowrap;
+}
+
+ol,
+ul {
+    padding-left: 0.75rem;
+}
+
+.lp-card .col-md-5 {
+    width: auto;
+    flex: 1;
+}
+
+.lp-card .col-md-4 {
+    width: max-content;
+    max-width: 100%;
+}
+
+.lp-card h2 {
+    margin-bottom: 30px !important;
 }
 
 /* テキスト部分：白透過ボックス */
@@ -376,4 +397,102 @@ body {
 
 #section-expansion {
     background-image: url('/static/images/LP_6expansion.jpg');
+}
+
+/* ========================================
+   レスポンシブ対応
+   タブレット：768px〜1279px
+   スマホ    ：〜767px
+   ======================================== */
+
+/* ========================
+   タブレット（768px〜1279px）
+   ======================== */
+@media (min-width: 768px) and (max-width: 1279px) {
+    :root {
+        --header-h: 64px;
+    }
+
+    /* ヘッダーナビ非表示 */
+    .header-nav {
+        display: none;
+    }
+
+    /* ヒーローフレーム */
+    .hero-frame {
+        height: 70vh;
+    }
+
+    /* ヒーローテキスト */
+    .hero-content {
+        max-width: 500px;
+        padding: 1.5rem 2rem;
+    }
+
+    .hero-content h1 {
+        font-size: 1.6rem;
+    }
+
+    /* LPカード */
+    .lp-card {
+        width: 75vw;
+        max-width: 75vw;
+    }
+}
+
+/* ========================
+   スマホ（〜767px）
+   ======================== */
+@media (max-width: 767px) {
+    :root {
+        --header-h: 56px;
+    }
+
+    /* ヘッダーナビ非表示 */
+    .header-nav {
+        display: none;
+    }
+
+    /* ヘッダーボタン小さく */
+    .header-actions .btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    /* ヒーローフレーム */
+    .hero-frame {
+        height: 55vh;
+    }
+
+    /* ヒーローテキスト */
+    .hero-content {
+        max-width: 90%;
+        padding: 1rem 1.2rem;
+    }
+
+    .hero-content h1 {
+        font-size: 1.3rem;
+    }
+
+    .hero-content p {
+        font-size: 0.9rem;
+    }
+
+    /* セクション */
+    .section {
+        min-height: auto;
+        padding: 3rem 0;
+    }
+
+    /* LPカード */
+    .lp-card {
+        width: 92vw;
+        max-width: 92vw;
+        padding: 2rem 1rem;
+    }
+
+    /* カード内2カラム → 1カラム */
+    .lp-card .row>[class*="col-md"] {
+        width: 100%;
+    }
 }
