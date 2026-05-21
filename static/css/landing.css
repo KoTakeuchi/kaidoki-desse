@@ -28,13 +28,12 @@ body {
     overflow-y: auto;
 }
 
-/* アンカー移動時に固定ヘッダーで隠れないよう補正 */
 .lp-section {
     scroll-margin-top: var(--header-h);
 }
 
 /* ========================
-   Hero全体（上下均等バランス版）
+   Hero全体
    ======================== */
 #section-intro.hero {
     position: relative;
@@ -44,10 +43,8 @@ body {
     justify-content: center;
     background: #fff;
     overflow: visible;
-
     margin-top: var(--header-h);
     margin-bottom: var(--header-h);
-
     max-width: 1700px;
     margin-inline: auto;
     padding-inline: 2vw;
@@ -74,9 +71,6 @@ body {
     height: 100%;
 }
 
-/* ========================
-   Carousel 横スライド（完全同期版）
-   ======================== */
 #heroCarousel.custom-pan .carousel-inner {
     position: relative;
     overflow: hidden;
@@ -91,14 +85,12 @@ body {
     z-index: 1;
 }
 
-/* 表示中 */
 #heroCarousel.custom-pan .carousel-item.active {
     position: relative;
     z-index: 2;
     transform: translateX(0);
 }
 
-/* === 自動・右ボタン（dir-next） ===================== */
 #heroCarousel.custom-pan.dir-next .carousel-item-next {
     transform: translateX(-100%);
 }
@@ -111,7 +103,6 @@ body {
     transform: translateX(0);
 }
 
-/* === 左ボタン（dir-prev） ===================== */
 #heroCarousel.custom-pan.dir-prev .carousel-item-prev {
     transform: translateX(100%);
 }
@@ -124,7 +115,6 @@ body {
     transform: translateX(0);
 }
 
-/* Bootstrapの干渉除去 */
 #heroCarousel.custom-pan .carousel-item-start,
 #heroCarousel.custom-pan .carousel-item-end,
 #heroCarousel.custom-pan .carousel-item-next,
@@ -134,7 +124,7 @@ body {
 }
 
 /* ========================
-   フレーム（中央構成を維持）
+   フレーム
    ======================== */
 .hero-frame {
     position: relative;
@@ -150,7 +140,6 @@ body {
     overflow: hidden;
 }
 
-/* 背景画像（上下位置微調整） */
 .hero-frame img {
     width: 100%;
     height: 100%;
@@ -222,7 +211,6 @@ body {
     background: rgba(195, 86, 86, 1);
 }
 
-/* モバイル対応 */
 @media (max-width:768px) {
 
     #heroCarousel .carousel-control-prev,
@@ -338,12 +326,16 @@ body {
     backdrop-filter: blur(4px);
     border-radius: 1.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    padding: 1.5rem;
+    padding: 1rem 1rem 2rem 1rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     position: relative;
+}
+
+.lp-card h2 {
+    margin-bottom: 36px !important;
 }
 
 .lp-card li,
@@ -365,12 +357,6 @@ ul {
     width: max-content;
     max-width: 100%;
 }
-
-.lp-card h2 {
-    margin-bottom: 30px !important;
-}
-
-/* テキスト部分：白透過ボックス */
 
 /* ========================
    各セクション背景画像
@@ -413,17 +399,14 @@ ul {
         --header-h: 64px;
     }
 
-    /* ヘッダーナビ非表示 */
     .header-nav {
         display: none;
     }
 
-    /* ヒーローフレーム */
     .hero-frame {
         height: 70vh;
     }
 
-    /* ヒーローテキスト */
     .hero-content {
         max-width: 500px;
         padding: 1.5rem 2rem;
@@ -433,10 +416,16 @@ ul {
         font-size: 1.6rem;
     }
 
-    /* LPカード */
     .lp-card {
         width: 75vw;
         max-width: 75vw;
+    }
+
+    .lp-card .col-md-6,
+    .lp-card .col-md-5 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
     }
 }
 
@@ -448,23 +437,19 @@ ul {
         --header-h: 56px;
     }
 
-    /* ヘッダーナビ非表示 */
     .header-nav {
         display: none;
     }
 
-    /* ヘッダーボタン小さく */
     .header-actions .btn {
         padding: 0.3rem 0.6rem;
         font-size: 0.8rem;
     }
 
-    /* ヒーローフレーム */
     .hero-frame {
         height: 55vh;
     }
 
-    /* ヒーローテキスト */
     .hero-content {
         max-width: 90%;
         padding: 1rem 1.2rem;
@@ -478,21 +463,34 @@ ul {
         font-size: 0.9rem;
     }
 
-    /* セクション */
     .section {
         min-height: auto;
         padding: 3rem 0;
     }
 
-    /* LPカード */
     .lp-card {
         width: 92vw;
         max-width: 92vw;
         padding: 2rem 1rem;
     }
 
-    /* カード内2カラム → 1カラム */
     .lp-card .row>[class*="col-md"] {
         width: 100%;
+    }
+
+    /* nowrap解除 */
+    .lp-card li,
+    .lp-card p {
+        white-space: normal;
+    }
+
+    /* カード内中央配置（ulは左寄せ維持） */
+    .lp-card {
+        text-align: center;
+    }
+
+    .lp-card ul {
+        text-align: left;
+        display: inline-block;
     }
 }
